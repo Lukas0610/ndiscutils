@@ -28,6 +28,7 @@
 
 ## 3rd-party sources and libraries
  * [CommandLineParser](https://github.com/commandlineparser/commandline)
+ * ConsoleDotNet by Jim Mischel
  * [CSharpx](https://github.com/gsscoder/CSharpx)
  * [DiscUtils](https://github.com/DiscUtils/DiscUtils)
  * [RailwaySharp](https://github.com/gsscoder/railwaysharp)
