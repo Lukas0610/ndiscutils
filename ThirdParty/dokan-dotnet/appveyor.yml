@@ -1,0 +1,114 @@
+environment:
+    AccessTokenDokanDoc:
+      secure: Z8Htovf0nHmWVj+JNOF4H7ozQ5+sS3TkgUu+nyVU414AUlog4kzBhxCSJxIl5t+I
+
+version: 1.0.0-{build}
+configuration:
+- Release
+- Debug
+os: Visual Studio 2017
+branches:
+  only:
+    - master
+
+# To debug build issues, add your own fork to AppVeyor and uncomment below.
+# Connection details will be printed to the console output.
+# $blockRdp makes the build block until a file is deleted from the desktop.
+#init:
+#- ps: Invoke-Expression (Invoke-WebRequest 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1')
+#on_finish:
+#- ps: $blockRdp = $true; Invoke-Expression (Invoke-WebRequest 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1')
+
+install:
+ - ps: |
+     Add-Type -AssemblyName System.IO.Compression.FileSystem
+            (new-object System.Net.WebClient).DownloadFile(
+              'https://github.com/dokan-dev/dokany/releases/download/v1.1.0/DokanSetup_redist.exe',
+              'C:\projects\dokan-dotnet\DokanSetup.exe'
+            )
+            
+      & choco install doxygen.portable
+ - cmd: |
+     C:\projects\dokan-dotnet\DokanSetup.exe /quiet
+
+before_build:
+  - nuget restore
+build:
+  project: DokanNet.sln
+  verbosity: minimal
+after_build:
+  - ps: |
+      #Stop the mirror process and wait for the driver to be unmounted.
+      Function Stop-Mirror {
+          param(
+              [Parameter(Position=0,Mandatory=1)][System.ComponentModel.Component] $app
+          )
+          Stop-Process -Id $app.Id
+          Wait-Process -Id $app.Id -EA SilentlyContinue
+          
+          $countdown = 1
+          while ((Test-Path 'N:\'))
+          {
+              Write-output "Waiting for unmount and Counting down $Countdown"
+              Start-Sleep -Seconds 1
+              if($countdown++ -ge 5) {
+                  Throw "It took more than 5 seconds to unmount"
+              }
+          }
+      }
+  - ps: |
+      git clone -q https://github.com/Liryna/winfstest.git
+      $buildCmd = "MSBuild.exe"
+      $buildArgs = @(
+         ".\winfstest\winfstest.sln",
+         "/m",
+         "/l:C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll",
+         "/p:Configuration=Debug",
+         "/p:Platform=x64")
+      & $buildCmd $buildArgs
+      New-Item C:\TMP -type directory
+      ls c:\TMP
+      
+      foreach ($target in @("net4.6", "net4.0")) {
+         if ($app) {
+            Write-Host "Waiting for the driver to unmount..."
+            Stop-Mirror($app)
+         }
+         Write-Host "Run Windows file system testing for $target..." -ForegroundColor Green
+         $app = Start-Process -passthru .\sample\DokanNetMirror\bin\$env:CONFIGURATION\$target\win\DokanNetMirror.exe
+         Start-Sleep -s 5
+         
+         & .\winfstest\TestSuite\run-winfstest.bat t\base N:\TMP
+         Start-Sleep -s 5
+      }
+      #Stop the process from the last iteration, but do not wait for the driver to unmount.
+      Stop-Process -Id $app.Id
+test:
+  categories:
+    except:
+      - Manual
+      - Timing
+      
+on_success:
+    - ps: |
+          if ($env:CONFIGURATION -eq "Release") {
+              if ("$env:APPVEYOR_PULL_REQUEST_TITLE" -or "$env:APPVEYOR_REPO_BRANCH" -ne "master") {
+                return;
+              }
+              
+              cd $env:APPVEYOR_BUILD_FOLDER\DokanNet\documentations
+              git config --global user.email "appveyor@appveyor.org"
+              git config --global user.name "appveyor"
+              git.exe clone -b gh-pages --single-branch  https://$($env:AccessTokenDokanDoc)@github.com/dokan-dev/dokan-dotnet-doc.git doc
+              doxygen.exe Doxyfile
+              cd doc
+              if ($(git status --porcelain)) {
+                Write-Host "Update documentation..." -ForegroundColor Green
+                git add -A
+                git commit -m "Latest documentation on successful appveyor build $env:APPVEYOR_BUILD_VERSION auto-pushed to gh-pages"
+                git push -fq origin gh-pages
+                Write-Host "Documentation updated!" -ForegroundColor Green
+              } else {
+                Write-Host "No documentation changes detected." -ForegroundColor Green
+              }
+          }
