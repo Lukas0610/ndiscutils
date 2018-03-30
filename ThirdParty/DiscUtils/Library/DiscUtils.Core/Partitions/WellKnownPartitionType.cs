@@ -47,9 +47,44 @@ namespace DiscUtils.Partitions
         /// </summary>
         LinuxSwap = 3,
 
-        /// <summary>
-        /// Linux Logical Volume Manager (LVM).
-        /// </summary>
-        LinuxLvm = 4
-    }
+		/// <summary>
+		/// Linux Logical Volume Manager (LVM).
+		/// </summary>
+		LinuxLvm = 4,
+
+		/// <summary>
+		/// EFI System Partition
+		/// </summary>
+		EfiSystem = 5,
+
+		/// <summary>
+		/// Windows Logical Disk Manager metadata.
+		/// </summary>
+		WindowsLdmMetadata = 6,
+
+		/// <summary>
+		/// Windows Logical Disk Manager data.
+		/// </summary>
+		WindowsLdmData = 7,
+
+		/// <summary>
+		/// Microsoft reserved partition.
+		/// </summary>
+		MicrosoftReserved = 8,
+
+		/// <summary>
+		/// BIOS boot partition.
+		/// </summary>
+		BiosBoot = 9,
+
+		/// <summary>
+		/// Windows RE Partition
+		/// </summary>
+		WindowsRecovery = 10,
+
+		/// <summary>
+		/// Windows Storages Spaces, successor of Windows LDM
+		/// </summary>
+		WindowsStorageSpaces = 11
+	}
 }

@@ -64,17 +64,27 @@ namespace DiscUtils.Partitions
         /// </summary>
         public static readonly Guid WindowsLdmMetadata = new Guid("5808C8AA-7E8F-42E0-85D2-E1E90434CFB3");
 
-        /// <summary>
-        /// Windows Logical Disk Manager data.
-        /// </summary>
-        public static readonly Guid WindowsLdmData = new Guid("AF9B60A0-1431-4F62-BC68-3311714A69AD");
+		/// <summary>
+		/// Windows Logical Disk Manager data.
+		/// </summary>
+		public static readonly Guid WindowsLdmData = new Guid("AF9B60A0-1431-4F62-BC68-3311714A69AD");
 
-        /// <summary>
-        /// Converts a well known partition type to a Guid.
-        /// </summary>
-        /// <param name="wellKnown">The value to convert.</param>
-        /// <returns>The GUID value.</returns>
-        internal static Guid Convert(WellKnownPartitionType wellKnown)
+		/// <summary>
+		/// Windows Storage Spaces, successor of Windows LDM
+		/// </summary>
+		public static readonly Guid WindowsStorageSpaces = new Guid("E75CAF8F-F680-4CEE-AFA3-B001E56EFC2D");
+
+		/// <summary>
+		/// Windows RE REcovery Partition
+		/// </summary>
+		public static readonly Guid WindowsRecovery = new Guid("DE94BBA4-06D1-4D40-A16A-BFD50179D6AC");
+
+		/// <summary>
+		/// Converts a well known partition type to a Guid.
+		/// </summary>
+		/// <param name="wellKnown">The value to convert.</param>
+		/// <returns>The GUID value.</returns>
+		internal static Guid Convert(WellKnownPartitionType wellKnown)
         {
             switch (wellKnown)
             {
@@ -86,7 +96,19 @@ namespace DiscUtils.Partitions
                     return LinuxLvm;
                 case WellKnownPartitionType.LinuxSwap:
                     return LinuxSwap;
-                default:
+				case WellKnownPartitionType.EfiSystem:
+					return EfiSystem;
+				case WellKnownPartitionType.WindowsLdmMetadata:
+					return WindowsLdmMetadata;
+				case WellKnownPartitionType.WindowsLdmData:
+					return WindowsLdmData;
+				case WellKnownPartitionType.WindowsStorageSpaces:
+					return WindowsStorageSpaces;
+				case WellKnownPartitionType.MicrosoftReserved:
+					return MicrosoftReserved;
+				case WellKnownPartitionType.WindowsRecovery:
+					return WindowsRecovery;
+				default:
                     throw new ArgumentException("Unknown partition type");
             }
         }

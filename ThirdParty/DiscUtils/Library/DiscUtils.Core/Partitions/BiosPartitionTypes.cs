@@ -57,30 +57,40 @@ namespace DiscUtils.Partitions
         /// </summary>
         public const byte Fat32 = 0x0B;
 
-        /// <summary>
-        /// Microsoft FAT32, accessed using Int13h BIOS LBA extensions.
-        /// </summary>
-        public const byte Fat32Lba = 0x0C;
+		/// <summary>
+		/// Microsoft FAT32, accessed using Int13h BIOS LBA extensions.
+		/// </summary>
+		public const byte Fat32Lba = 0x0C;
 
-        /// <summary>
-        /// Microsoft BIGDOS FAT16, accessed using Int13h BIOS LBA extensions.
-        /// </summary>
-        public const byte Fat16Lba = 0x0E;
+		/// <summary>
+		/// Reserved space for Windows in EFI mode. Collides with Fat32Lba.
+		/// </summary>
+		public const byte WindowsEfiReserved = 0x0C;
+
+		/// <summary>
+		/// Microsoft BIGDOS FAT16, accessed using Int13h BIOS LBA extensions.
+		/// </summary>
+		public const byte Fat16Lba = 0x0E;
 
         /// <summary>
         /// Extended Partition (contains other partitions), accessed using Int13h BIOS LBA extensions.
         /// </summary>
         public const byte ExtendedLba = 0x0F;
 
-        /// <summary>
-        /// Windows Logical Disk Manager dynamic volume.
-        /// </summary>
-        public const byte WindowsDynamicVolume = 0x42;
+		/// <summary>
+		/// Windows RE REcovery Partition
+		/// </summary>
+		public const byte WindowsRecovery = 0x27;
 
-        /// <summary>
-        /// Linux Swap.
-        /// </summary>
-        public const byte LinuxSwap = 0x82;
+		/// <summary>
+		/// Windows Logical Disk Manager dynamic volume.
+		/// </summary>
+		public const byte WindowsDynamicVolume = 0x42;
+
+		/// <summary>
+		/// Linux Swap.
+		/// </summary>
+		public const byte LinuxSwap = 0x82;
 
         /// <summary>
         /// Linux Native (ext2 and friends).
@@ -130,7 +140,7 @@ namespace DiscUtils.Partitions
                 case 0x0B:
                     return "FAT32 (non-LBA)";
                 case 0x0C:
-                    return "FAT32 (LBA)";
+                    return "FAT32 (LBA)/EFI Reserved";
                 case 0x0E:
                     return "FAT16 (LBA)";
                 case 0x0F:

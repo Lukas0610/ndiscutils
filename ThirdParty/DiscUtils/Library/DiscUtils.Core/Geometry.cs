@@ -312,7 +312,7 @@ namespace DiscUtils
 
             cylinders = totalSectors / sectorsPerTrack / headsPerCylinder;
 
-            return new Geometry(cylinders, headsPerCylinder, sectorsPerTrack, sectorSize);
+            return new Geometry(cylinders + 1, headsPerCylinder, sectorsPerTrack, sectorSize);
         }
 
         /// <summary>

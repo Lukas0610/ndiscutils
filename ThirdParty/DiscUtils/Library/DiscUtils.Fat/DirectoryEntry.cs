@@ -30,8 +30,9 @@ namespace DiscUtils.Fat
     {
         private readonly FatType _fatVariant;
         private readonly FatFileSystemOptions _options;
-        private byte _attr;
-        private ushort _creationDate;
+		private byte[] _buffer;
+		private byte _attr;
+		private ushort _creationDate;
         private ushort _creationTime;
         private byte _creationTimeTenth;
         private uint _fileSize;
@@ -40,13 +41,16 @@ namespace DiscUtils.Fat
         private ushort _lastAccessDate;
         private ushort _lastWriteDate;
         private ushort _lastWriteTime;
+        private LongFileName _longFileName;
 
         internal DirectoryEntry(FatFileSystemOptions options, Stream stream, FatType fatVariant)
         {
             _options = options;
             _fatVariant = fatVariant;
+            _longFileName = new LongFileName();
             byte[] buffer = StreamUtilities.ReadExact(stream, 32);
-            Load(buffer, 0);
+			_buffer = buffer;
+			Load(buffer, 0);
         }
 
         internal DirectoryEntry(FatFileSystemOptions options, FileName name, FatAttributes attrs, FatType fatVariant)
@@ -55,6 +59,7 @@ namespace DiscUtils.Fat
             _fatVariant = fatVariant;
             Name = name;
             _attr = (byte)attrs;
+            _longFileName = LongFileName.Empty;
         }
 
         internal DirectoryEntry(DirectoryEntry toCopy)
@@ -71,15 +76,22 @@ namespace DiscUtils.Fat
             _lastWriteTime = toCopy._lastWriteTime;
             _firstClusterLo = toCopy._firstClusterLo;
             _fileSize = toCopy._fileSize;
+            _longFileName = new LongFileName();
+            toCopy._longFileName.CopyTo(_longFileName);
         }
 
-        public FatAttributes Attributes
-        {
-            get { return (FatAttributes)_attr; }
-            set { _attr = (byte)value; }
-        }
+		internal byte[] Buffer
+		{
+			get { return _buffer; }
+		}
 
-        public DateTime CreationTime
+		public FatAttributes Attributes
+		{
+			get { return (FatAttributes)_attr; }
+			set { _attr = (byte)value; }
+		}
+
+		public DateTime CreationTime
         {
             get { return FileTimeToDateTime(_creationDate, _creationTime, _creationTimeTenth); }
             set { DateTimeToFileTime(value, out _creationDate, out _creationTime, out _creationTimeTenth); }
@@ -127,9 +139,17 @@ namespace DiscUtils.Fat
 
         public FileName Name { get; set; }
 
+        public LongFileName LongName
+        {
+            get { return _longFileName; }
+            set { _longFileName = value; }
+        }
+
         internal void WriteTo(Stream stream)
         {
             byte[] buffer = new byte[32];
+
+            _longFileName.WriteTo(stream);
 
             Name.GetBytes(buffer, 0);
             buffer[11] = _attr;

@@ -64,7 +64,11 @@ namespace DiscUtils.Partitions
                         return "Windows Logical Disk Manager Metadata";
                     case "AF9B60A0-1431-4F62-BC68-3311714A69AD":
                         return "Windows Logical Disk Manager Data";
-                    case "75894C1E-3AEB-11D3-B7C1-7B03A0000000":
+					case "E75CAF8F-F680-4CEE-AFA3-B001E56EFC2D":
+						return "Windows Storage Spaces";
+					case "DE94BBA4-06D1-4D40-A16A-BFD50179D6AC":
+						return "Windows RE Recovery";
+					case "75894C1E-3AEB-11D3-B7C1-7B03A0000000":
                         return "HP-UX Data";
                     case "E2A1E728-32E3-11D6-A682-7B03A0000000":
                         return "HP-UX Service";

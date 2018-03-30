@@ -345,6 +345,8 @@ namespace DiscUtils.Fat
 
         private void LoadEntries()
         {
+            LongFileName lfnData = new LongFileName();
+
             _entries = new Dictionary<long, DirectoryEntry>();
             _freeEntries = new List<long>();
 
@@ -360,30 +362,46 @@ namespace DiscUtils.Fat
                     (FatAttributes.ReadOnly | FatAttributes.Hidden | FatAttributes.System | FatAttributes.VolumeId))
                 {
                     // Long File Name entry
+                    lfnData.AddEntry(entry);
                 }
                 else if (entry.Name.IsDeleted())
                 {
+                    lfnData.CopyTo(entry.LongName);
+                    lfnData.Clear();
+
                     // E5 = Free Entry
                     _freeEntries.Add(streamPos);
                 }
                 else if (entry.Name == FileName.SelfEntryName)
                 {
+                    lfnData.CopyTo(entry.LongName);
+                    lfnData.Clear();
+
                     _selfEntry = entry;
                     _selfEntryLocation = streamPos;
                 }
                 else if (entry.Name == FileName.ParentEntryName)
                 {
+                    lfnData.CopyTo(entry.LongName);
+                    lfnData.Clear();
+
                     _parentEntry = entry;
                     _parentEntryLocation = streamPos;
                 }
                 else if (entry.Name.IsEndMarker())
                 {
+                    lfnData.CopyTo(entry.LongName);
+                    lfnData.Clear();
+
                     // Free Entry, no more entries available
                     _endOfEntries = streamPos;
                     break;
                 }
                 else
                 {
+                    lfnData.CopyTo(entry.LongName);
+                    lfnData.Clear();
+
                     _entries.Add(streamPos, entry);
                 }
             }

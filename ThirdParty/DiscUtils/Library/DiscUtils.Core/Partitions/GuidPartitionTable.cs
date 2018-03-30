@@ -145,6 +145,10 @@ namespace DiscUtils.Partitions
             disk.Position = header.HeaderLba * diskGeometry.BytesPerSector;
             disk.Write(headerBuffer, 0, headerBuffer.Length);
 
+            // Write the primary partition table
+            disk.Position = header.PartitionEntriesLba * diskGeometry.BytesPerSector;
+            disk.Write(entriesBuffer, 0, entriesBuffer.Length);
+
             // Calc alternate header
             header.HeaderLba = header.AlternateHeaderLba;
             header.AlternateHeaderLba = 1;
@@ -154,6 +158,10 @@ namespace DiscUtils.Partitions
             header.WriteTo(headerBuffer, 0);
             disk.Position = header.HeaderLba * diskGeometry.BytesPerSector;
             disk.Write(headerBuffer, 0, headerBuffer.Length);
+
+            // Write the alternate partition table
+            disk.Position = header.PartitionEntriesLba * diskGeometry.BytesPerSector;
+            disk.Write(entriesBuffer, 0, entriesBuffer.Length);
 
             return new GuidPartitionTable(disk, diskGeometry);
         }
@@ -169,17 +177,96 @@ namespace DiscUtils.Partitions
             GuidPartitionTable pt = Initialize(disk);
             pt.Create(type, true);
             return pt;
-        }
+		}
 
-        /// <summary>
-        /// Creates a new partition that encompasses the entire disk.
-        /// </summary>
-        /// <param name="type">The partition type.</param>
-        /// <param name="active">Whether the partition is active (bootable).</param>
-        /// <returns>The index of the partition.</returns>
-        /// <remarks>The partition table must be empty before this method is called,
-        /// otherwise IOException is thrown.</remarks>
-        public override int Create(WellKnownPartitionType type, bool active)
+		/// <summary>
+		/// Indicates if a stream contains a GPT partition table.
+		/// </summary>
+		/// <param name="disk">The stream to inspect.</param>
+		/// <returns><c>true</c> if the partition table is valid, else <c>false</c>.</returns>
+		public static bool Detect(Stream disk)
+		{
+			if (disk.Length < Sizes.Sector)
+			{
+				return false;
+			}
+
+			disk.Position = 0;
+			byte[] bootSector = StreamUtilities.ReadExact(disk, Sizes.Sector);
+
+			// Check for the 'bootable sector' marker
+			if (bootSector[510] != 0x55 || bootSector[511] != 0xAA)
+			{
+				return false;
+			}
+
+			Geometry diskGeometry = DetectGeometry(disk);
+			BiosPartitionTable bpt = new BiosPartitionTable(disk, diskGeometry);
+
+			return bpt.Count == 1 && bpt[0].BiosType == BiosPartitionTypes.GptProtective;
+		}
+
+		/// <summary>
+		/// Makes a best guess at the geometry of a disk.
+		/// </summary>
+		/// <param name="disk">String containing the disk image to detect the geometry from.</param>
+		/// <returns>The detected geometry.</returns>
+		public static Geometry DetectGeometry(Stream disk)
+		{
+			if (disk.Length >= Sizes.Sector)
+			{
+				disk.Position = 0;
+				byte[] bootSector = StreamUtilities.ReadExact(disk, Sizes.Sector);
+				if (bootSector[510] == 0x55 && bootSector[511] == 0xAA)
+				{
+					long lastSector = 0;
+
+					disk.Position = Sizes.Sector;
+					var sector = StreamUtilities.ReadExact(disk, Sizes.Sector);
+					var header = new GptHeader(Sizes.Sector);
+					if (!header.ReadFrom(sector, 0))
+						throw new InvalidDataException("Failed to read primary GPT header");
+
+					disk.Position = header.PartitionEntriesLba * Sizes.Sector;
+					var entryBuffer = StreamUtilities.ReadExact(disk, 
+						(int)(header.PartitionEntrySize * header.PartitionEntryCount));
+
+					if (header.EntriesCrc != Crc32LittleEndian.Compute(Crc32Algorithm.Common,
+						entryBuffer, 0, entryBuffer.Length))
+					{
+						throw new InvalidDataException("Invalid GPT header");
+					}
+
+					for (int i = 0; i < header.PartitionEntryCount; ++i)
+					{
+						GptEntry entry = new GptEntry();
+						entry.ReadFrom(entryBuffer, i * header.PartitionEntrySize);
+
+						if (entry.PartitionType != Guid.Empty)
+						{
+							lastSector = entry.LastUsedLogicalBlock + 1;
+						}
+					}
+
+					if (lastSector > 0)
+					{
+						return Geometry.FromCapacity(lastSector * Sizes.Sector, Sizes.Sector);
+					}
+				}
+			}
+
+			return Geometry.FromCapacity(disk.Length);
+		}
+
+		/// <summary>
+		/// Creates a new partition that encompasses the entire disk.
+		/// </summary>
+		/// <param name="type">The partition type.</param>
+		/// <param name="active">Whether the partition is active (bootable).</param>
+		/// <returns>The index of the partition.</returns>
+		/// <remarks>The partition table must be empty before this method is called,
+		/// otherwise IOException is thrown.</remarks>
+		public override int Create(WellKnownPartitionType type, bool active)
         {
             List<GptEntry> allEntries = new List<GptEntry>(GetAllEntries());
 
@@ -553,9 +640,20 @@ namespace DiscUtils.Partitions
 
             _diskData.Position = _secondaryHeader.PartitionEntriesLba * _diskGeometry.BytesPerSector;
             _diskData.Write(_entryBuffer, 0, _entryBuffer.Length);
-        }
+		}
 
-        private bool ReadEntries(GptHeader header)
+		private static BiosPartitionRecord[] ReadPrimaryRecords(byte[] bootSector)
+		{
+			BiosPartitionRecord[] records = new BiosPartitionRecord[4];
+			for (int i = 0; i < 4; ++i)
+			{
+				records[i] = new BiosPartitionRecord(bootSector, 0x01BE + i * 0x10, 0, i);
+			}
+
+			return records;
+		}
+
+		private bool ReadEntries(GptHeader header)
         {
             _diskData.Position = header.PartitionEntriesLba * _diskGeometry.BytesPerSector;
             _entryBuffer = StreamUtilities.ReadExact(_diskData, (int)(header.PartitionEntrySize * header.PartitionEntryCount));
@@ -574,7 +672,9 @@ namespace DiscUtils.Partitions
 
         private IEnumerable<GptEntry> GetAllEntries()
         {
-            for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
+			ReadEntries(_primaryHeader);
+
+			for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
             {
                 GptEntry entry = new GptEntry();
                 entry.ReadFrom(_entryBuffer, i * _primaryHeader.PartitionEntrySize);
@@ -591,7 +691,9 @@ namespace DiscUtils.Partitions
             int entriesSoFar = 0;
             int position = 0;
 
-            while (!found && position < _primaryHeader.PartitionEntryCount)
+			ReadEntries(_primaryHeader);
+
+			while (!found && position < _primaryHeader.PartitionEntryCount)
             {
                 GptEntry entry = new GptEntry();
                 entry.ReadFrom(_entryBuffer, position * _primaryHeader.PartitionEntrySize);
@@ -620,7 +722,9 @@ namespace DiscUtils.Partitions
         {
             int index = 0;
 
-            for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
+			ReadEntries(_primaryHeader);
+
+			for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
             {
                 GptEntry entry = new GptEntry();
                 entry.ReadFrom(_entryBuffer, i * _primaryHeader.PartitionEntrySize);
@@ -639,8 +743,10 @@ namespace DiscUtils.Partitions
         }
 
         private int GetFreeEntryOffset()
-        {
-            for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
+		{
+			ReadEntries(_primaryHeader);
+
+			for (int i = 0; i < _primaryHeader.PartitionEntryCount; ++i)
             {
                 GptEntry entry = new GptEntry();
                 entry.ReadFrom(_entryBuffer, i * _primaryHeader.PartitionEntrySize);

@@ -1811,6 +1811,37 @@ namespace DiscUtils.Ntfs
             }
         }
 
+        internal void CreateHardLink(DirectoryEntry sourceDirEntry, string destinationName)
+        {
+            using (new NtfsTransaction())
+            {
+                string destinationDirName = Utilities.GetDirectoryFromPath(destinationName);
+                DirectoryEntry destinationDirSelfEntry = GetDirectoryEntry(destinationDirName);
+                if (destinationDirSelfEntry == null ||
+                    (destinationDirSelfEntry.Details.FileAttributes & FileAttributes.Directory) == 0)
+                {
+                    throw new FileNotFoundException("Destination directory not found", destinationDirName);
+                }
+
+                Directory destinationDir = GetDirectory(destinationDirSelfEntry.Reference);
+                if (destinationDir == null)
+                {
+                    throw new FileNotFoundException("Destination directory not found", destinationDirName);
+                }
+
+                DirectoryEntry destinationDirEntry = GetDirectoryEntry(destinationDir,
+                    Utilities.GetFileFromPath(destinationName));
+                if (destinationDirEntry != null)
+                {
+                    throw new IOException("A file with this name already exists: " + destinationName);
+                }
+
+                File file = GetFile(sourceDirEntry.Reference);
+                destinationDir.AddEntry(file, Utilities.GetFileFromPath(destinationName), FileNameNamespace.Posix);
+                destinationDirSelfEntry.UpdateFrom(destinationDir);
+            }
+        }
+
         /// <summary>
         /// Creates an NTFS hard link to an existing file.
         /// </summary>
@@ -1941,11 +1972,20 @@ namespace DiscUtils.Ntfs
 
         private static bool IsValidBPB(BiosParameterBlock bpb, long volumeSize)
         {
-            if (bpb.SignatureByte != 0x80 || bpb.TotalSectors16 != 0 || bpb.TotalSectors32 != 0
-                || bpb.TotalSectors64 == 0 || bpb.MftRecordSize == 0 || bpb.MftCluster == 0 || bpb.BytesPerSector == 0)
-            {
+			// If we have a valid NTFS signature and no sectors are set,
+			// this is not a valid NTFS-stream
+			if (bpb.SignatureByte == 0x80 && bpb.TotalSectors16 == 0 && bpb.TotalSectors32 == 0 &&
+					bpb.TotalSectors64 == 0)
+				return false;
+
+			// If signature is set to 0x00 and the OEM-id is not recognizable, you better won't
+			// support this stream.
+			if (bpb.SignatureByte == 0x00 && !bpb.OemId.StartsWith("NTFS"))
+				return false;
+
+			// This data seems to be valid across all NTFS implementations.
+            if (bpb.MftRecordSize == 0 || bpb.MftCluster == 0 || bpb.BytesPerSector == 0)
                 return false;
-            }
 
             long mftPos = bpb.MftCluster * bpb.SectorsPerCluster * bpb.BytesPerSector;
             return mftPos < bpb.TotalSectors64 * bpb.BytesPerSector && mftPos < volumeSize;

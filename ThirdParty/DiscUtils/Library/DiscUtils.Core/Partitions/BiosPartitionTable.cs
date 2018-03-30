@@ -129,7 +129,7 @@ namespace DiscUtils.Partitions
                     if (maxHead > 0 && maxSector > 0)
                     {
                         int cylSize = (maxHead + 1) * maxSector * 512;
-                        return new Geometry((int)MathUtilities.Ceil(disk.Length, cylSize), maxHead + 1, maxSector);
+                        return new Geometry(disk.Length, (int)MathUtilities.Ceil(disk.Length, cylSize), maxHead + 1, maxSector);
                     }
                 }
             }
@@ -595,7 +595,17 @@ namespace DiscUtils.Partitions
                     return BiosPartitionTypes.LinuxSwap;
                 case WellKnownPartitionType.LinuxLvm:
                     return BiosPartitionTypes.LinuxLvm;
-                default:
+				case WellKnownPartitionType.EfiSystem:
+					return BiosPartitionTypes.EfiSystem;
+				case WellKnownPartitionType.WindowsLdmMetadata:
+				case WellKnownPartitionType.WindowsLdmData:
+				case WellKnownPartitionType.WindowsStorageSpaces:
+					return BiosPartitionTypes.WindowsDynamicVolume;
+				case WellKnownPartitionType.MicrosoftReserved:
+					return BiosPartitionTypes.WindowsEfiReserved;
+				case WellKnownPartitionType.WindowsRecovery:
+					return BiosPartitionTypes.WindowsRecovery;
+				default:
                     throw new ArgumentException(
                         string.Format(CultureInfo.InvariantCulture, "Unrecognized partition type: '{0}'", type),
                         nameof(type));
