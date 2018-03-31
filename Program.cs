@@ -32,21 +32,21 @@ namespace nDiscUtils
                 Clone.Options,
                 Compare.Options,
                 ListPartitions.Options,
-                MountPartition.Options,
-                MountImage.Options,
-                Ramdisk.Options,
+                MakeDirectoryImage.Options,
                 MakeImage.Options,
-                Sync.Options,
-                MakeDirectoryImage.Options>(args)
-                .MapResult(
+                MountImage.Options,
+                MountPartition.Options,
+                Ramdisk.Options,
+                Sync.Options
+            >(args).MapResult(
                     (Clone.Options opts) => Clone.Run(opts),
                     (Compare.Options opts) => Compare.Run(opts),
                     (ListPartitions.Options opts) => ListPartitions.Run(opts),
-                    (MountPartition.Options opts) => MountPartition.Run(opts),
-                    (MountImage.Options opts) => MountImage.Run(opts),
-                    (Ramdisk.Options opts) => Ramdisk.Run(opts),
-                    (MakeImage.Options opts) => MakeImage.Run(opts),
                     (MakeDirectoryImage.Options opts) => MakeDirectoryImage.Run(opts),
+                    (MakeImage.Options opts) => MakeImage.Run(opts),
+                    (MountImage.Options opts) => MountImage.Run(opts),
+                    (MountPartition.Options opts) => MountPartition.Run(opts),
+                    (Ramdisk.Options opts) => Ramdisk.Run(opts),
                     (Sync.Options opts) => Sync.Run(opts),
                     (errcode) => 1
                 );
