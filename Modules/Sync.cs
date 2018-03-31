@@ -366,24 +366,17 @@ namespace nDiscUtils.Modules
                         }
                     }
 
-                    // transfering attributes
-                    if (!opts.SkipAttributes && !opts.SkipFileMeta)
-                    {
-                        Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
-                        targetFile.Attributes = sourceFile.Attributes;
-                    }
-
-                    // transfering dates
-                    if (!opts.SkipDates && !opts.SkipFileMeta)
-                    {
-                        Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
-                        targetFile.CreationTime = sourceFile.CreationTime;
-                        targetFile.LastAccessTime = sourceFile.LastAccessTime;
-                        targetFile.LastWriteTime = sourceFile.LastWriteTime;
-                    }
-
                     try
                     {
+                        // transfering dates
+                        if (!opts.SkipDates && !opts.SkipFileMeta)
+                        {
+                            Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
+                            targetFile.CreationTime = sourceFile.CreationTime;
+                            targetFile.LastAccessTime = sourceFile.LastAccessTime;
+                            targetFile.LastWriteTime = sourceFile.LastWriteTime;
+                        }
+
                         // transfering security descriptors
                         if (!opts.SkipSecurity && !opts.SkipFileMeta)
                         {
@@ -391,12 +384,22 @@ namespace nDiscUtils.Modules
                             targetFile.SetAccessControl(sourceFile.GetAccessControl());
                         }
 
-                        // ALWAYS sync this property at the end
-                        targetFile.IsReadOnly = sourceFile.IsReadOnly;
+                        // ALWAYS sync attributes at the end
+                        if (!opts.SkipAttributes && !opts.SkipFileMeta)
+                        {
+                            Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
+                            targetFile.Attributes = sourceFile.Attributes;
+                            targetFile.IsReadOnly = sourceFile.IsReadOnly;
+                        }
+                    }
+                    catch (IOException ioex)
+                    {
+                        Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
+                        Logger.Exception(ioex);
                     }
                     catch (UnauthorizedAccessException uaex)
                     {
-                        Logger.Exception("Failed to synchronize read-only or security access control for \"{0}\"", relativePath);
+                        Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                         Logger.Exception(uaex);
                     }
                 }
@@ -419,24 +422,16 @@ namespace nDiscUtils.Modules
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", currentFile, fileCount);
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
 
-                // transfering attributes
-                if (!opts.SkipAttributes && !opts.SkipDirectoryMeta)
-                {
-                    Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
-                    targetDirectory.Attributes = sourceDirectory.Attributes;
-                }
-
-                // transfering dates
-                if (!opts.SkipDates && !opts.SkipDirectoryMeta)
-                {
-                    Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
-                    targetDirectory.CreationTime = sourceDirectory.CreationTime;
-                    targetDirectory.LastAccessTime = sourceDirectory.LastAccessTime;
-                    targetDirectory.LastWriteTime = sourceDirectory.LastWriteTime;
-                }
-
                 try
                 {
+                    // transfering dates
+                    if (!opts.SkipDates && !opts.SkipDirectoryMeta)
+                    {
+                        Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
+                        targetDirectory.CreationTime = sourceDirectory.CreationTime;
+                        targetDirectory.LastAccessTime = sourceDirectory.LastAccessTime;
+                        targetDirectory.LastWriteTime = sourceDirectory.LastWriteTime;
+                    }
 
                     // transfering security descriptors
                     if (!opts.SkipSecurity && !opts.SkipDirectoryMeta)
@@ -444,10 +439,22 @@ namespace nDiscUtils.Modules
                         Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
                         targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
                     }
+
+                    // transfering attributes
+                    if (!opts.SkipAttributes && !opts.SkipDirectoryMeta)
+                    {
+                        Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
+                        targetDirectory.Attributes = sourceDirectory.Attributes;
+                    }
+                }
+                catch (IOException ioex)
+                {
+                    Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
+                    Logger.Exception(ioex);
                 }
                 catch (UnauthorizedAccessException uaex)
                 {
-                    Logger.Exception("Failed to synchronize security access control for \"{0}\"", relativePath);
+                    Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                     Logger.Exception(uaex);
                 }
             }
