@@ -124,10 +124,16 @@ namespace DiscUtils.Ntfs
 
         internal static RawSecurityDescriptor CalcNewObjectDescriptor(RawSecurityDescriptor parent, bool isContainer)
         {
-            RawAcl sacl = InheritAcl(parent.SystemAcl, isContainer);
-            RawAcl dacl = InheritAcl(parent.DiscretionaryAcl, isContainer);
+            if (parent != null)
+            {
 
-            return new RawSecurityDescriptor(parent.ControlFlags, parent.Owner, parent.Group, sacl, dacl);
+                RawAcl sacl = InheritAcl(parent.SystemAcl, isContainer);
+                RawAcl dacl = InheritAcl(parent.DiscretionaryAcl, isContainer);
+
+                return new RawSecurityDescriptor(parent.ControlFlags, parent.Owner, parent.Group, sacl, dacl);
+            }
+
+            return null;
         }
 
         private static RawAcl InheritAcl(RawAcl parentAcl, bool isContainer)

@@ -32,7 +32,7 @@ namespace DiscUtils.Ntfs
         internal NtfsOptions()
         {
             HideMetafiles = true;
-            HideHiddenFiles = true;
+            HideHiddenFiles = false;
             HideSystemFiles = true;
             HideDosFileNames = true;
             Compressor = new LZNT1();

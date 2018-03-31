@@ -123,7 +123,10 @@ namespace DiscUtils.Ntfs
             IdIndexData data;
             if (_idIndex.TryGetValue(new IdIndexKey(id), out data))
             {
-                return ReadDescriptor(data).Descriptor;
+                SecurityDescriptor descriptor = ReadDescriptor(data);
+                
+                if (descriptor != null)
+                    return descriptor.Descriptor;
             }
 
             return null;
@@ -141,12 +144,16 @@ namespace DiscUtils.Ntfs
             {
                 SecurityDescriptor stored = ReadDescriptor(entry.Value);
 
-                byte[] storedByteForm = new byte[stored.Size];
-                stored.WriteTo(storedByteForm, 0);
-
-                if (Utilities.AreEqual(newByteForm, storedByteForm))
+                if (stored != null)
                 {
-                    return entry.Value.Id;
+
+                    byte[] storedByteForm = new byte[stored.Size];
+                    stored.WriteTo(storedByteForm, 0);
+
+                    if (Utilities.AreEqual(newByteForm, storedByteForm))
+                    {
+                        return entry.Value.Id;
+                    }
                 }
             }
 
@@ -222,8 +229,11 @@ namespace DiscUtils.Ntfs
                 SecurityDescriptorRecord record = new SecurityDescriptorRecord();
                 record.Read(buffer, 0);
 
-                return new SecurityDescriptor(new RawSecurityDescriptor(record.SecurityDescriptor, 0));
+                if (record.SecurityDescriptor != null)
+                    return new SecurityDescriptor(new RawSecurityDescriptor(record.SecurityDescriptor, 0));
             }
+
+            return null;
         }
 
         internal abstract class IndexData

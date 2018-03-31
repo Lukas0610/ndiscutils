@@ -709,7 +709,8 @@ namespace DiscUtils.Ntfs
 
                 if ((changedAttribs & NonSettableFileAttributes) != 0)
                 {
-                    throw new ArgumentException("Attempt to change attributes that are read-only", nameof(newValue));
+                    // throw new ArgumentException("Attempt to change attributes that are read-only", nameof(newValue));
+                    changedAttribs = changedAttribs & ~NonSettableFileAttributes;
                 }
 
                 File file = GetFile(dirEntry.Reference);
@@ -1699,13 +1700,16 @@ namespace DiscUtils.Ntfs
                                 newSd = SecurityDescriptor.CalcNewObjectDescriptor(parentSd, false);
                             }
 
-                            DoSetSecurity(childDir, newSd);
-                            childDirEntry.UpdateFrom(childDir);
+                            if (newSd != null)
+                            {
+                                DoSetSecurity(childDir, newSd);
+                                childDirEntry.UpdateFrom(childDir);
 
-                            // Update the directory entry by which we found the directory we've just modified
-                            focusDirEntry.UpdateFrom(focusDir);
+                                // Update the directory entry by which we found the directory we've just modified
+                                focusDirEntry.UpdateFrom(focusDir);
 
-                            focusDir = childDir;
+                                focusDir = childDir;
+                            }
                         }
                         finally
                         {
@@ -2087,10 +2091,13 @@ namespace DiscUtils.Ntfs
                     newSd = SecurityDescriptor.CalcNewObjectDescriptor(parentSd, false);
                 }
 
-                DoSetSecurity(file, newSd);
-                result.UpdateFrom(file);
+                if (newSd != null)
+                {
+                    DoSetSecurity(file, newSd);
+                    result.UpdateFrom(file);
 
-                parentDirEntry.UpdateFrom(parentDir);
+                    parentDirEntry.UpdateFrom(parentDir);
+                }
             }
             finally
             {

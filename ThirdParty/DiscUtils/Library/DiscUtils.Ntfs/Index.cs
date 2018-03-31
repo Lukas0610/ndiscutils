@@ -41,12 +41,16 @@ namespace DiscUtils.Ntfs
         private readonly IndexRoot _root;
         private readonly IndexNode _rootNode;
 
+        private readonly object _lock;
+
         public Index(File file, string name, BiosParameterBlock bpb, UpperCase upCase)
         {
             _file = file;
             _name = name;
             _bpb = bpb;
             IsFileIndex = name == "$I30";
+
+            _lock = new object();
 
             _blockCache = new ObjectCache<long, IndexBlock>();
 
@@ -83,6 +87,8 @@ namespace DiscUtils.Ntfs
             _bpb = bpb;
             IsFileIndex = name == "$I30";
 
+            _lock = new object();
+
             _blockCache = new ObjectCache<long, IndexBlock>();
 
             _file.CreateStream(AttributeType.IndexRoot, _name);
@@ -107,9 +113,13 @@ namespace DiscUtils.Ntfs
             get
             {
                 int i = 0;
-                foreach (KeyValuePair<byte[], byte[]> entry in Entries)
+
+                lock (_lock)
                 {
-                    ++i;
+                    foreach (KeyValuePair<byte[], byte[]> entry in Entries)
+                    {
+                        ++i;
+                    }
                 }
 
                 return i;
@@ -120,9 +130,12 @@ namespace DiscUtils.Ntfs
         {
             get
             {
-                foreach (IndexEntry entry in Enumerate(_rootNode))
+                lock (_lock)
                 {
-                    yield return new KeyValuePair<byte[], byte[]>(entry.KeyBuffer, entry.DataBuffer);
+                    foreach (IndexEntry entry in Enumerate(_rootNode))
+                    {
+                        yield return new KeyValuePair<byte[], byte[]>(entry.KeyBuffer, entry.DataBuffer);
+                    }
                 }
             }
         }
@@ -150,15 +163,19 @@ namespace DiscUtils.Ntfs
             {
                 IndexEntry oldEntry;
                 IndexNode node;
-                _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
+
+                lock (_lock)
+                {
+                    _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
                                                 _file.MftRecordFreeSpace(AttributeType.IndexRoot, _name);
-                if (_rootNode.TryFindEntry(key, out oldEntry, out node))
-                {
-                    node.UpdateEntry(key, value);
-                }
-                else
-                {
-                    _rootNode.AddEntry(key, value);
+                    if (_rootNode.TryFindEntry(key, out oldEntry, out node))
+                    {
+                        node.UpdateEntry(key, value);
+                    }
+                    else
+                    {
+                        _rootNode.AddEntry(key, value);
+                    }
                 }
             }
         }
@@ -182,9 +199,12 @@ namespace DiscUtils.Ntfs
 
         public IEnumerable<KeyValuePair<byte[], byte[]>> FindAll(IComparable<byte[]> query)
         {
-            foreach (IndexEntry entry in FindAllIn(query, _rootNode))
+            lock (_lock)
             {
-                yield return new KeyValuePair<byte[], byte[]>(entry.KeyBuffer, entry.DataBuffer);
+                foreach (IndexEntry entry in FindAllIn(query, _rootNode))
+                {
+                    yield return new KeyValuePair<byte[], byte[]>(entry.KeyBuffer, entry.DataBuffer);
+                }
             }
         }
 
@@ -196,11 +216,17 @@ namespace DiscUtils.Ntfs
 
         public bool Remove(byte[] key)
         {
-            _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
+            IndexEntry overflowEntry;
+            bool found = false;
+
+            lock (_lock)
+            {
+                _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
                                             _file.MftRecordFreeSpace(AttributeType.IndexRoot, _name);
 
-            IndexEntry overflowEntry;
-            bool found = _rootNode.RemoveEntry(key, out overflowEntry);
+                found = _rootNode.RemoveEntry(key, out overflowEntry);
+            }
+
             if (overflowEntry != null)
             {
                 throw new IOException("Error removing entry, root overflowed");
@@ -214,10 +240,13 @@ namespace DiscUtils.Ntfs
             IndexEntry entry;
             IndexNode node;
 
-            if (_rootNode.TryFindEntry(key, out entry, out node))
+            lock (_lock)
             {
-                value = entry.DataBuffer;
-                return true;
+                if (_rootNode.TryFindEntry(key, out entry, out node))
+                {
+                    value = entry.DataBuffer;
+                    return true;
+                }
             }
 
             value = default(byte[]);
@@ -313,12 +342,15 @@ namespace DiscUtils.Ntfs
 
         internal bool ShrinkRoot()
         {
-            if (_rootNode.Depose())
+            lock (_lock)
             {
-                WriteRootNodeToDisk();
-                _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
-                                                _file.MftRecordFreeSpace(AttributeType.IndexRoot, _name);
-                return true;
+                if (_rootNode.Depose())
+                {
+                    WriteRootNodeToDisk();
+                    _rootNode.TotalSpaceAvailable = _rootNode.CalcSize() +
+                                                    _file.MftRecordFreeSpace(AttributeType.IndexRoot, _name);
+                    return true;
+                }
             }
 
             return false;
@@ -326,48 +358,57 @@ namespace DiscUtils.Ntfs
 
         internal IndexBlock GetSubBlock(IndexEntry parentEntry)
         {
-            IndexBlock block = _blockCache[parentEntry.ChildrenVirtualCluster];
-            if (block == null)
+            lock (_lock)
             {
-                block = new IndexBlock(this, false, parentEntry, _bpb);
-                _blockCache[parentEntry.ChildrenVirtualCluster] = block;
-            }
+                IndexBlock block = _blockCache[parentEntry.ChildrenVirtualCluster];
+                if (block == null)
+                {
+                    block = new IndexBlock(this, false, parentEntry, _bpb);
+                    _blockCache[parentEntry.ChildrenVirtualCluster] = block;
+                }
 
-            return block;
+                return block;
+            }
         }
 
         internal IndexBlock AllocateBlock(IndexEntry parentEntry)
         {
-            if (AllocationStream == null)
+            lock (_lock)
             {
-                _file.CreateStream(AttributeType.IndexAllocation, _name);
-                AllocationStream = _file.OpenStream(AttributeType.IndexAllocation, _name, FileAccess.ReadWrite);
+                if (AllocationStream == null)
+                {
+                    _file.CreateStream(AttributeType.IndexAllocation, _name);
+                    AllocationStream = _file.OpenStream(AttributeType.IndexAllocation, _name, FileAccess.ReadWrite);
+                }
+
+                if (_indexBitmap == null)
+                {
+                    _file.CreateStream(AttributeType.Bitmap, _name);
+                    _indexBitmap = new Bitmap(_file.OpenStream(AttributeType.Bitmap, _name, FileAccess.ReadWrite),
+                        long.MaxValue);
+                }
+
+                long idx = _indexBitmap.AllocateFirstAvailable(0);
+
+                parentEntry.ChildrenVirtualCluster = idx *
+                                                     MathUtilities.Ceil(_bpb.IndexBufferSize,
+                                                         _bpb.SectorsPerCluster * _bpb.BytesPerSector);
+                parentEntry.Flags |= IndexEntryFlags.Node;
+
+                IndexBlock block = IndexBlock.Initialize(this, false, parentEntry, _bpb);
+                _blockCache[parentEntry.ChildrenVirtualCluster] = block;
+                return block;
             }
-
-            if (_indexBitmap == null)
-            {
-                _file.CreateStream(AttributeType.Bitmap, _name);
-                _indexBitmap = new Bitmap(_file.OpenStream(AttributeType.Bitmap, _name, FileAccess.ReadWrite),
-                    long.MaxValue);
-            }
-
-            long idx = _indexBitmap.AllocateFirstAvailable(0);
-
-            parentEntry.ChildrenVirtualCluster = idx *
-                                                 MathUtilities.Ceil(_bpb.IndexBufferSize,
-                                                     _bpb.SectorsPerCluster * _bpb.BytesPerSector);
-            parentEntry.Flags |= IndexEntryFlags.Node;
-
-            IndexBlock block = IndexBlock.Initialize(this, false, parentEntry, _bpb);
-            _blockCache[parentEntry.ChildrenVirtualCluster] = block;
-            return block;
         }
 
         internal void FreeBlock(long vcn)
         {
-            long idx = vcn / MathUtilities.Ceil(_bpb.IndexBufferSize, _bpb.SectorsPerCluster * _bpb.BytesPerSector);
-            _indexBitmap.MarkAbsent(idx);
-            _blockCache.Remove(vcn);
+            lock (_lock)
+            {
+                long idx = vcn / MathUtilities.Ceil(_bpb.IndexBufferSize, _bpb.SectorsPerCluster * _bpb.BytesPerSector);
+                _indexBitmap.MarkAbsent(idx);
+                _blockCache.Remove(vcn);
+            }
         }
 
         internal int Compare(byte[] x, byte[] y)
@@ -382,66 +423,72 @@ namespace DiscUtils.Ntfs
 
         protected IEnumerable<IndexEntry> Enumerate(IndexNode node)
         {
-            foreach (IndexEntry focus in node.Entries)
+            lock (_lock)
             {
-                if ((focus.Flags & IndexEntryFlags.Node) != 0)
+                foreach (IndexEntry focus in node.Entries)
                 {
-                    IndexBlock block = GetSubBlock(focus);
-                    foreach (IndexEntry subEntry in Enumerate(block.Node))
+                    if ((focus.Flags & IndexEntryFlags.Node) != 0)
                     {
-                        yield return subEntry;
+                        IndexBlock block = GetSubBlock(focus);
+                        foreach (IndexEntry subEntry in Enumerate(block.Node))
+                        {
+                            yield return subEntry;
+                        }
                     }
-                }
 
-                if ((focus.Flags & IndexEntryFlags.End) == 0)
-                {
-                    yield return focus;
+                    if ((focus.Flags & IndexEntryFlags.End) == 0)
+                    {
+                        yield return focus;
+                    }
                 }
             }
         }
 
         private IEnumerable<IndexEntry> FindAllIn(IComparable<byte[]> query, IndexNode node)
         {
-            foreach (IndexEntry focus in node.Entries)
+            lock (_lock)
             {
-                bool searchChildren = true;
-                bool matches = false;
-                bool keepIterating = true;
-
-                if ((focus.Flags & IndexEntryFlags.End) == 0)
+                foreach (IndexEntry focus in node.Entries)
                 {
-                    int compVal = query.CompareTo(focus.KeyBuffer);
-                    if (compVal == 0)
-                    {
-                        matches = true;
-                    }
-                    else if (compVal > 0)
-                    {
-                        searchChildren = false;
-                    }
-                    else if (compVal < 0)
-                    {
-                        keepIterating = false;
-                    }
-                }
+                    bool searchChildren = true;
+                    bool matches = false;
+                    bool keepIterating = true;
 
-                if (searchChildren && (focus.Flags & IndexEntryFlags.Node) != 0)
-                {
-                    IndexBlock block = GetSubBlock(focus);
-                    foreach (IndexEntry entry in FindAllIn(query, block.Node))
+                    if ((focus.Flags & IndexEntryFlags.End) == 0)
                     {
-                        yield return entry;
+                        int compVal = query.CompareTo(focus.KeyBuffer);
+                        if (compVal == 0)
+                        {
+                            matches = true;
+                        }
+                        else if (compVal > 0)
+                        {
+                            searchChildren = false;
+                        }
+                        else if (compVal < 0)
+                        {
+                            keepIterating = false;
+                        }
                     }
-                }
 
-                if (matches)
-                {
-                    yield return focus;
-                }
+                    if (searchChildren && (focus.Flags & IndexEntryFlags.Node) != 0)
+                    {
+                        IndexBlock block = GetSubBlock(focus);
+                        foreach (IndexEntry entry in FindAllIn(query, block.Node))
+                        {
+                            yield return entry;
+                        }
+                    }
 
-                if (!keepIterating)
-                {
-                    yield break;
+                    if (matches)
+                    {
+                        yield return focus;
+                    }
+
+                    if (!keepIterating)
+                    {
+                        yield break;
+                    }
                 }
             }
         }

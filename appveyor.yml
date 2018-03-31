@@ -1,0 +1,22 @@
+version: 0.1.0.{build}
+branches:
+  only:
+  - master
+skip_tags: true
+image: Visual Studio 2017
+configuration: Debug
+platform: Any CPU
+build:
+  project: nDiscUtils.sln
+  verbosity: detailed
+artifacts:
+- path: bin/Debug/nDiscUtils.exe
+  name: ndiscutils.exe
+deploy:
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: nDiscUtils $(appveyor_build_version)
+  auth_token:
+    secure: Dk5VMb+gcTeoyDHWS4Vi1g09ps2PrW7ohAOB/FWnC5DLNZSukUPCPgT+QQLgcoP0
+  repository: Lukas0610/nDiscUtils
+  artifact: ndiscutils.exe
