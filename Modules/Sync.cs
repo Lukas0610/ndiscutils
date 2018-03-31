@@ -169,6 +169,7 @@ namespace nDiscUtils.Modules
             var lastSpeedString = "";
 
             var lastTotalSpeedMeasure = DateTime.Now;
+            var totalSpeedMeasureStart = DateTime.Now;
             var lastTotalCurrent = 0L;
             var totalCurrent = 0L;
             var lastTotalSpeedString = "";
@@ -342,9 +343,7 @@ namespace nDiscUtils.Modules
                             var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
                             if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
                             {
-                                var currentDelta = totalCurrent - lastTotalCurrent;
-                                var averageSpeed = (currentDelta <= 0 ? 0.0 :
-                                    currentDelta / totalSpeedMeasureDiff.TotalSeconds);
+                                var averageSpeed = totalCurrent / speedMeasureNow.Subtract(totalSpeedMeasureStart).TotalSeconds;
 
                                 var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
                                 TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
