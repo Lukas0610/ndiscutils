@@ -19,13 +19,14 @@
 using System;
 using CommandLine;
 using nDiscUtils.Modules;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils
 {
 
     public static class Program
     {
-
+        
         public static int Main(string[] args)
         {                        
             return Parser.Default.ParseArguments<
@@ -48,7 +49,7 @@ namespace nDiscUtils
                     (MountPartition.Options opts) => MountPartition.Run(opts),
                     (Ramdisk.Options opts) => Ramdisk.Run(opts),
                     (Sync.Options opts) => Sync.Run(opts),
-                    (errcode) => 1
+                    (errcode) => INVALID_ARGUMENT
                 );
         }
 

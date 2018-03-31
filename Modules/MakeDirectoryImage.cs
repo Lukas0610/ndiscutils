@@ -24,6 +24,7 @@ using DiscUtils.Iso9660;
 using DiscUtils.SquashFs;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -45,7 +46,7 @@ namespace nDiscUtils.Modules
 
                 default:
                     Logger.Error("Requested file system is not supported (Requested {0}, supported: ISO, SquashFS)", opts.FileSystem);
-                    return 1;
+                    return INVALID_ARGUMENT;
             }
 
             Logger.Info("Gathering files image \"{0}\"", opts.Path);
@@ -109,13 +110,13 @@ namespace nDiscUtils.Modules
                 }
 
                 default:
-                    return 1;
+                    return INVALID_ARGUMENT;
             }
 
             Logger.Info("Done!");
 
             Cleanup(imageStream);
-            return 0;
+            return SUCCESS;
         }
 
         private static void LoopFiles(Action<string, Stream> action, string baseDirectory, LinkedList<FileInfo> files)

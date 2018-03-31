@@ -29,6 +29,7 @@ using nDiscUtils.IO;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -77,16 +78,20 @@ namespace nDiscUtils.Modules
             var beginDateTime = DateTime.Now;
             WriteBegin(beginDateTime);
 
-            StartInternal();
+            var returnCode = StartInternal();
 
             var endDateTime = DateTime.Now;
             WriteEnd(beginDateTime, endDateTime);
 
-            Logger.Fine("Finished!");
+            if (returnCode == SUCCESS)
+                Logger.Fine("Finished!");
+            else
+                Logger.Error("One or more errors occurred...");
 
+            UpdateBackgroundIfRequired(returnCode);
             WaitForUserExit();
             RestoreOldConsoleBuffer();
-            return 0;
+            return returnCode;
         }
         
         public static void Dispose()
@@ -105,7 +110,7 @@ namespace nDiscUtils.Modules
             mRightPath = "";
         }
 
-        private static void StartInternal()
+        private static int StartInternal()
         {
             Info("====== Starting Partition Table Checks ======");
 
@@ -113,7 +118,7 @@ namespace nDiscUtils.Modules
             if (!GuidPartitionTable.Detect(mLeftStream))
             {
                 Error("Could not find valid GUID Partition Table on left stream");
-                return;
+                return ERROR;
             }
             Info("Found valid GUID Partition Table on left stream");
 
@@ -121,7 +126,7 @@ namespace nDiscUtils.Modules
             if (!GuidPartitionTable.Detect(mRightStream))
             {
                 Error("Could not find valid GUID Partition Table on right stream");
-                return;
+                return ERROR;
             }
             Info("Found valid GUID Partition Table on right stream");
 
@@ -142,7 +147,7 @@ namespace nDiscUtils.Modules
             {
                 Error("Non-equal count of partitions (Left: {0}, Right {1})",
                     leftPartitionTable.Count, rightPartitionTable.Count);
-                return;
+                return ERROR;
             }
             Info("Matching count of partitions ({0})", leftPartitionTable.Count);
 
@@ -158,7 +163,7 @@ namespace nDiscUtils.Modules
                     Error("Partition{0}: Non-matching BIOS partition type " +
                         "(Left: 0x{1:X2}, Right: 0x{2:X2})", i,
                         leftPartition.BiosType, rightPartition.BiosType);
-                    return;
+                    return ERROR;
                 }
                 Info("Partition{0}: Matching BIOS partition type (0x{1:X2})", i,
                     leftPartition.BiosType);
@@ -169,7 +174,7 @@ namespace nDiscUtils.Modules
                     Error("Partition{0}: Non-matching GUID partition type " +
                         "(Left: {1}, Right: {2})", i,
                         leftPartition.GuidType, rightPartition.GuidType);
-                    return;
+                    return ERROR;
                 }
                 Info("Partition{0}: Matching GUID partition type ({1})", i,
                     leftPartition.GuidType);
@@ -180,7 +185,7 @@ namespace nDiscUtils.Modules
                     Error("Partition{0}: Non-matching physical partition type " +
                         "(Left: 0x{1:X}/{1}, Right: 0x{2:X}/{2})", i,
                         leftPartition.VolumeType, rightPartition.VolumeType);
-                    return;
+                    return ERROR;
                 }
                 Info("Partition{0}: Matching physical partition type (0x{1:X}/{1})", i,
                     leftPartition.VolumeType);
@@ -386,6 +391,8 @@ namespace nDiscUtils.Modules
                     DoByteComparison(leftPartitionStream, rightPartitionStream, i, null);
                 }
             }
+
+            return SUCCESS;
         }
 
         private static void DoMetaDataComparison(int partition, DiscFileInfo left, DiscFileInfo right)

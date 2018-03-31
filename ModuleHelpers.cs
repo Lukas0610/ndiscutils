@@ -67,6 +67,14 @@ namespace nDiscUtils
             Logger.SetDebug(opts.Debug);
         }
 
+        public static void UpdateBackgroundIfRequired(int returnCode)
+        {
+            if (returnCode == ReturnCodes.SUCCESS)
+                return;
+
+            // make background red, etc.
+        }
+
         public static int ParseSizeString(string sizeString)
         {
             var sizeChar = sizeString[sizeString.Length - 1];

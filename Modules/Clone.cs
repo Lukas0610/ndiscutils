@@ -29,6 +29,7 @@ using nDiscUtils.Modules.Events;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -171,13 +172,17 @@ namespace nDiscUtils.Modules
             mForceExactCloning = opts.ForceExactCloning;
             mFullClone = opts.FullClone;
 
-            StartInternal();
+            var returnCode = StartInternal();
 
-            Logger.Fine("Finished!");
+            if (returnCode == SUCCESS)
+                Logger.Fine("Finished!");
+            else
+                Logger.Error("One or more errors occurred...");
 
+            UpdateBackgroundIfRequired(returnCode);
             WaitForUserExit();
             RestoreOldConsoleBuffer();
-            return 0;
+            return returnCode;
         }
         
         public static void Dispose()
@@ -196,7 +201,7 @@ namespace nDiscUtils.Modules
             mDestinationPath = "";
         }
 
-        private static void StartInternal()
+        private static int StartInternal()
         {
             if (!GuidPartitionTable.Detect(mSourceStream))
                 throw new InvalidDataException(
@@ -209,7 +214,7 @@ namespace nDiscUtils.Modules
             var partitionTable = new GuidPartitionTable(mSourceStream, geometry);
 
             if (partitionTable.Count <= 0)
-                return; // nothing to clone here
+                return SUCCESS; // nothing to clone here
 
             // adjust source length
             if (FixedLengthStream.IsFixedDiskStream(mSourceStream))
@@ -240,7 +245,7 @@ namespace nDiscUtils.Modules
             {
                 Logger.Warn("Starting full clone...");
                 CloneStream(0, 0, mSourceStream, mDestinationStream);
-                return;
+                return SUCCESS;
             }
 
             Logger.Debug("Initializing new GPT partition table on destination...");
@@ -690,6 +695,8 @@ namespace nDiscUtils.Modules
                     cloneSrcFsToDestFs(srcPartitionFS.Root, destPartitionFS.Root);
                 }
             }
+
+            return SUCCESS;
         }
 
         private static void CloneStream(int partition, long taskId, Stream source, Stream destination)

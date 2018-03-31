@@ -22,6 +22,7 @@ using System.Text;
 using CommandLine;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -36,13 +37,13 @@ namespace nDiscUtils.Modules
             if (!File.Exists(opts.Path))
             {
                 Logger.Info("Could not find image \"{0}\"", opts.Path);
-                return 1;
+                return INVALID_ARGUMENT;
             }
 
             Logger.Info("Opening image \"{0}\"", opts.Path);
             var imageStream = OpenPath(opts.Path, FileMode.Open, FileAccess.Read, FileShare.None);
             if (imageStream == null)
-                return 1;
+                return INVALID_ARGUMENT;
 
             var partitionTable = FindPartitionTable(imageStream);
 
@@ -72,7 +73,7 @@ namespace nDiscUtils.Modules
             }
 
             Cleanup(imageStream);
-            return 0;
+            return SUCCESS;
         }
 
         [Verb("lspart", HelpText = "Lists the partitions located in an image or on a disk")]

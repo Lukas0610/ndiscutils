@@ -16,14 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-using System;
 using System.IO;
 using CommandLine;
-using DiscUtils;
-using DiscUtils.Fat;
-using DiscUtils.Ntfs;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -42,10 +39,10 @@ namespace nDiscUtils.Modules
                 FileShare.None);
 
             if (FormatStream(opts.FileSystem, imageStream, opts.Size, "nDiscUtils Image") == null)
-                return 1;
+                return INVALID_ARGUMENT;
 
             Cleanup(imageStream);
-            return 0;
+            return SUCCESS;
         }
 
         [Verb("mkimg", HelpText = "Create a file system image")]

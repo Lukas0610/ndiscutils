@@ -22,6 +22,7 @@ using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -40,7 +41,7 @@ namespace nDiscUtils.Modules
                 FileShare.None);
 
             if (imageStream == null)
-                return 1;
+                return INVALID_ARGUMENT;
 
             if (imageStream is FixedLengthStream fixedStream)
             {
@@ -51,7 +52,7 @@ namespace nDiscUtils.Modules
             MountStream(imageStream, opts);
 
             Cleanup(imageStream);
-            return 0;
+            return SUCCESS;
         }
 
         [Verb("mntimg", HelpText = "Mounts the file system located in an image")]

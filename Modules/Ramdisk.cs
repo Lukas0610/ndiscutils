@@ -24,6 +24,7 @@ using DiscUtils.Fat;
 using DiscUtils.Ntfs;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -40,14 +41,14 @@ namespace nDiscUtils.Modules
                 Logger.Error("Are you sure you want to mount a ramdisk as read-only?",
                     opts.FileSystem);
                 Environment.Exit(1);
-                return 1;
+                return INVALID_ARGUMENT;
             }
 
             Logger.Info("Creating memory stream with size 0x{0:X}", opts.Size);
             var memoryStream = new MemoryStream(opts.Size);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
-                return 1;
+                return INVALID_ARGUMENT;
 
             if (opts.FileSystem == "FAT")
             {
@@ -65,7 +66,7 @@ namespace nDiscUtils.Modules
             MountStream(memoryStream, opts);
 
             Cleanup(memoryStream);
-            return 0;
+            return SUCCESS;
         }
 
         [Verb("ramdisk", HelpText = "Create a memory-located mount point")]

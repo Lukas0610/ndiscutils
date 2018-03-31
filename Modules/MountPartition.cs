@@ -23,6 +23,7 @@ using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -37,7 +38,7 @@ namespace nDiscUtils.Modules
             if (opts.Partition < 0)
             {
                 Logger.Info("Invalid partition index (Expected number greater than 0)");
-                return 1;
+                return INVALID_ARGUMENT;
             }
 
             Logger.Info("Opening image \"{0}\"", opts.Path);
@@ -47,14 +48,14 @@ namespace nDiscUtils.Modules
                 FileShare.None);
 
             if (imageStream == null)
-                return 1;
+                return INVALID_ARGUMENT;
 
             var partitionTable = FindPartitionTable(imageStream);
 
             if (opts.Partition >= partitionTable.Count)
             {
                 Logger.Info("Invalid partition index (Expected number lower than than {0})", partitionTable.Count);
-                return 1;
+                return INVALID_ARGUMENT;
             }
 
             var partition = partitionTable[opts.Partition];
@@ -81,7 +82,7 @@ namespace nDiscUtils.Modules
                 MountStream(partitionStream, opts);
 
             Cleanup(imageStream);
-            return 0;
+            return SUCCESS;
         }
 
         [Verb("mntpart", HelpText = "Mounts a partition located in an image or on a disk")]

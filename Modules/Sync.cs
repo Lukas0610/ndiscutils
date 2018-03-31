@@ -25,6 +25,7 @@ using nDiscUtils.IO;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
+using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
@@ -69,16 +70,31 @@ namespace nDiscUtils.Modules
             // update advanced logging
             Logger.SetAdvancedLoggingOffset(11);
 
+            var returnCode = StartInternal(opts);
+
+            if (returnCode == SUCCESS)
+                Logger.Fine("Finished!");
+            else
+                Logger.Error("One or more errors occurred...");
+
+            UpdateBackgroundIfRequired(returnCode);
+            WaitForUserExit();
+            RestoreOldConsoleBuffer();
+            return returnCode;
+        }
+
+        private static int StartInternal(Options opts)
+        {
             if (!Directory.Exists(opts.Source))
             {
                 Logger.Error("Could not source directory \"{0}\"", opts.Source);
-                goto exit;
+                return INVALID_ARGUMENT;
             }
 
             if (!Directory.Exists(opts.Target))
             {
                 Logger.Error("Could not target directory \"{0}\"", opts.Target);
-                goto exit;
+                return INVALID_ARGUMENT;
             }
 
             string[] comparators = null;
@@ -95,7 +111,7 @@ namespace nDiscUtils.Modules
 
                 Logger.Error("Found unsupported comparator: \"{0}\"", unsupportedComparator);
                 Logger.Error("Supported comparators: [ {0} ]", string.Join(", ", kSupportedComparators));
-                goto exit;
+                return INVALID_ARGUMENT;
             }
 
             Logger.Info("Indexing files and directories in \"{0}\"", opts.Source);
@@ -125,13 +141,13 @@ namespace nDiscUtils.Modules
                     foreach (var subDir in parentDir.GetDirectories())
                     {
                         if (baseDirectory.Root.FullName == baseDirectory.FullName &&
-                            parentDir == baseDirectory && 
-                            (subDir.Name == "$RECYCLE.BIN" || 
+                            parentDir == baseDirectory &&
+                            (subDir.Name == "$RECYCLE.BIN" ||
                             subDir.Name == "System Volume Information"))
                         {
                             Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
                             continue;
-                        }                        
+                        }
 
                         directoryList.Add(subDir);
                         directoryCount++;
@@ -149,12 +165,12 @@ namespace nDiscUtils.Modules
 
             recursiveFileIndexer(baseDirectory);
 
-            Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}", 
+            Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}",
                 directoryCount, (directoryCount == 1 ? "y" : "ies"),
                 fileCount, (fileCount == 1 ? "" : "s"),
                 FormatBytes(fileSize, 3));
 
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", 0, fileCount);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", 0, fileCount);
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, directoryCount);
 
             var absoluteSource = Path.GetFullPath(opts.Source).TrimEnd('\\');
@@ -182,7 +198,7 @@ namespace nDiscUtils.Modules
                 ResetColor();
 
                 WriteFormat(ContentLeft, ContentTop + 3, "File {0} / {1}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", currentFile, fileCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
 
                 var fileProgress = ((double)currentFile / fileCount) * 100;
@@ -396,11 +412,13 @@ namespace nDiscUtils.Modules
                     {
                         Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                         Logger.Exception(ioex);
+                        return ERROR;
                     }
                     catch (UnauthorizedAccessException uaex)
                     {
                         Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                         Logger.Exception(uaex);
+                        return ERROR;
                     }
                 }
                 else
@@ -415,11 +433,11 @@ namespace nDiscUtils.Modules
 
                 var relativePath = sourceDirectory.FullName.Substring(absoluteSource.Length).Trim('\\');
                 var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
-                
+
                 Logger.Info("Processing directory \"{0}\"...", sourceDirectory.FullName);
 
                 ResetColor();
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", currentFile, fileCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
 
                 try
@@ -451,20 +469,17 @@ namespace nDiscUtils.Modules
                 {
                     Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                     Logger.Exception(ioex);
+                    return ERROR;
                 }
                 catch (UnauthorizedAccessException uaex)
                 {
                     Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
                     Logger.Exception(uaex);
+                    return ERROR;
                 }
             }
 
-            Logger.Fine("Finished!");
-
-exit:
-            WaitForUserExit();
-            RestoreOldConsoleBuffer();
-            return 0;
+            return SUCCESS;
         }
 
         private static bool HasComparator(string[] comparators, string comp)
