@@ -257,117 +257,117 @@ namespace nDiscUtils.Modules
                     var lastSpeedMeasure = DateTime.Now;
                     var lastSpeedCurrent = 0L;
 
-                    // check target directory structure
-                    if (!targetFile.Directory.Exists)
-                        targetFile.Directory.CreateRecursive();
-
-                    Write(ContentLeft + 1, ContentTop + 8, ' ', relativeProgressWidth);
-
-                    using (var sourceStream = sourceFile.OpenRead())
-                    using (var targetStream = new FileStream(targetFile.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
-                    {
-                        var buffer = new byte[64 * 1024];
-
-                        targetStream.SetLength(sourceStream.Length);
-
-                        while (sourceStream.Position < sourceStream.Length)
-                        {
-                            var read = sourceStream.Read(buffer, 0, buffer.Length);
-                            targetStream.Write(buffer, 0, read);
-
-                            currentFileBytes += read;
-                            totalCurrent += read;
-
-                            var speedMeasureNow = DateTime.Now;
-                            var speedMeasureDiff = speedMeasureNow.Subtract(lastSpeedMeasure);
-                            if (speedMeasureDiff.TotalSeconds >= 1.0 || sourceStream.Position == sourceStream.Length)
-                            {
-                                var current = sourceStream.Position;
-                                var total = sourceStream.Length;
-
-                                var progress = ((double)current / total) * 100;
-                                var widthProgress = (int)Math.Min((progress / 100) * relativeProgressWidth, relativeProgressWidth);
-
-                                var currentDelta = current - lastSpeedCurrent;
-                                var averageSpeed = (currentDelta <= 0 ? 0.0 :
-                                    currentDelta / speedMeasureDiff.TotalSeconds);
-
-                                var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
-                                TimeSpan.FromSeconds((total - current) / averageSpeed));
-
-                                ResetColor();
-
-                                Write(ContentLeft + 1, ContentTop + 8, '|', widthProgress);
-                                WriteFormat(ContentLeft, ContentTop + 9, "{0:0.00} %  ", progress);
-
-                                var filesProgressString = string.Format(
-                                    "{0} / {1}",
-                                    FormatBytes(currentFileBytes, 3), FormatBytes(fileSize, 3));
-
-                                var filesProgressPadding = "";
-                                if (filesProgressString.Length < lastFilesProgressString.Length)
-                                    filesProgressPadding = new string(' ', lastFilesProgressString.Length - filesProgressString.Length);
-                                lastFilesProgressString = filesProgressString;
-
-                                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 3,
-                                    "{0}{1}", filesProgressPadding, filesProgressString);
-
-                                var progressString = string.Format(
-                                    "{0} / {1}",
-                                    FormatBytes(current, 3), FormatBytes(total, 3));
-
-                                var progressPadding = "";
-                                if (progressString.Length < lastProgressString.Length)
-                                    progressPadding = new string(' ', lastProgressString.Length - progressString.Length);
-                                lastProgressString = progressString;
-
-                                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 7,
-                                    "{0}{1}", progressPadding, progressString);
-
-                                var speedString = string.Format(
-                                    "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
-                                    estimatedEnd, FormatBytes(averageSpeed, 3));
-
-                                var speedPadding = "";
-                                if (speedString.Length < lastSpeedString.Length)
-                                    speedPadding = new string(' ', lastSpeedString.Length - speedString.Length);
-                                lastSpeedString = speedString;
-
-                                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 9,
-                                    "{0}{1}", speedPadding, speedString);
-
-                                lastSpeedCurrent = current;
-                                lastSpeedMeasure = speedMeasureNow;
-                            }
-
-                            var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
-                            if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
-                            {
-                                var averageSpeed = totalCurrent / speedMeasureNow.Subtract(totalSpeedMeasureStart).TotalSeconds;
-
-                                var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
-                                TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
-
-                                var speedString = string.Format(
-                                    "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
-                                    estimatedEnd, FormatBytes(averageSpeed, 3));
-
-                                var speedPadding = "";
-                                if (speedString.Length < lastTotalSpeedString.Length)
-                                    speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
-                                lastTotalSpeedString = speedString;
-
-                                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
-                                    "{0}{1}", speedPadding, speedString);
-
-                                lastTotalSpeedMeasure = speedMeasureNow;
-                                lastTotalCurrent = totalCurrent;
-                            }
-                        }
-                    }
-
                     try
                     {
+                        // check target directory structure
+                        if (!targetFile.Directory.Exists)
+                            targetFile.Directory.CreateRecursive();
+
+                        Write(ContentLeft + 1, ContentTop + 8, ' ', relativeProgressWidth);
+
+                        using (var sourceStream = sourceFile.OpenRead())
+                        using (var targetStream = new FileStream(targetFile.FullName, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
+                        {
+                            var buffer = new byte[64 * 1024];
+
+                            targetStream.SetLength(sourceStream.Length);
+
+                            while (sourceStream.Position < sourceStream.Length)
+                            {
+                                var read = sourceStream.Read(buffer, 0, buffer.Length);
+                                targetStream.Write(buffer, 0, read);
+
+                                currentFileBytes += read;
+                                totalCurrent += read;
+
+                                var speedMeasureNow = DateTime.Now;
+                                var speedMeasureDiff = speedMeasureNow.Subtract(lastSpeedMeasure);
+                                if (speedMeasureDiff.TotalSeconds >= 1.0 || sourceStream.Position == sourceStream.Length)
+                                {
+                                    var current = sourceStream.Position;
+                                    var total = sourceStream.Length;
+
+                                    var progress = ((double)current / total) * 100;
+                                    var widthProgress = (int)Math.Min((progress / 100) * relativeProgressWidth, relativeProgressWidth);
+
+                                    var currentDelta = current - lastSpeedCurrent;
+                                    var averageSpeed = (currentDelta <= 0 ? 0.0 :
+                                        currentDelta / speedMeasureDiff.TotalSeconds);
+
+                                    var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
+                                    TimeSpan.FromSeconds((total - current) / averageSpeed));
+
+                                    ResetColor();
+
+                                    Write(ContentLeft + 1, ContentTop + 8, '|', widthProgress);
+                                    WriteFormat(ContentLeft, ContentTop + 9, "{0:0.00} %  ", progress);
+
+                                    var filesProgressString = string.Format(
+                                        "{0} / {1}",
+                                        FormatBytes(currentFileBytes, 3), FormatBytes(fileSize, 3));
+
+                                    var filesProgressPadding = "";
+                                    if (filesProgressString.Length < lastFilesProgressString.Length)
+                                        filesProgressPadding = new string(' ', lastFilesProgressString.Length - filesProgressString.Length);
+                                    lastFilesProgressString = filesProgressString;
+
+                                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 3,
+                                        "{0}{1}", filesProgressPadding, filesProgressString);
+
+                                    var progressString = string.Format(
+                                        "{0} / {1}",
+                                        FormatBytes(current, 3), FormatBytes(total, 3));
+
+                                    var progressPadding = "";
+                                    if (progressString.Length < lastProgressString.Length)
+                                        progressPadding = new string(' ', lastProgressString.Length - progressString.Length);
+                                    lastProgressString = progressString;
+
+                                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 7,
+                                        "{0}{1}", progressPadding, progressString);
+
+                                    var speedString = string.Format(
+                                        "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
+                                        estimatedEnd, FormatBytes(averageSpeed, 3));
+
+                                    var speedPadding = "";
+                                    if (speedString.Length < lastSpeedString.Length)
+                                        speedPadding = new string(' ', lastSpeedString.Length - speedString.Length);
+                                    lastSpeedString = speedString;
+
+                                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 9,
+                                        "{0}{1}", speedPadding, speedString);
+
+                                    lastSpeedCurrent = current;
+                                    lastSpeedMeasure = speedMeasureNow;
+                                }
+
+                                var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
+                                if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
+                                {
+                                    var averageSpeed = totalCurrent / speedMeasureNow.Subtract(totalSpeedMeasureStart).TotalSeconds;
+
+                                    var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
+                                    TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
+
+                                    var speedString = string.Format(
+                                        "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
+                                        estimatedEnd, FormatBytes(averageSpeed, 3));
+
+                                    var speedPadding = "";
+                                    if (speedString.Length < lastTotalSpeedString.Length)
+                                        speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
+                                    lastTotalSpeedString = speedString;
+
+                                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
+                                        "{0}{1}", speedPadding, speedString);
+
+                                    lastTotalSpeedMeasure = speedMeasureNow;
+                                    lastTotalCurrent = totalCurrent;
+                                }
+                            }
+                        }
+
                         // transfering dates
                         if (!opts.SkipDates && !opts.SkipFileMeta)
                         {
