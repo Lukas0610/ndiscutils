@@ -58,7 +58,7 @@ namespace nDiscUtils.Modules
             ResetColor();
 
             // print source/destination
-            WriteFormat(ContentLeft, ContentTop, "Source:      {0}", opts.Source);
+            WriteFormat(ContentLeft, ContentTop,     "Source:      {0}", opts.Source);
             WriteFormat(ContentLeft, ContentTop + 1, "Destination: {0}", opts.Destination);
 
             // print progress placeholder

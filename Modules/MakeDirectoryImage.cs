@@ -20,10 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CommandLine;
-using DiscUtils;
-using DiscUtils.Fat;
 using DiscUtils.Iso9660;
-using DiscUtils.Ntfs;
 using DiscUtils.SquashFs;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
@@ -73,7 +70,7 @@ namespace nDiscUtils.Modules
                 {
                     foreach (var subDir in parentDir.GetDirectories())
                     {
-                        Logger.Info("Advancing recursion into \"{0}\"", subDir.FullName);
+                        Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
                         recursiveFileIndexer(subDir);
                     }
                 }

@@ -36,6 +36,7 @@ namespace nDiscUtils
                 MountImage.Options,
                 Ramdisk.Options,
                 MakeImage.Options,
+                Sync.Options,
                 MakeDirectoryImage.Options>(args)
                 .MapResult(
                     (Clone.Options opts) => Clone.Run(opts),
@@ -46,6 +47,7 @@ namespace nDiscUtils
                     (Ramdisk.Options opts) => Ramdisk.Run(opts),
                     (MakeImage.Options opts) => MakeImage.Run(opts),
                     (MakeDirectoryImage.Options opts) => MakeDirectoryImage.Run(opts),
+                    (Sync.Options opts) => Sync.Run(opts),
                     (errcode) => 1
                 );
         }

@@ -51,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayUtils.cs" />
+    <Compile Include="IO\DirectoryInfoExtensions.cs" />
     <Compile Include="IO\DiscHandler.cs" />
     <Compile Include="IO\FixedLengthStream.cs" />
     <Compile Include="IO\PlatformFileHandler.cs" />
@@ -62,6 +64,7 @@
     <Compile Include="Modules\Events\CloneProgressEventHandler.cs" />
     <Compile Include="Modules\MakeDirectoryImage.cs" />
     <Compile Include="Modules\MakeImage.cs" />
+    <Compile Include="Modules\Sync.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="nConsole.cs" />
     <Compile Include="Options\BaseMountOptions.cs" />
