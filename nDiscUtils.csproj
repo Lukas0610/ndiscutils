@@ -56,6 +56,8 @@
     <Compile Include="IO\DiscHandler.cs" />
     <Compile Include="IO\FixedLengthStream.cs" />
     <Compile Include="IO\PlatformFileHandler.cs" />
+    <Compile Include="IO\SmartData.cs" />
+    <Compile Include="IO\SmartValueIdeality.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="LogType.cs" />
     <Compile Include="Modules\Clone.cs" />
@@ -64,8 +66,10 @@
     <Compile Include="Modules\Events\CloneProgressEventHandler.cs" />
     <Compile Include="Modules\MakeDirectoryImage.cs" />
     <Compile Include="Modules\MakeImage.cs" />
+    <Compile Include="Modules\Smart.cs" />
     <Compile Include="Modules\Sync.cs" />
     <Compile Include="NativeMethods.cs" />
+    <Compile Include="Native\STORAGE_PREDICT_FAILURE.cs" />
     <Compile Include="nConsole.cs" />
     <Compile Include="Options\BaseMountOptions.cs" />
     <Compile Include="Options\BaseOptions.cs" />

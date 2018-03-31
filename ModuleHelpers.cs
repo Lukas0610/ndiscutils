@@ -275,7 +275,9 @@ namespace nDiscUtils
         {
             int suffix = 0;
 
-            while (input / 1024.0 >= 0.9)
+            while (input / 1024.0 >= 0.9 
+                && !double.IsNaN(input / 1024.0) 
+                && !double.IsInfinity(input / 1024.0))
             {
                 input /= 1024.0;
                 suffix++;

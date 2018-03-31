@@ -51,14 +51,15 @@ namespace nDiscUtils.Modules
             WriteFormat(ContentLeft, ContentTop,     "Source:      {0}", opts.Source);
             WriteFormat(ContentLeft, ContentTop + 1, "Destination: {0}", opts.Target);
             
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0:8} / {1:8}", 0, 0);
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0:8} / {1:8}", 0, 0);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", 0, 0);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, 0);
 
             // print progress placeholder
             Write(ContentLeft, ContentTop + 3, "0 / 0");
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 3, "0 Bytes / 0 Bytes");
             Write(ContentLeft, ContentTop + 4, '[');
             Write(ContentLeft + ContentWidth, ContentTop + 4, ']');
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5, "ETA: 00:00:00  @  0 Bytes/s");
 
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 7, "0 Bytes / 0 Bytes");
             Write(ContentLeft, ContentTop + 8, '[');
@@ -98,8 +99,9 @@ namespace nDiscUtils.Modules
             }
 
             Logger.Info("Indexing files and directories in \"{0}\"", opts.Source);
-            var fileList = new LinkedList<FileInfo>();
-            var directoryList = new LinkedList<DirectoryInfo>();
+            var fileList = new List<FileInfo>();
+            var directoryList = new List<DirectoryInfo>();
+            var baseDirectory = new DirectoryInfo(opts.Source);
             long fileSize = 0, fileCount = 0, directoryCount = 0;
 
             Action<DirectoryInfo> recursiveFileIndexer = null;
@@ -109,7 +111,7 @@ namespace nDiscUtils.Modules
                 {
                     foreach (var file in parentDir.GetFiles())
                     {
-                        fileList.AddLast(file);
+                        fileList.Add(file);
 
                         fileCount++;
                         fileSize += file.Length;
@@ -122,8 +124,20 @@ namespace nDiscUtils.Modules
                 {
                     foreach (var subDir in parentDir.GetDirectories())
                     {
-                        directoryList.AddLast(subDir);
+                        if (baseDirectory.Root.FullName == baseDirectory.FullName &&
+                            parentDir == baseDirectory && 
+                            (subDir.Name == "$RECYCLE.BIN" || 
+                            subDir.Name == "System Volume Information"))
+                        {
+                            Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
+                            continue;
+                        }                        
+
+                        directoryList.Add(subDir);
                         directoryCount++;
+
+                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", 0, fileCount);
+                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, directoryCount);
 
                         Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
                         recursiveFileIndexer(subDir);
@@ -133,7 +147,7 @@ namespace nDiscUtils.Modules
                 catch (UnauthorizedAccessException) { }
             });
 
-            recursiveFileIndexer(new DirectoryInfo(opts.Source));
+            recursiveFileIndexer(baseDirectory);
 
             Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}", 
                 directoryCount, (directoryCount == 1 ? "y" : "ies"),
@@ -154,6 +168,11 @@ namespace nDiscUtils.Modules
             var lastProgressString = "";
             var lastSpeedString = "";
 
+            var lastTotalSpeedMeasure = DateTime.Now;
+            var lastTotalCurrent = 0L;
+            var totalCurrent = 0L;
+            var lastTotalSpeedString = "";
+
             foreach (var sourceFile in fileList)
             {
                 var relativeProgressWidth = ContentWidth - 1;
@@ -173,7 +192,7 @@ namespace nDiscUtils.Modules
                 var relativePath = sourceFile.FullName.Substring(absoluteSource.Length).Trim('\\');
                 var targetFile = new FileInfo(Path.Combine(absoluteTarget, relativePath));
 
-                Logger.Info("Processing file \"{0}\"...", relativePath);
+                Logger.Debug("Processing file \"{0}\"...", relativePath);
 
                 if (!targetFile.Exists || opts.Comparators == null)
                     needsUpdate = true;
@@ -256,9 +275,10 @@ namespace nDiscUtils.Modules
                             targetStream.Write(buffer, 0, read);
 
                             currentFileBytes += read;
+                            totalCurrent += read;
 
                             var speedMeasureNow = DateTime.Now;
-                            var speedMeasureDiff = DateTime.Now.Subtract(lastSpeedMeasure);
+                            var speedMeasureDiff = speedMeasureNow.Subtract(lastSpeedMeasure);
                             if (speedMeasureDiff.TotalSeconds >= 1.0 || sourceStream.Position == sourceStream.Length)
                             {
                                 var current = sourceStream.Position;
@@ -318,33 +338,72 @@ namespace nDiscUtils.Modules
                                 lastSpeedCurrent = current;
                                 lastSpeedMeasure = speedMeasureNow;
                             }
+
+                            var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
+                            if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
+                            {
+                                var currentDelta = totalCurrent - lastTotalCurrent;
+                                var averageSpeed = (currentDelta <= 0 ? 0.0 :
+                                    currentDelta / totalSpeedMeasureDiff.TotalSeconds);
+
+                                var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
+                                TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
+
+                                var speedString = string.Format(
+                                    "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
+                                    estimatedEnd, FormatBytes(averageSpeed, 3));
+
+                                var speedPadding = "";
+                                if (speedString.Length < lastTotalSpeedString.Length)
+                                    speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
+                                lastTotalSpeedString = speedString;
+
+                                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
+                                    "{0}{1}", speedPadding, speedString);
+
+                                lastTotalSpeedMeasure = speedMeasureNow;
+                                lastTotalCurrent = totalCurrent;
+                            }
                         }
                     }
 
                     // transfering attributes
-                    if (!opts.SkipAttributes)
+                    if (!opts.SkipAttributes && !opts.SkipFileMeta)
                     {
+                        Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
                         targetFile.Attributes = sourceFile.Attributes;
-                        targetFile.IsReadOnly = sourceFile.IsReadOnly;
                     }
 
                     // transfering dates
-                    if (!opts.SkipDates)
+                    if (!opts.SkipDates && !opts.SkipFileMeta)
                     {
+                        Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
                         targetFile.CreationTime = sourceFile.CreationTime;
                         targetFile.LastAccessTime = sourceFile.LastAccessTime;
                         targetFile.LastWriteTime = sourceFile.LastWriteTime;
                     }
 
-                    // transfering security descriptors
-                    if (!opts.SkipSecurity)
+                    try
                     {
-                        targetFile.SetAccessControl(sourceFile.GetAccessControl());
+                        // transfering security descriptors
+                        if (!opts.SkipSecurity && !opts.SkipFileMeta)
+                        {
+                            Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
+                            targetFile.SetAccessControl(sourceFile.GetAccessControl());
+                        }
+
+                        // ALWAYS sync this property at the end
+                        targetFile.IsReadOnly = sourceFile.IsReadOnly;
+                    }
+                    catch (UnauthorizedAccessException uaex)
+                    {
+                        Logger.Exception("Failed to synchronize read-only or security access control for \"{0}\"", relativePath);
+                        Logger.Exception(uaex);
                     }
                 }
                 else
                 {
-                    Logger.Verbose("Skipping files \"{0}\"!", relativePath);
+                    Logger.Info("Skipping files \"{0}\"!", relativePath);
                 }
             }
 
@@ -362,23 +421,35 @@ namespace nDiscUtils.Modules
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
 
                 // transfering attributes
-                if (!opts.SkipAttributes)
+                if (!opts.SkipAttributes && !opts.SkipDirectoryMeta)
                 {
+                    Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
                     targetDirectory.Attributes = sourceDirectory.Attributes;
                 }
 
                 // transfering dates
-                if (!opts.SkipDates)
+                if (!opts.SkipDates && !opts.SkipDirectoryMeta)
                 {
+                    Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
                     targetDirectory.CreationTime = sourceDirectory.CreationTime;
                     targetDirectory.LastAccessTime = sourceDirectory.LastAccessTime;
                     targetDirectory.LastWriteTime = sourceDirectory.LastWriteTime;
                 }
 
-                // transfering security descriptors
-                if (!opts.SkipSecurity)
+                try
                 {
-                    targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
+
+                    // transfering security descriptors
+                    if (!opts.SkipSecurity && !opts.SkipDirectoryMeta)
+                    {
+                        Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
+                        targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
+                    }
+                }
+                catch (UnauthorizedAccessException uaex)
+                {
+                    Logger.Exception("Failed to synchronize security access control for \"{0}\"", relativePath);
+                    Logger.Exception(uaex);
                 }
             }
 
@@ -408,6 +479,9 @@ exit:
             [Option('c', "comparators", HelpText = "File state comparators and their order of execution", Default = null, Required = false)]
             public string Comparators { get; set; }
 
+            [Option("no-directory-meta", HelpText = "Skip synchronizing directory attributes/dates/security", Default = false, Required = false)]
+            public bool SkipFileMeta { get; set; }
+
             [Option("no-attributes", HelpText = "Skip synchronizing file attributes", Default = false, Required = false)]
             public bool SkipAttributes { get; set; }
 
@@ -416,6 +490,18 @@ exit:
 
             [Option("no-security", HelpText = "Skip synchronizing file security data", Default = false, Required = false)]
             public bool SkipSecurity { get; set; }
+
+            [Option("no-directory-meta", HelpText = "Skip synchronizing directory attributes/dates/security", Default = false, Required = false)]
+            public bool SkipDirectoryMeta { get; set; }
+
+            [Option("no-directory-dates", HelpText = "Skip synchronizing directory attributes", Default = false, Required = false)]
+            public bool SkipDirectoryAttributes { get; set; }
+
+            [Option("no-directory-attributes", HelpText = "Skip synchronizing directory change/access/write dates", Default = false, Required = false)]
+            public bool SkipDirectoryDates { get; set; }
+
+            [Option("no-directory-security", HelpText = "Skip synchronizing directory security data", Default = false, Required = false)]
+            public bool SkipDirectorySecurity { get; set; }
 
         }
 
