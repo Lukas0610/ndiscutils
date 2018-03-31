@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Reflection;
 using DiscUtils;
 using DiscUtils.Fat;
 using DiscUtils.Ntfs;
@@ -33,10 +34,37 @@ namespace nDiscUtils
     public static class ModuleHelpers
     {
 
+        private static int osVersionPlatform = (int)Environment.OSVersion.Platform;
+
+        public static bool IsLinux
+        {
+            get
+            {
+                return (osVersionPlatform == 4) ||
+                       (osVersionPlatform == 6) ||
+                       (osVersionPlatform == 128);
+            }
+        }
+
+        public static bool UseConsoleBuffers
+        {
+            get
+            {
+                return !IsLinux
+#if DISABLE_CONSOLE_BUFFERS
+                    && false
+#endif
+                    ;
+            }
+        }
+
         public static void RunHelpers(BaseOptions opts)
         {
             if (opts.LogFile != null)
                 Logger.OpenFile(opts.LogFile);
+
+            Logger.SetVerbose(opts.Verbose);
+            Logger.SetDebug(opts.Debug);
         }
 
         public static int ParseSizeString(string sizeString)
@@ -62,9 +90,14 @@ namespace nDiscUtils
 
         public static Stream OpenPath(string path, FileMode mode, System.IO.FileAccess access, FileShare share)
         {
-            if (path.StartsWith("\\\\.\\"))
+            if (!IsLinux && path.StartsWith("\\\\.\\"))
             {
                 return PlatformFileHandler.OpenDisk(path, access, share);
+            }
+            else if (IsLinux && path.StartsWith("/dev/"))
+            {
+                // TODO: implement block device handling on Unix systems
+                return null;
             }
             else
             {
@@ -200,6 +233,80 @@ namespace nDiscUtils
             }
 
             return null;
+        }
+
+        public static WellKnownPartitionType GetWellKnownPartitionType(
+            GuidPartitionInfo partition)
+        {
+            if (partition.GuidType.Equals(GuidPartitionTypes.BiosBoot))
+                return WellKnownPartitionType.BiosBoot;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.EfiSystem))
+                return WellKnownPartitionType.EfiSystem;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.LinuxLvm))
+                return WellKnownPartitionType.LinuxLvm;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.LinuxSwap))
+                return WellKnownPartitionType.LinuxSwap;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.MicrosoftReserved))
+                return WellKnownPartitionType.MicrosoftReserved;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.WindowsBasicData))
+                return WellKnownPartitionType.WindowsNtfs; // + WindowsFat & Linux
+            else if (partition.GuidType.Equals(GuidPartitionTypes.WindowsLdmData))
+                return WellKnownPartitionType.WindowsLdmData;
+            else if (partition.GuidType.Equals(GuidPartitionTypes.WindowsLdmMetadata))
+                return WellKnownPartitionType.WindowsLdmMetadata;
+
+            return 0;
+        }
+
+        public static bool IsSupportedPartitionType(WellKnownPartitionType partitionType)
+        {
+            // Exactly clone critical partitions like BIOS/EFI boot
+            if (partitionType == WellKnownPartitionType.BiosBoot ||
+                    partitionType == WellKnownPartitionType.EfiSystem)
+                return false;
+
+            return true;
+        }
+
+        private static string[] BYTE_SUFFIXES =
+            { "Byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+        public static string FormatBytes(double input, int decimals)
+        {
+            int suffix = 0;
+
+            while (input / 1024.0 >= 0.9)
+            {
+                input /= 1024.0;
+                suffix++;
+            }
+
+            return string.Format("{0:0." + new string('0', decimals) + "} {1}",
+                input, BYTE_SUFFIXES[suffix]);
+        }
+
+        // https://stackoverflow.com/a/1600990
+        public static DateTime GetLinkerTime(this Assembly assembly, TimeZoneInfo target = null)
+        {
+            var filePath = assembly.Location;
+            const int c_PeHeaderOffset = 60;
+            const int c_LinkerTimestampOffset = 8;
+
+            var buffer = new byte[2048];
+
+            using (var stream = new FileStream(filePath, FileMode.Open, System.IO.FileAccess.Read))
+                stream.Read(buffer, 0, 2048);
+
+            var offset = BitConverter.ToInt32(buffer, c_PeHeaderOffset);
+            var secondsSince1970 = BitConverter.ToInt32(buffer, offset + c_LinkerTimestampOffset);
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            var linkTimeUtc = epoch.AddSeconds(secondsSince1970);
+
+            var tz = target ?? TimeZoneInfo.Local;
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(linkTimeUtc, tz);
+
+            return localTime;
         }
 
         public static void Cleanup(Stream stream)

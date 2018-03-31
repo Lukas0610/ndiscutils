@@ -36,6 +36,7 @@ namespace nDiscUtils.IO
         {
             mStream = stream;
             mLength = length;
+            mHandle = null;
         }
 
         public FixedLengthStream(SafeFileHandle handle, FileAccess access, long length)
@@ -44,6 +45,16 @@ namespace nDiscUtils.IO
 #pragma warning restore CS0618 // Typ oder Element ist veraltet
         {
             mHandle = handle;
+        }
+
+        public static bool IsFixedDiskStream(Stream stream)
+        {
+            return stream is FixedLengthStream fixedStream && fixedStream.HasHandle;
+        }
+
+        public bool HasHandle
+        {
+            get => (mHandle != null);
         }
 
         public override bool CanRead

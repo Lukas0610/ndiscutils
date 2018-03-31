@@ -29,6 +29,8 @@ namespace nDiscUtils
         public static int Main(string[] args)
         {                        
             return Parser.Default.ParseArguments<
+                Clone.Options,
+                Compare.Options,
                 ListPartitions.Options,
                 MountPartition.Options,
                 MountImage.Options,
@@ -36,6 +38,8 @@ namespace nDiscUtils
                 MakeImage.Options,
                 MakeDirectoryImage.Options>(args)
                 .MapResult(
+                    (Clone.Options opts) => Clone.Run(opts),
+                    (Compare.Options opts) => Compare.Run(opts),
                     (ListPartitions.Options opts) => ListPartitions.Run(opts),
                     (MountPartition.Options opts) => MountPartition.Run(opts),
                     (MountImage.Options opts) => MountImage.Run(opts),

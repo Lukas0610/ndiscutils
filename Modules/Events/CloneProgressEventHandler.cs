@@ -1,5 +1,5 @@
 ﻿/*
- * nDiscUtils - Advanced utilities for disc management
+ * nClone - Platform independent drive cloning tool
  * Copyright (C) 2018  Lukas Berger
  *
  * This program is free software; you can redistribute it and/or
@@ -17,23 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-using CommandLine;
-
-namespace nDiscUtils.Options
+namespace nDiscUtils.Modules.Events
 {
 
-    public abstract class BaseOptions
-    {
-
-        [Option('l', "log-file", Default = null, HelpText = "File to which all log-entries get written to", Required = false)]
-        public string LogFile { get; set; }
-
-        [Option('v', "verbose", Default = false, HelpText = "Be more verbose about what happens")]
-        public bool Verbose { get; set; }
-
-        [Option('d', "debug", Default = false, HelpText = "Print debugging output")]
-        public bool Debug { get; set; }
-
-    }
+    public delegate void CloneProgressEventHandler(CloneProgressEventArgs e);
 
 }

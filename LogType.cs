@@ -22,6 +22,9 @@ namespace nDiscUtils
 
     public enum LogType
     {
+        Verbose,
+        Debug,
+        Fine,
         Info,
         Warn,
         Error,

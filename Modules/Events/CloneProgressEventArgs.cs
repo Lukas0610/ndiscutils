@@ -1,5 +1,5 @@
 ﻿/*
- * nDiscUtils - Advanced utilities for disc management
+ * nClone - Platform independent drive cloning tool
  * Copyright (C) 2018  Lukas Berger
  *
  * This program is free software; you can redistribute it and/or
@@ -16,23 +16,38 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+using System;
 
-using CommandLine;
-
-namespace nDiscUtils.Options
+namespace nDiscUtils.Modules.Events
 {
 
-    public abstract class BaseOptions
+    public sealed class CloneProgressEventArgs : EventArgs
     {
 
-        [Option('l', "log-file", Default = null, HelpText = "File to which all log-entries get written to", Required = false)]
-        public string LogFile { get; set; }
+        private int mPartition;
+        private long mTaskId;
+        private long mTotal;
+        private long mCurrent;
 
-        [Option('v', "verbose", Default = false, HelpText = "Be more verbose about what happens")]
-        public bool Verbose { get; set; }
+        public int Partition
+            => mPartition;
 
-        [Option('d', "debug", Default = false, HelpText = "Print debugging output")]
-        public bool Debug { get; set; }
+        public long TaskID
+            => mTaskId;
+
+        public long Total
+            => mTotal;
+
+        public long Current
+            => mCurrent;
+
+        internal CloneProgressEventArgs(int partition, long taskId, long total, long current)
+        {
+            mPartition = partition;
+            mTaskId = taskId;
+            mTotal = total;
+            mCurrent = current;
+        }
 
     }
 

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using static nDiscUtils.nConsole;
 
 namespace nDiscUtils
 {
@@ -31,6 +32,22 @@ namespace nDiscUtils
         private static string mLoggingFile = null;
         private static FileStream mLoggingStream = null;
         private static StreamWriter mLoggingWriter = null;
+
+        private static bool mVerbose = false;
+        private static bool mDebug = false;
+        private static int mAdvancedLoggingOffset = 0;
+
+        private static LinkedList<ConsoleLogEntry> mConsoleLogList
+            = new LinkedList<ConsoleLogEntry>();
+
+        internal static void SetVerbose(bool flag)
+            => mVerbose = flag;
+
+        internal static void SetDebug(bool flag)
+            => mDebug = flag;
+
+        internal static void SetAdvancedLoggingOffset(int offset)
+            => mAdvancedLoggingOffset = offset;
 
         internal static void OpenFile(string loggingFile)
         {
@@ -67,12 +84,59 @@ namespace nDiscUtils
                 string.Format(format, args));
             
             // console
-            Console.WriteLine(consoleText);
+            if (UseAdvancedConsoleLogging)
+            {
+                var consoleColor = GetConsoleColor(logType);
+                var maxLogHeight = ContentHeight - mAdvancedLoggingOffset;
+                var loggingContentTop = ContentTop + mAdvancedLoggingOffset;
+                if (mConsoleLogList.Count == maxLogHeight)
+                    mConsoleLogList.RemoveLast();
+
+                // console
+                mConsoleLogList.AddFirst(new ConsoleLogEntry()
+                { Color = consoleColor, Content = consoleText });
+
+                for (int i = 0; i < maxLogHeight && i < mConsoleLogList.Count; i++)
+                {
+                    var logEntry = mConsoleLogList.ElementAt(i);
+                    var text = logEntry.Content;
+
+                    if (text.Length > ContentWidth)
+                        text = text.Substring(0, ContentWidth - 3) + "...";
+
+                    var padding = "";
+                    if (ContentWidth - text.Length > 0)
+                        padding = new string(' ', ContentWidth - text.Length);
+
+                    ForegroundColor = logEntry.Color;
+                    WriteFormat(ContentLeft, loggingContentTop + i,
+                        "{0}{1}", text, padding);
+                }
+            }
+            else
+            {
+                Console.WriteLine(consoleText);
+            }
 
             // file
             if (mLoggingWriter != null)
                 mLoggingWriter.WriteLine(fileText);
         }
+
+        public static void Verbose(string format, params object[] args)
+        {
+            if (mVerbose)
+                Log(LogType.Verbose, format, args);
+        }
+
+        public static void Debug(string format, params object[] args)
+        {
+            if (mDebug)
+                Log(LogType.Debug, format, args);
+        }
+
+        public static void Fine(string format, params object[] args)
+            => Log(LogType.Fine, format, args);
 
         public static void Info(string format, params object[] args)
             => Log(LogType.Info, format, args);
@@ -89,10 +153,37 @@ namespace nDiscUtils
         public static void Exception(Exception ex)
             => Log(LogType.Exception, "Unhandled {0} at {1}", ex.ToString(), ex.Source);
 
+        private static ConsoleColor GetConsoleColor(LogType type)
+        {
+            switch (type)
+            {
+                case LogType.Verbose:
+                    return ConsoleColor.DarkGray;
+                case LogType.Debug:
+                    return ConsoleColor.DarkBlue;
+                case LogType.Fine:
+                    return ConsoleColor.DarkGreen;
+                case LogType.Info:
+                    return ConsoleColor.Black;
+                case LogType.Warn:
+                    return ConsoleColor.DarkYellow;
+                case LogType.Error:
+                case LogType.Exception:
+                    return ConsoleColor.DarkRed;
+            }
+            return ConsoleColor.Black;
+        }
+
         private static string GetPrefix(LogType type)
         {
             switch (type)
             {
+                case LogType.Verbose:
+                    return "VERB";
+                case LogType.Debug:
+                    return "DEBG";
+                case LogType.Fine:
+                    return "FINE";
                 case LogType.Info:
                     return "INFO";
                 case LogType.Warn:
@@ -102,6 +193,15 @@ namespace nDiscUtils
                     return "FAIL";
             }
             return "UNKN";
+        }
+
+        private class ConsoleLogEntry
+        {
+
+            public ConsoleColor Color { get; set; }
+
+            public string Content { get; set; }
+
         }
 
     }
