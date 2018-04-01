@@ -35,6 +35,8 @@ namespace nDiscUtils
         public const uint FSCTL_LOCK_VOLUME = 0x00090018;
         public const uint FSCTL_UNLOCK_VOLUME = 0x0009001C;
 
+        public const uint IOCTL_STORAGE_PREDICT_FAILURE = 0x002D1100;
+
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern SafeFileHandle CreateFile(
             [MarshalAs(UnmanagedType.LPTStr)]
