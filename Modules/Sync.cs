@@ -54,9 +54,9 @@ namespace nDiscUtils.Modules
             // print source/destination
             WriteFormat(ContentLeft, ContentTop,     "Source:      {0}", opts.Source);
             WriteFormat(ContentLeft, ContentTop + 1, "Destination: {0}", opts.Target);
-            
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files:       {0,8} / {1,8}", 0, 0);
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, 0);
+
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, 0);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, 0);
 
             // print progress placeholder
             Write(ContentLeft, ContentTop + 3, "0 / 0");
@@ -90,13 +90,13 @@ namespace nDiscUtils.Modules
         {
             if (!Directory.Exists(opts.Source))
             {
-                Logger.Error("Could not source directory \"{0}\"", opts.Source);
+                Logger.Error("Could not find source directory \"{0}\"", opts.Source);
                 return INVALID_ARGUMENT;
             }
 
             if (!Directory.Exists(opts.Target))
             {
-                Logger.Error("Could not target directory \"{0}\"", opts.Target);
+                Logger.Error("Could not find target directory \"{0}\"", opts.Target);
                 return INVALID_ARGUMENT;
             }
 
@@ -155,8 +155,8 @@ namespace nDiscUtils.Modules
                         directoryList.Add(subDir);
                         directoryCount++;
 
-                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", 0, fileCount);
-                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, directoryCount);
+                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
+                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, directoryCount);
 
                         Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
                         recursiveFileIndexer(subDir);
@@ -173,8 +173,8 @@ namespace nDiscUtils.Modules
                 fileCount, (fileCount == 1 ? "" : "s"),
                 FormatBytes(fileSize, 3));
 
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", 0, fileCount);
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", 0, directoryCount);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, directoryCount);
 
             var absoluteSource = Path.GetFullPath(opts.Source).TrimEnd('\\');
             var absoluteTarget = Path.GetFullPath(opts.Target).TrimEnd('\\');
@@ -235,8 +235,8 @@ namespace nDiscUtils.Modules
                 ResetColor();
 
                 WriteFormat(ContentLeft, ContentTop + 3, "File {0} / {1}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", currentFile, fileCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", currentDirectory, directoryCount);
 
                 var fileProgress = ((double)currentFile / fileCount) * 100;
                 Write(ContentLeft + 1, ContentTop + 4, '|', (int)((fileProgress / 100) * relativeProgressWidth));
@@ -249,7 +249,7 @@ namespace nDiscUtils.Modules
                     relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
                     var targetFile = new FileInfo(Path.Combine(absoluteTarget, relativePath));
 
-                    Logger.Debug("Processing file \"{0}\"...", relativePath);
+                    Logger.Debug("Syncing file \"{0}\"...", relativePath);
 
                     if (!targetFile.Exists || opts.Comparators == null)
                         needsUpdate = true;
@@ -450,6 +450,10 @@ namespace nDiscUtils.Modules
             foreach (var sourceDirectory in directoryList)
             {
                 currentDirectory++;
+
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files: {0,10} / {1,10}", currentFile, fileCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", currentDirectory, directoryCount);
+
                 SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
             }
 
@@ -468,11 +472,12 @@ namespace nDiscUtils.Modules
                 relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
                 var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
 
-                Logger.Debug("Processing directory \"{0}\"...", sourceDirectory.FullName);
-
                 // make sure to sync empty directories as well
-                if (!targetDirectory.Exists)
-                    targetDirectory.CreateRecursive();
+                if (targetDirectory.Exists)
+                    return;
+
+                targetDirectory.CreateRecursive();
+                Logger.Debug("Syncing directory \"{0}\"...", relativePath);
 
                 // transfering dates
                 if (!opts.SkipDates && !opts.SkipDirectoryMeta)
