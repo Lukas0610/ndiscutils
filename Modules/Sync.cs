@@ -50,7 +50,7 @@ namespace nDiscUtils.Modules
             OpenNewConsoleBuffer();
             InitializeConsole();
             ResetColor();
-
+            
             // print source/destination
             WriteFormat(ContentLeft, ContentTop,     "Source:      {0}", opts.Source);
             WriteFormat(ContentLeft, ContentTop + 1, "Destination: {0}", opts.Target);
@@ -213,6 +213,7 @@ namespace nDiscUtils.Modules
                         speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
                     lastTotalSpeedString = speedString;
 
+                    ResetColor();
                     WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
                         "{0}{1}", speedPadding, speedString);
 

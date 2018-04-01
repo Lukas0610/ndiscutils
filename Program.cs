@@ -28,7 +28,7 @@ namespace nDiscUtils
     {
         
         public static int Main(string[] args)
-        {                        
+        {
             return Parser.Default.ParseArguments<
                 Clone.Options,
                 Compare.Options,
