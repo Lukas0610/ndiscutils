@@ -277,9 +277,8 @@ namespace nDiscUtils.Modules
                         var lastSpeedMeasure = DateTime.Now;
                         var lastSpeedCurrent = 0L;
 
-                        // check target directory structure
-                        if (!targetFile.Directory.Exists)
-                            targetFile.Directory.CreateRecursive();
+                        // make target directory structure
+                        SyncDirectory(opts, absoluteSource, absoluteTarget, sourceFile.Directory);
 
                         Write(ContentLeft + 1, ContentTop + 8, ' ', relativeProgressWidth);
 
@@ -429,60 +428,61 @@ namespace nDiscUtils.Modules
 
             foreach (var sourceDirectory in directoryList)
             {
-                var relativePath = sourceDirectory.FullName;
                 currentDirectory++;
-
-                try
-                {
-                    relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
-                    var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
-
-                    Logger.Debug("Processing directory \"{0}\"...", sourceDirectory.FullName);
-
-                    ResetColor();
-                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
-                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
-
-                    // make sure to sync empty directories as well
-                    if (!targetDirectory.Exists)
-                        targetDirectory.CreateRecursive();
-
-                    // transfering dates
-                    if (!opts.SkipDates && !opts.SkipDirectoryMeta)
-                    {
-                        Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
-                        targetDirectory.CreationTime = sourceDirectory.CreationTime;
-                        targetDirectory.LastAccessTime = sourceDirectory.LastAccessTime;
-                        targetDirectory.LastWriteTime = sourceDirectory.LastWriteTime;
-                    }
-
-                    // transfering security descriptors
-                    if (!opts.SkipSecurity && !opts.SkipDirectoryMeta)
-                    {
-                        Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
-                        targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
-                    }
-
-                    // transfering attributes
-                    if (!opts.SkipAttributes && !opts.SkipDirectoryMeta)
-                    {
-                        Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
-                        targetDirectory.Attributes = sourceDirectory.Attributes;
-                    }
-                }
-                catch (IOException ex)
-                {
-                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
-                    Logger.Exception(ex);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
-                    Logger.Exception(ex);
-                }
+                SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
             }
 
             return SUCCESS;
+        }
+
+        private static void SyncDirectory(Options opts, string absoluteSource, string absoluteTarget, DirectoryInfo sourceDirectory)
+        {
+            var relativePath = sourceDirectory.FullName;
+
+            try
+            {
+                relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
+                var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
+
+                Logger.Debug("Processing directory \"{0}\"...", sourceDirectory.FullName);
+
+                // make sure to sync empty directories as well
+                if (!targetDirectory.Exists)
+                    targetDirectory.CreateRecursive();
+
+                // transfering dates
+                if (!opts.SkipDates && !opts.SkipDirectoryMeta)
+                {
+                    Logger.Verbose("Syncing creation/access/write dates for \"{0}\"", relativePath);
+                    targetDirectory.CreationTime = sourceDirectory.CreationTime;
+                    targetDirectory.LastAccessTime = sourceDirectory.LastAccessTime;
+                    targetDirectory.LastWriteTime = sourceDirectory.LastWriteTime;
+                }
+
+                // transfering security descriptors
+                if (!opts.SkipSecurity && !opts.SkipDirectoryMeta)
+                {
+                    Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
+                    targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
+                }
+
+                // transfering attributes
+                if (!opts.SkipAttributes && !opts.SkipDirectoryMeta)
+                {
+                    Logger.Verbose("Syncing attributes for \"{0}\"", relativePath);
+                    targetDirectory.Attributes = sourceDirectory.Attributes;
+                }
+            }
+            catch (IOException ex)
+            {
+                Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                Logger.Exception(ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                Logger.Exception(ex);
+            }
         }
 
         private static bool HasComparator(string[] comparators, string comp)
