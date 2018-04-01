@@ -98,11 +98,32 @@ namespace nDiscUtils.Modules
             diskHandle.Dispose();
             diskHandle = null;
 
-            const string format = "{1,5}{0}{2,-40}{0}{3,-6}{0}{4,-6}{0}{5,-15}";
+            Logger.Info("");
 
-            Logger.Info(format, " | ", "ID", "Name", "Value", "Worst", "Data");
-            Logger.Info(format, "===", new string('=', 5), new string('=', 40), new string('=', 6), 
-                new string('=', 6), new string('=', 15));
+            var predictFailure = (BitConverter.ToInt32(smartAttributes, 0) != 0);
+            if (predictFailure)
+            {
+                Logger.Warn("****************************************************");
+                Logger.Warn("****************************************************");
+                Logger.Warn("***                                              ***");
+                Logger.Warn("***      IMMINENT  FAILURE  PREDICTED:  YES      ***");
+                Logger.Warn("***                                              ***");
+                Logger.Warn("****************************************************");
+                Logger.Warn("****************************************************");
+            }
+            else
+            {
+                Logger.Info("Imminent failure predicted: No");
+            }
+
+            Logger.Info("");
+
+            Logger.Info(" {1,-4}{0}{2,-40}{0}{3,-5}{0}{4,-5}{0}{5,-15}", 
+                " | ", "ID", "Name", "Value", "Worst", "Data");
+            Logger.Info("={1,-4}{0}{2,-40}{0}{3,-5}{0}{4,-5}{0}{5,-15}", 
+                "===", 
+                new string('=', 5), new string('=', 40), new string('=', 6), 
+                new string('=', 6), new string('=', 12));
 
             for (int i = 0; i < 30; i++)
             {
@@ -113,17 +134,16 @@ namespace nDiscUtils.Modules
                 var attribute = SmartAttribute.GetAttribute(attributeId, HardDiskType.HDD);
                 if (attribute == null)
                     continue;
-                
+
                 var value = smartAttributes[offset + 3];
                 var worst = smartAttributes[offset + 4];
-                var hex = "";
 
-                for (int j = 11; j >= 5; j--)
-                    hex += smartAttributes[offset + j].ToString("X");
+                var raw = new byte[8];
+                Array.Copy(smartAttributes, offset + 5, raw, 0, 7);
+                var data = BitConverter.ToInt64(raw, 0);
 
-                var data = Convert.ToInt64(hex, 16);
-
-                Logger.Info(format, " | ", "0x" + attributeId.ToString("X2"), attribute.Name, value, worst, "0x" + hex);
+                Logger.Info(" 0x{1,-2:X2}{0}{2,-40}{0}{3,-5}{0}{4,-5}{0}0x{5,-15:X12}", 
+                    " | ", attributeId, attribute.Name, value, worst, data);
             }
 
 exit:
