@@ -25,6 +25,7 @@ using System.Security.AccessControl;
 using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
+using ProcessPrivileges;
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
 using static nDiscUtils.ReturnCodes;
@@ -191,6 +192,10 @@ namespace nDiscUtils.Modules
             var lastTotalCurrent = 0L;
             var totalCurrent = 0L;
             var lastTotalSpeedString = "";
+
+            var privilegeEnabler = new PrivilegeEnabler(Process.GetCurrentProcess(),
+                Privilege.Audit, Privilege.Backup, Privilege.EnableDelegation,
+                Privilege.Restore, Privilege.Security, Privilege.TakeOwnership);
 
             foreach (var sourceFile in fileList)
             {
@@ -438,6 +443,9 @@ namespace nDiscUtils.Modules
                 currentDirectory++;
                 SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
             }
+
+            privilegeEnabler.Dispose();
+            privilegeEnabler = null;
 
             return SUCCESS;
         }
