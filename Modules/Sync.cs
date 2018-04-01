@@ -56,7 +56,7 @@ namespace nDiscUtils.Modules
             WriteFormat(ContentLeft, ContentTop + 1, "Destination: {0}", opts.Target);
 
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, 0);
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, 0);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, 0);
 
             // print progress placeholder
             Write(ContentLeft, ContentTop + 3, "0 / 0");
@@ -150,7 +150,7 @@ namespace nDiscUtils.Modules
                         directoryCount++;
 
                         WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
-                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, directoryCount);
+                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
 
                         Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
                         recursiveFileIndexer(subDir);
@@ -168,7 +168,7 @@ namespace nDiscUtils.Modules
                 FormatBytes(fileSize, 3));
 
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
-            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", 0, directoryCount);
+            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
 
             var absoluteSource = Path.GetFullPath(opts.Source).TrimEnd('\\');
             var absoluteTarget = Path.GetFullPath(opts.Target).TrimEnd('\\');
@@ -230,7 +230,7 @@ namespace nDiscUtils.Modules
 
                 WriteFormat(ContentLeft, ContentTop + 3, "File {0} / {1}", currentFile, fileCount);
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", currentDirectory, directoryCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", currentDirectory, directoryCount);
 
                 var fileProgress = ((double)currentFile / fileCount) * 100;
                 Write(ContentLeft + 1, ContentTop + 4, '|', (int)((fileProgress / 100) * relativeProgressWidth));
@@ -446,7 +446,7 @@ namespace nDiscUtils.Modules
                 currentDirectory++;
 
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files: {0,10} / {1,10}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,01} / {1,10}", currentDirectory, directoryCount);
+                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", currentDirectory, directoryCount);
 
                 SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
             }
