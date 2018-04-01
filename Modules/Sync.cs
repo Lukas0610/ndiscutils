@@ -94,12 +94,6 @@ namespace nDiscUtils.Modules
                 return INVALID_ARGUMENT;
             }
 
-            if (!Directory.Exists(opts.Target))
-            {
-                Logger.Error("Could not find target directory \"{0}\"", opts.Target);
-                return INVALID_ARGUMENT;
-            }
-
             string[] comparators = null;
 
             if (opts.Comparators != null)
