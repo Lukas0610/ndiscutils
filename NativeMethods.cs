@@ -60,16 +60,16 @@ namespace nDiscUtils
         [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool DeviceIoControl(
             SafeFileHandle hDevice,
-            
-            uint dwIoControlCode, 
-            
+
+            uint dwIoControlCode,
+
             IntPtr lpInBuffer,
-            
+
             uint nInBufferSize,
 
             IntPtr lpOutBuffer,
 
-            uint nOutBufferSize, 
+            uint nOutBufferSize,
 
             out uint lpBytesReturned,
 

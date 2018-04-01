@@ -794,6 +794,18 @@
     <Compile Include="ThirdParty\lzo.net\src\LzoStream.cs" />
     <Compile Include="ThirdParty\lzo.net\src\RingBuffer.cs" />
     <Compile Include="ThirdParty\lzo.net\src\SeekableLzoStream.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\AccessTokenHandle.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\AllocatedMemory.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\Enums.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\NativeEnums.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\NativeMethods.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\NativeStructs.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\PrivilegeAndAttributes.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\PrivilegeAndAttributesCollection.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\PrivilegeEnabler.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\Privileges.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\ProcessExtensions.cs" />
+    <Compile Include="ThirdParty\ProcessPrivileges\ProcessHandle.cs" />
     <Compile Include="ThirdParty\RailwaySharp\src\RailwaySharp\ErrorHandling.cs" />
   </ItemGroup>
   <ItemGroup>
