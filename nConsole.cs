@@ -505,14 +505,14 @@ namespace nDiscUtils
                 kPrivateBuffer.OutputMode = ConsoleOutputModeFlags.Processed;
             }
 
-            for (int y = 0; y <= Height; y++)
+            for (int y = 0; y < BufferHeight; y++)
             {
                 if (y < (ContentTop - 2) || y > (ContentTop + ContentHeight + 1))
-                    Write(0, y, ' ', Width - (!UseConsoleBuffers && y == Height ? 1 : 0));
+                    Write(0, y, ' ', BufferWidth - (!UseConsoleBuffers && y == Height ? 1 : 0));
                 else
                 {
                     Write(0, y, ' ', ContentLeft - 3);
-                    Write(ContentLeft + ContentWidth + 3, y, ' ', Width - (ContentLeft + ContentWidth) - 3);
+                    Write(ContentLeft + ContentWidth + 3, y, ' ', BufferWidth - (ContentLeft + ContentWidth) - 3);
                 }
             }
 
