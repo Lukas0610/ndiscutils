@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
@@ -398,7 +400,12 @@ namespace nDiscUtils.Modules
                         if (!opts.SkipSecurity && !opts.SkipFileMeta)
                         {
                             Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
-                            targetFile.SetAccessControl(sourceFile.GetAccessControl());
+                            var sourceSecurity = sourceFile.GetAccessControl();
+                            var targetSecurity = targetFile.GetAccessControl();
+
+                            targetSecurity.SetSecurityDescriptorSddlForm(
+                                sourceSecurity.GetSecurityDescriptorSddlForm(AccessControlSections.All));
+                            targetFile.SetAccessControl(targetSecurity);
                         }
 
                         // ALWAYS sync attributes at the end
@@ -463,7 +470,12 @@ namespace nDiscUtils.Modules
                 if (!opts.SkipSecurity && !opts.SkipDirectoryMeta)
                 {
                     Logger.Verbose("Syncing security access control for \"{0}\"", relativePath);
-                    targetDirectory.SetAccessControl(sourceDirectory.GetAccessControl());
+                    var sourceSecurity = sourceDirectory.GetAccessControl();
+                    var targetSecurity = targetDirectory.GetAccessControl();
+
+                    targetSecurity.SetSecurityDescriptorSddlForm(
+                        sourceSecurity.GetSecurityDescriptorSddlForm(AccessControlSections.All));
+                    targetDirectory.SetAccessControl(targetSecurity);
                 }
 
                 // transfering attributes
