@@ -193,6 +193,34 @@ namespace nDiscUtils.Modules
             var totalCurrent = 0L;
             var lastTotalSpeedString = "";
 
+            var updateTotalSpeedAndEta = new Action(() =>
+            {
+                var speedMeasureNow = DateTime.Now;
+                var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
+                if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
+                {
+                    var averageSpeed = totalCurrent / speedMeasureNow.Subtract(totalSpeedMeasureStart).TotalSeconds;
+
+                    var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
+                    TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
+
+                    var speedString = string.Format(
+                        "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
+                        estimatedEnd, FormatBytes(averageSpeed, 3));
+
+                    var speedPadding = "";
+                    if (speedString.Length < lastTotalSpeedString.Length)
+                        speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
+                    lastTotalSpeedString = speedString;
+
+                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
+                        "{0}{1}", speedPadding, speedString);
+
+                    lastTotalSpeedMeasure = speedMeasureNow;
+                    lastTotalCurrent = totalCurrent;
+                }
+            });
+
             var privilegeEnabler = new PrivilegeEnabler(Process.GetCurrentProcess(),
                 Privilege.Audit, Privilege.Backup, Privilege.EnableDelegation,
                 Privilege.Restore, Privilege.Security, Privilege.TakeOwnership);
@@ -366,29 +394,7 @@ namespace nDiscUtils.Modules
                                     lastSpeedMeasure = speedMeasureNow;
                                 }
 
-                                var totalSpeedMeasureDiff = speedMeasureNow.Subtract(lastTotalSpeedMeasure);
-                                if (totalSpeedMeasureDiff.TotalSeconds >= 1.0)
-                                {
-                                    var averageSpeed = totalCurrent / speedMeasureNow.Subtract(totalSpeedMeasureStart).TotalSeconds;
-
-                                    var estimatedEnd = (averageSpeed == 0 ? TimeSpan.MaxValue :
-                                    TimeSpan.FromSeconds((fileSize - totalCurrent) / averageSpeed));
-
-                                    var speedString = string.Format(
-                                        "ETA: {0:hh\\:mm\\:ss}  @  {1}/s",
-                                        estimatedEnd, FormatBytes(averageSpeed, 3));
-
-                                    var speedPadding = "";
-                                    if (speedString.Length < lastTotalSpeedString.Length)
-                                        speedPadding = new string(' ', lastTotalSpeedString.Length - speedString.Length);
-                                    lastTotalSpeedString = speedString;
-
-                                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 5,
-                                        "{0}{1}", speedPadding, speedString);
-
-                                    lastTotalSpeedMeasure = speedMeasureNow;
-                                    lastTotalCurrent = totalCurrent;
-                                }
+                                updateTotalSpeedAndEta();
                             }
                         }
 
@@ -424,6 +430,8 @@ namespace nDiscUtils.Modules
                     else
                     {
                         Logger.Debug("Skipping file \"{0}\"!", relativePath);
+                        totalCurrent += sourceFile.Length;
+                        updateTotalSpeedAndEta();
                     }
                 }
                 catch (IOException ex)
