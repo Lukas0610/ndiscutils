@@ -193,6 +193,7 @@ namespace nDiscUtils.Modules
             foreach (var sourceFile in fileList)
             {
                 var relativeProgressWidth = ContentWidth - 1;
+                var relativePath = sourceFile.FullName;
                 currentFile++;
 
                 ResetColor();
@@ -205,76 +206,77 @@ namespace nDiscUtils.Modules
                 Write(ContentLeft + 1, ContentTop + 4, '|', (int)((fileProgress / 100) * relativeProgressWidth));
                 WriteFormat(ContentLeft, ContentTop + 5, "{0:0.00} %  ", fileProgress);
 
-                var needsUpdate = false;
-                var relativePath = sourceFile.FullName.Substring(absoluteSource.Length).Trim('\\');
-                var targetFile = new FileInfo(Path.Combine(absoluteTarget, relativePath));
-
-                Logger.Debug("Processing file \"{0}\"...", relativePath);
-
-                if (!targetFile.Exists || opts.Comparators == null)
-                    needsUpdate = true;
-
-                if (comparators != null)
+                try
                 {
-                    foreach (var comparator in comparators)
+                    var needsUpdate = false;
+
+                    relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
+                    var targetFile = new FileInfo(Path.Combine(absoluteTarget, relativePath));
+
+                    Logger.Debug("Processing file \"{0}\"...", relativePath);
+
+                    if (!targetFile.Exists || opts.Comparators == null)
+                        needsUpdate = true;
+
+                    if (comparators != null)
                     {
-                        if (needsUpdate)
-                            break;
-
-                        switch (comparator)
+                        foreach (var comparator in comparators)
                         {
-                            case "length":
-                                needsUpdate = (targetFile.Length != sourceFile.Length);
+                            if (needsUpdate)
                                 break;
 
-                            case "writetime":
-                                needsUpdate = (targetFile.LastWriteTime < sourceFile.LastWriteTime);
-                                break;
-
-                            case "creationtime":
-                                needsUpdate = (targetFile.CreationTime < sourceFile.CreationTime);
-                                break;
-
-                            case "content":
-                                needsUpdate = (targetFile.Length != sourceFile.Length);
-                                if (needsUpdate)
+                            switch (comparator)
+                            {
+                                case "length":
+                                    needsUpdate = (targetFile.Length != sourceFile.Length);
                                     break;
 
-                                using (var sourceStream = sourceFile.OpenRead())
-                                using (var targetStream = targetFile.OpenRead())
-                                {
-                                    var sourceBuffer = new byte[64 * 1024];
-                                    var targetBuffer = new byte[64 * 1024];
+                                case "writetime":
+                                    needsUpdate = (targetFile.LastWriteTime < sourceFile.LastWriteTime);
+                                    break;
 
-                                    while (sourceStream.Position < sourceStream.Length)
+                                case "creationtime":
+                                    needsUpdate = (targetFile.CreationTime < sourceFile.CreationTime);
+                                    break;
+
+                                case "content":
+                                    needsUpdate = (targetFile.Length != sourceFile.Length);
+                                    if (needsUpdate)
+                                        break;
+
+                                    using (var sourceStream = sourceFile.OpenRead())
+                                    using (var targetStream = targetFile.OpenRead())
                                     {
-                                        var sourceRead = sourceStream.Read(sourceBuffer, 0, sourceBuffer.Length);
-                                        var targetRead = targetStream.Read(targetBuffer, 0, targetBuffer.Length);
+                                        var sourceBuffer = new byte[64 * 1024];
+                                        var targetBuffer = new byte[64 * 1024];
 
-                                        needsUpdate = (sourceRead != targetRead);
-                                        if (needsUpdate)
-                                            break;
+                                        while (sourceStream.Position < sourceStream.Length)
+                                        {
+                                            var sourceRead = sourceStream.Read(sourceBuffer, 0, sourceBuffer.Length);
+                                            var targetRead = targetStream.Read(targetBuffer, 0, targetBuffer.Length);
 
-                                        needsUpdate = EqualBytesLongUnrolled(sourceBuffer, targetBuffer);
-                                        if (needsUpdate)
-                                            break;
+                                            needsUpdate = (sourceRead != targetRead);
+                                            if (needsUpdate)
+                                                break;
+
+                                            needsUpdate = EqualBytesLongUnrolled(sourceBuffer, targetBuffer);
+                                            if (needsUpdate)
+                                                break;
+                                        }
                                     }
-                                }
-                                break;
+                                    break;
+                            }
                         }
                     }
-                }
 
-                if (needsUpdate)
-                {
-                    Logger.Verbose("Updating file \"{0}\"...", relativePath);
-
-                    // progress stuff
-                    var lastSpeedMeasure = DateTime.Now;
-                    var lastSpeedCurrent = 0L;
-
-                    try
+                    if (needsUpdate)
                     {
+                        Logger.Verbose("Updating file \"{0}\"...", relativePath);
+
+                        // progress stuff
+                        var lastSpeedMeasure = DateTime.Now;
+                        var lastSpeedCurrent = 0L;
+
                         // check target directory structure
                         if (!targetFile.Directory.Exists)
                             targetFile.Directory.CreateRecursive();
@@ -408,40 +410,43 @@ namespace nDiscUtils.Modules
                             targetFile.IsReadOnly = sourceFile.IsReadOnly;
                         }
                     }
-                    catch (IOException ioex)
+                    else
                     {
-                        Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
-                        Logger.Exception(ioex);
-                        return ERROR;
-                    }
-                    catch (UnauthorizedAccessException uaex)
-                    {
-                        Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
-                        Logger.Exception(uaex);
-                        return ERROR;
+                        Logger.Debug("Skipping file \"{0}\"!", relativePath);
                     }
                 }
-                else
+                catch (IOException ex)
                 {
-                    Logger.Info("Skipping files \"{0}\"!", relativePath);
+                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                    Logger.Exception(ex);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                    Logger.Exception(ex);
                 }
             }
 
             foreach (var sourceDirectory in directoryList)
             {
+                var relativePath = sourceDirectory.FullName;
                 currentDirectory++;
-
-                var relativePath = sourceDirectory.FullName.Substring(absoluteSource.Length).Trim('\\');
-                var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
-
-                Logger.Info("Processing directory \"{0}\"...", sourceDirectory.FullName);
-
-                ResetColor();
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
-                WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
 
                 try
                 {
+                    relativePath = relativePath.Substring(absoluteSource.Length).Trim('\\');
+                    var targetDirectory = new DirectoryInfo(Path.Combine(absoluteTarget, relativePath));
+
+                    Logger.Debug("Processing directory \"{0}\"...", sourceDirectory.FullName);
+
+                    ResetColor();
+                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files:       {0,8} / {1,8}", currentFile, fileCount);
+                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,8} / {1,8}", currentDirectory, directoryCount);
+
+                    // make sure to sync empty directories as well
+                    if (!targetDirectory.Exists)
+                        targetDirectory.CreateRecursive();
+
                     // transfering dates
                     if (!opts.SkipDates && !opts.SkipDirectoryMeta)
                     {
@@ -465,17 +470,15 @@ namespace nDiscUtils.Modules
                         targetDirectory.Attributes = sourceDirectory.Attributes;
                     }
                 }
-                catch (IOException ioex)
+                catch (IOException ex)
                 {
-                    Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
-                    Logger.Exception(ioex);
-                    return ERROR;
+                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                    Logger.Exception(ex);
                 }
-                catch (UnauthorizedAccessException uaex)
+                catch (UnauthorizedAccessException ex)
                 {
-                    Logger.Exception("Failed to synchronize metadata for \"{0}\"", relativePath);
-                    Logger.Exception(uaex);
-                    return ERROR;
+                    Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
+                    Logger.Exception(ex);
                 }
             }
 
