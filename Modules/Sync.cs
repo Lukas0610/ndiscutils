@@ -88,6 +88,8 @@ namespace nDiscUtils.Modules
 
         private static int StartInternal(Options opts)
         {
+            var returnCode = SUCCESS;
+
             if (!Directory.Exists(opts.Source))
             {
                 Logger.Error("Could not find source directory \"{0}\"", opts.Source);
@@ -308,7 +310,16 @@ namespace nDiscUtils.Modules
                         var lastSpeedCurrent = 0L;
 
                         // make target directory structure
-                        SyncDirectory(opts, absoluteSource, absoluteTarget, sourceFile.Directory);
+                        int syncDirRc = SyncDirectory(opts, absoluteSource, absoluteTarget, sourceFile.Directory);
+                        if (syncDirRc != SUCCESS)
+                        {
+                            if (returnCode == SUCCESS)
+                                returnCode = syncDirRc;
+
+                            Logger.Error("Could not synchronize file \"{0}\": Failed to synchronize parent directory",
+                                relativePath, returnCode);
+                            continue;
+                        }
 
                         Write(ContentLeft + 1, ContentTop + 8, ' ', relativeProgressWidth);
 
@@ -433,11 +444,17 @@ namespace nDiscUtils.Modules
                 {
                     Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
                     Logger.Exception(ex);
+
+                    if (returnCode == SUCCESS)
+                        returnCode = ERROR;
                 }
                 catch (UnauthorizedAccessException ex)
                 {
                     Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
                     Logger.Exception(ex);
+
+                    if (returnCode == SUCCESS)
+                        returnCode = ERROR;
                 }
             }
 
@@ -448,7 +465,9 @@ namespace nDiscUtils.Modules
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop,     "Files: {0,10} / {1,10}", currentFile, fileCount);
                 WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", currentDirectory, directoryCount);
 
-                SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
+                int rc = SyncDirectory(opts, absoluteSource, absoluteTarget, sourceDirectory);
+                if (rc != SUCCESS && returnCode == SUCCESS)
+                    returnCode = rc;
             }
 
             privilegeEnabler.Dispose();
@@ -457,7 +476,7 @@ namespace nDiscUtils.Modules
             return SUCCESS;
         }
 
-        private static void SyncDirectory(Options opts, string absoluteSource, string absoluteTarget, DirectoryInfo sourceDirectory)
+        private static int SyncDirectory(Options opts, string absoluteSource, string absoluteTarget, DirectoryInfo sourceDirectory)
         {
             var relativePath = sourceDirectory.FullName;
 
@@ -468,7 +487,7 @@ namespace nDiscUtils.Modules
 
                 // make sure to sync empty directories as well
                 if (targetDirectory.Exists)
-                    return;
+                    return SUCCESS;
 
                 targetDirectory.CreateRecursive();
                 Logger.Debug("Syncing directory \"{0}\"...", relativePath);
@@ -505,12 +524,16 @@ namespace nDiscUtils.Modules
             {
                 Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
                 Logger.Exception(ex);
+                return ERROR;
             }
             catch (UnauthorizedAccessException ex)
             {
                 Logger.Exception("Failed to synchronize \"{0}\"", relativePath);
                 Logger.Exception(ex);
+                return ERROR;
             }
+
+            return SUCCESS;
         }
 
         private static bool HasComparator(string[] comparators, string comp)
