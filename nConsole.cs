@@ -486,6 +486,42 @@ namespace nDiscUtils
             nConsole.WriteVertical(Left + 5, Top + 3, new string(' ', Width - 9), Height - 5);
         }
 
+        public static void UpdateBackgroundIfRequired(int returnCode)
+        {
+            var color = ForegroundColor;
+            var outputMode = ConsoleOutputModeFlags.WrapAtEol;
+
+            if (returnCode == ReturnCodes.SUCCESS)
+                color = ConsoleColor.DarkGreen;
+            else
+                color = ConsoleColor.DarkRed;
+
+            ForegroundColor = color;
+            BackgroundColor = color;
+
+            if (UseConsoleBuffers)
+            {
+                outputMode = kPrivateBuffer.OutputMode;
+                kPrivateBuffer.OutputMode = ConsoleOutputModeFlags.Processed;
+            }
+
+            for (int y = 0; y <= Height; y++)
+            {
+                if (y < (ContentTop - 2) || y > (ContentTop + ContentHeight + 1))
+                    Write(0, y, ' ', Width - (!UseConsoleBuffers && y == Height ? 1 : 0));
+                else
+                {
+                    Write(0, y, ' ', ContentLeft - 3);
+                    Write(ContentLeft + ContentWidth + 3, y, ' ', Width - (ContentLeft + ContentWidth) - 3);
+                }
+            }
+
+            if (UseConsoleBuffers)
+                kPrivateBuffer.OutputMode = outputMode;
+
+            ResetColor();
+        }
+
     }
 
 }
