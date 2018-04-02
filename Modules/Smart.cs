@@ -122,8 +122,8 @@ namespace nDiscUtils.Modules
                 " | ", "ID", "Name", "Value", "Worst", "Data");
             Logger.Info("={1,-4}{0}{2,-40}{0}{3,-5}{0}{4,-5}{0}{5,-15}", 
                 "===", 
-                new string('=', 5), new string('=', 40), new string('=', 6), 
-                new string('=', 6), new string('=', 12));
+                new string('=', 4), new string('=', 40), new string('=', 5), 
+                new string('=', 5), new string('=', 15));
 
             for (int i = 0; i < 30; i++)
             {
