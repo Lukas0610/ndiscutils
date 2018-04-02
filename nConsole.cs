@@ -43,6 +43,8 @@ namespace nDiscUtils
         public static int ContentTop = 0;
         public static int ContentLeft = 0;
 
+        private static object kWriteLock = new object();
+
         public static ConsoleColor ForegroundColor
         {
             get
@@ -396,17 +398,20 @@ namespace nDiscUtils
 
         public static void Write(int x, int y, string str)
         {
-            if (!UseConsoleBuffers)
+            lock(kWriteLock)
             {
-                Console.SetCursorPosition(x, y);
-                Console.Write(str);
-            }
-            else
-            {
-                using (var buffer = JConsole.GetActiveScreenBuffer())
+                if (!UseConsoleBuffers)
                 {
-                    buffer.SetCursorPosition(x, y);
-                    buffer.Write(str);
+                    Console.SetCursorPosition(x, y);
+                    Console.Write(str);
+                }
+                else
+                {
+                    using (var buffer = JConsole.GetActiveScreenBuffer())
+                    {
+                        buffer.SetCursorPosition(x, y);
+                        buffer.Write(str);
+                    }
                 }
             }
         }
