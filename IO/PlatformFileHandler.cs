@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
+
 using static nDiscUtils.NativeMethods;
 
 namespace nDiscUtils.IO

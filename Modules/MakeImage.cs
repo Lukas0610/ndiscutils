@@ -17,8 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System.IO;
+
 using CommandLine;
+
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
 

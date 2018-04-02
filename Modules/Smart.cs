@@ -18,13 +18,16 @@
  */
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
+
 using CommandLine;
+
+using nDiscUtils.IO;
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.NativeMethods;
 using static nDiscUtils.ReturnCodes;
-using System.Runtime.InteropServices;
-using nDiscUtils.IO;
 
 namespace nDiscUtils.Modules
 {

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+
 using DiscUtils;
 using DiscUtils.Btrfs;
 using DiscUtils.Ext;
@@ -31,13 +32,15 @@ using DiscUtils.Ntfs;
 using DiscUtils.SquashFs;
 using DiscUtils.Udf;
 using DiscUtils.Xfs;
+
 using DokanNet;
+
 using nDiscUtils.Options;
 
 namespace nDiscUtils.Mounting
 {
 
-	public sealed class DokanMountPoint : IDokanOperations, IDisposable
+    public sealed class DokanMountPoint : IDokanOperations, IDisposable
 	{
 
         public const int VERSION_MAJOR = 1;

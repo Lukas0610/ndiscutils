@@ -19,14 +19,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using CommandLine;
+
 using DiscUtils;
 using DiscUtils.Fat;
 using DiscUtils.Ntfs;
 using DiscUtils.Partitions;
+
 using nDiscUtils.IO;
 using nDiscUtils.Modules.Events;
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
 using static nDiscUtils.ReturnCodes;

@@ -22,12 +22,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using System.Text;
 using System.Threading;
+
 using CommandLine;
+
 using nDiscUtils.IO;
 using nDiscUtils.Options;
+
 using ProcessPrivileges;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
 using static nDiscUtils.ReturnCodes;

@@ -18,7 +18,9 @@
  */
 using System;
 using System.Text;
+
 using Mischel.ConsoleDotNet;
+
 using static nDiscUtils.ModuleHelpers;
 
 namespace nDiscUtils

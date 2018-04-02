@@ -19,10 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using CommandLine;
+
 using DiscUtils.Iso9660;
 using DiscUtils.SquashFs;
+
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
 

@@ -21,12 +21,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using CommandLine;
+
 using DiscUtils;
 using DiscUtils.Ntfs;
 using DiscUtils.Partitions;
+
 using nDiscUtils.IO;
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.nConsole;
 using static nDiscUtils.ReturnCodes;

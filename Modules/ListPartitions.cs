@@ -19,8 +19,11 @@
 using System;
 using System.IO;
 using System.Text;
+
 using CommandLine;
+
 using nDiscUtils.Options;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
 

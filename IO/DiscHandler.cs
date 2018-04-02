@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+
 using DiscUtils;
 using DiscUtils.Ntfs;
 
