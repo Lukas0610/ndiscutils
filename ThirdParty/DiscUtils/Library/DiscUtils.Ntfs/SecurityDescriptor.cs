@@ -90,13 +90,27 @@ namespace DiscUtils.Ntfs
                 EndianUtilities.WriteBytesLittleEndian(0, buffer, offset + 0x0C);
             }
 
-            EndianUtilities.WriteBytesLittleEndian(pos, buffer, offset + 0x04);
-            Descriptor.Owner.GetBinaryForm(buffer, offset + pos);
-            pos += Descriptor.Owner.BinaryLength;
+            if (Descriptor.Owner != null)
+            {
+                EndianUtilities.WriteBytesLittleEndian(pos, buffer, offset + 0x04);
+                Descriptor.Owner.GetBinaryForm(buffer, offset + pos);
+                pos += Descriptor.Owner.BinaryLength;
+            }
+            else
+            {
+                EndianUtilities.WriteBytesLittleEndian(0, buffer, offset + 0x04);
+            }
 
-            EndianUtilities.WriteBytesLittleEndian(pos, buffer, offset + 0x08);
-            Descriptor.Group.GetBinaryForm(buffer, offset + pos);
-            pos += Descriptor.Group.BinaryLength;
+            if (Descriptor.Group != null)
+            {
+                EndianUtilities.WriteBytesLittleEndian(pos, buffer, offset + 0x08);
+                Descriptor.Group.GetBinaryForm(buffer, offset + pos);
+                pos += Descriptor.Group.BinaryLength;
+            }
+            else
+            {
+                EndianUtilities.WriteBytesLittleEndian(0, buffer, offset + 0x08);
+            }
 
             if (pos != Descriptor.BinaryLength)
             {

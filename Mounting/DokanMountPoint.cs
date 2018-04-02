@@ -575,12 +575,7 @@ namespace nDiscUtils.Mounting
                     var binaryForm = new byte[secDescriptor.BinaryLength];
 
                     secDescriptor.GetBinaryForm(binaryForm, 0);
-
-                    if (sections == 0)
-                        security.SetSecurityDescriptorBinaryForm(binaryForm);
-                    else
-                        security.SetSecurityDescriptorBinaryForm(binaryForm, sections);
-
+                    security.SetSecurityDescriptorBinaryForm(binaryForm);
                     return DokanResult.Success;
                 }
                 catch (IOException ioex)
@@ -821,10 +816,22 @@ namespace nDiscUtils.Mounting
                     if (IsBlacklisted(fileName))
                         return DokanResult.Success;
 
-                    var securityDescriptor = new RawSecurityDescriptor(
+                    var currentSecurityDescriptor =
+                        ntfsFileSystem.GetSecurity(fileName);
+
+                    var newSecurityDescriptor = new RawSecurityDescriptor(
                         security.GetSecurityDescriptorBinaryForm(), 0);
-                    
-                    ntfsFileSystem.SetSecurity(fileName, securityDescriptor);
+
+                    if ((sections & AccessControlSections.Audit) != 0)
+                        currentSecurityDescriptor.SystemAcl = newSecurityDescriptor.SystemAcl;
+                    if ((sections & AccessControlSections.Access) != 0)
+                        currentSecurityDescriptor.DiscretionaryAcl = newSecurityDescriptor.DiscretionaryAcl;
+                    if ((sections & AccessControlSections.Group) != 0)
+                        currentSecurityDescriptor.Group = newSecurityDescriptor.Group;
+                    if ((sections & AccessControlSections.Owner) != 0)
+                        currentSecurityDescriptor.Owner = newSecurityDescriptor.Owner;
+
+                    ntfsFileSystem.SetSecurity(fileName, currentSecurityDescriptor);
 
                     return DokanResult.Success;
                 }
