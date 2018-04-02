@@ -18,21 +18,18 @@
  */
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
-
-using static nDiscUtils.NativeMethods;
 
 namespace nDiscUtils.IO
 {
 
-    public sealed class DynamicMemoryStream : Stream
+    public unsafe sealed class DynamicMemoryStream : Stream
     {
 
         private long mCapacity;
         private int mBlockSize;
         private long mBlockCount;
         private StreamMode mMode;
-        private IntPtr[] mMemory;
+        private void*[] mMemory;
 
         private long mLength;
         private long mPosition;
@@ -55,9 +52,9 @@ namespace nDiscUtils.IO
             mBlockSize = blockSize;
             mBlockCount = (long)Math.Ceiling((double)mCapacity / mBlockSize);
             mMode = mode;
-            mMemory = new IntPtr[mBlockCount];
+            mMemory = new void*[mBlockCount];
             for (int i = 0; i < mBlockCount; i++)
-                mMemory[i] = IntPtr.Zero;
+                mMemory[i] = Memory.NULL;
         }
 
         public override bool CanRead
@@ -122,13 +119,12 @@ namespace nDiscUtils.IO
                     fixed (void* fixedBufferPtr = buffer)
                         bufferPtr = fixedBufferPtr;
 
-                    if (memoryBlock == IntPtr.Zero)
+                    if (memoryBlock == Memory.NULL)
                     {
                         Memory.Set(bufferPtr, blockCount, 0);
                     }
                     else
                     {
-                        void* blockPtr = memoryBlock.ToPointer();
                         int blockPtrOffset = 0;
 
                         if ((memoryIndex * mBlockSize) < absoluteOffset)
@@ -139,7 +135,7 @@ namespace nDiscUtils.IO
                                 blockCount -= delta;
                         }
 
-                        Memory.Copy(bufferPtr, offset + readCount, blockPtr, blockPtrOffset, (uint)blockCount);
+                        Memory.Copy(bufferPtr, offset + readCount, memoryBlock, blockPtrOffset, (uint)blockCount);
                     }
                 }
 
@@ -199,13 +195,13 @@ namespace nDiscUtils.IO
                     fixed (void* fixedBufferPtr = buffer)
                         bufferPtr = fixedBufferPtr;
 
-                    if (memoryBlock == IntPtr.Zero)
+                    if (memoryBlock == Memory.NULL)
                     {
                         memoryBlock = Allocate(memoryIndex);
-                        Memory.Set(memoryBlock.ToPointer(), mBlockSize, 0);
+                        Memory.Set(memoryBlock, mBlockSize, 0);
                     }
 
-                    void* blockPtr = memoryBlock.ToPointer();
+                    void* blockPtr = memoryBlock;
                     int blockPtrOffset = 0;
 
                     if ((memoryIndex * mBlockSize) < absoluteOffset)
@@ -224,10 +220,10 @@ namespace nDiscUtils.IO
             }
         }
 
-        public IntPtr Allocate(long index)
+        public void* Allocate(long index)
         {
-            var ptr = Marshal.AllocHGlobal(mBlockSize);
-            if (ptr == IntPtr.Zero)
+            var ptr = Memory.Allocate(mBlockSize);
+            if (ptr == Memory.NULL)
                 throw new IOException($"Failed to allocate {mBlockSize} bytes of memory");
 
             mMemory[index] = ptr;
@@ -239,12 +235,12 @@ namespace nDiscUtils.IO
         public bool Free(long index)
         {
             var block = mMemory[index];
-            if (block == IntPtr.Zero)
+            if (block == Memory.NULL)
                 return false;
 
-            Marshal.FreeHGlobal(block);
+            Memory.Free(block);
 
-            mMemory[index] = IntPtr.Zero;
+            mMemory[index] = Memory.NULL;
             mLength -= mBlockSize;
 
             return true;

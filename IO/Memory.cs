@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
+using System.Runtime.InteropServices;
+
 using static nDiscUtils.Runtime.Emit.ILMethods;
 
 namespace nDiscUtils.IO
@@ -24,6 +26,18 @@ namespace nDiscUtils.IO
 
     public static unsafe class Memory
     {
+
+        public static readonly void* NULL = (void*)0;
+
+        public static void* Allocate(int count)
+        {
+            return Marshal.AllocHGlobal(count).ToPointer();
+        }
+
+        public static void Free(void* buffer)
+        {
+            Marshal.FreeHGlobal(new IntPtr(buffer));
+        }
 
         public static void Set(void* buffer, int count, byte b)
         {
