@@ -94,7 +94,7 @@ namespace nDiscUtils
             if (mReturnType == typeof(void))
                 mDelegate.DynamicInvoke(args);
             else
-                Convert.ChangeType(mDelegate.DynamicInvoke(args), mReturnType);
+                return Convert.ChangeType(mDelegate.DynamicInvoke(args), mReturnType);
             return null;
         }
 
