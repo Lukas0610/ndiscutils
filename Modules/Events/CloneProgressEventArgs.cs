@@ -1,5 +1,5 @@
 ﻿/*
- * nClone - Platform independent drive cloning tool
+ * nDiscUtils - Advanced utilities for disc management
  * Copyright (C) 2018  Lukas Berger
  *
  * This program is free software; you can redistribute it and/or
