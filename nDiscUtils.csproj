@@ -829,4 +829,7 @@
     <EmbeddedResource Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.resx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(TargetDir)buildtools.exe largeaddressaware $(TargetPath)</PostBuildEvent>
+  </PropertyGroup>
 </Project>
