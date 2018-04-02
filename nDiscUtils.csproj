@@ -53,6 +53,8 @@
   <ItemGroup>
     <Compile Include="ArrayUtils.cs" />
     <Compile Include="IO\HardDiskType.cs" />
+    <Compile Include="IO\DynamicMemoryStream.cs" />
+    <Compile Include="IO\StreamMode.cs" />
     <Compile Include="IO\SmartAttribute.cs" />
     <Compile Include="IO\SmartValueIdeality.cs" />
     <Compile Include="Modules\ListDisks.cs" />

@@ -16,12 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-using System;
-using System.IO;
 using CommandLine;
-using DiscUtils;
-using DiscUtils.Fat;
-using DiscUtils.Ntfs;
+using nDiscUtils.IO;
 using nDiscUtils.Options;
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
@@ -40,12 +36,17 @@ namespace nDiscUtils.Modules
             {
                 Logger.Error("Are you sure you want to mount a ramdisk as read-only?",
                     opts.FileSystem);
-                Environment.Exit(1);
+                return INVALID_ARGUMENT;
+            }
+
+            if (opts.BlockSize > (48 * 1024))
+            {
+                Logger.Error("Memory block sized larger than 48K are unsupported");
                 return INVALID_ARGUMENT;
             }
 
             Logger.Info("Creating memory stream with size 0x{0:X}", opts.Size);
-            var memoryStream = new MemoryStream(opts.Size);
+            var memoryStream = new DynamicMemoryStream(opts.Size, opts.BlockSize, StreamMode.ReadWrite);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
                 return INVALID_ARGUMENT;
@@ -72,13 +73,21 @@ namespace nDiscUtils.Modules
         [Verb("ramdisk", HelpText = "Create a memory-located mount point")]
         public sealed class Options : BaseMountOptions
         {
-            
-            [Value(1, Default = "256MB", HelpText = "Size of the newly created ramdisk", Required = true)]
+
+            [Value(1, Default = "256M", HelpText = "Size of the newly created ramdisk", Required = true)]
             public string SizeString { get; set; }
 
             public int Size
             {
                 get => ParseSizeString(SizeString);
+            }
+
+            [Option('b', "block-size", Default = "48K", HelpText = "Internal memory block size", Required = false)]
+            public string BlockSizeString { get; set; }
+
+            public int BlockSize
+            {
+                get => ParseSizeString(BlockSizeString);
             }
 
             [Option('f', "fs", Default = "NTFS", HelpText = "Type of the filesystem the ramdisk should be formatted with")]
