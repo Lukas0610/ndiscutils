@@ -39,7 +39,7 @@ namespace nDiscUtils.IO
             Marshal.FreeHGlobal(new IntPtr(buffer));
         }
 
-        public static void Set(void* buffer, int count, byte b)
+        public static void Set(void* buffer, uint count, byte b)
         {
             initblk.Run(
                 new IntPtr(buffer),

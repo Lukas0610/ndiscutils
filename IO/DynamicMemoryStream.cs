@@ -121,7 +121,7 @@ namespace nDiscUtils.IO
 
                     if (memoryBlock == Memory.NULL)
                     {
-                        Memory.Set(bufferPtr, blockCount, 0);
+                        Memory.Set(bufferPtr, (uint)blockCount, 0);
                     }
                     else
                     {
@@ -198,7 +198,7 @@ namespace nDiscUtils.IO
                     if (memoryBlock == Memory.NULL)
                     {
                         memoryBlock = Allocate(memoryIndex);
-                        Memory.Set(memoryBlock, mBlockSize, 0);
+                        Memory.Set(memoryBlock, (uint)mBlockSize, 0);
                     }
 
                     void* blockPtr = memoryBlock;

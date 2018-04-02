@@ -25,7 +25,7 @@ namespace nDiscUtils.Runtime.Emit
     public static class ILMethods
     {
 
-        public static readonly ILMethod cpblk = ILMethod.Create<IntPtr, byte, int>(
+        public static readonly ILMethod cpblk = ILMethod.Create<IntPtr, IntPtr, uint>(
             typeof(void),
                 OpCodes.Ldarg_0,
                 OpCodes.Ldarg_1,
@@ -33,7 +33,7 @@ namespace nDiscUtils.Runtime.Emit
                 OpCodes.Cpblk,
                 OpCodes.Ret);
 
-        public static readonly ILMethod initblk = ILMethod.Create<IntPtr, IntPtr, uint>(
+        public static readonly ILMethod initblk = ILMethod.Create<IntPtr, byte, uint>(
             typeof(void),
                 OpCodes.Ldarg_0,
                 OpCodes.Ldarg_1,
