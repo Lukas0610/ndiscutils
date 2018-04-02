@@ -22,6 +22,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using System.Text;
+using System.Threading;
 using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
@@ -119,50 +121,98 @@ namespace nDiscUtils.Modules
             var baseDirectory = new DirectoryInfo(opts.Source);
             long fileSize = 0, fileCount = 0, directoryCount = 0;
 
-            Action<DirectoryInfo> recursiveFileIndexer = null;
-            recursiveFileIndexer = new Action<DirectoryInfo>((parentDir) =>
+            Action<DirectoryInfo, bool> recursiveFileIndexer = null;
+            recursiveFileIndexer = new Action<DirectoryInfo, bool>((parentDir, skipSubDirectories) =>
             {
                 try
                 {
                     foreach (var file in parentDir.GetFiles())
                     {
-                        fileList.Add(file);
+                        lock (fileList)
+                        {
+                            fileList.Add(file);
 
-                        fileCount++;
-                        fileSize += file.Length;
+                            fileCount++;
+                            fileSize += file.Length;
+                        }
                     }
                 }
                 catch (IOException) { }
                 catch (UnauthorizedAccessException) { }
 
+                if (skipSubDirectories)
+                    return;
+
                 try
                 {
                     foreach (var subDir in parentDir.GetDirectories())
                     {
-                        if (baseDirectory.Root.FullName == baseDirectory.FullName &&
-                            parentDir == baseDirectory &&
-                            (subDir.Name == "$RECYCLE.BIN" ||
-                            subDir.Name == "System Volume Information"))
+                        lock (directoryList)
                         {
-                            Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
-                            continue;
+                            if (baseDirectory.Root.FullName == baseDirectory.FullName &&
+                            parentDir.FullName == baseDirectory.FullName &&
+                            (subDir.Name == "$RECYCLE.BIN" ||
+                             subDir.Name == "System Volume Information"))
+                            {
+                                Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
+                                continue;
+                            }
+
+                            directoryList.Add(subDir);
+                            directoryCount++;
+
+                            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
+                            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
+
+                            Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
+                            recursiveFileIndexer(subDir, false);
                         }
-
-                        directoryList.Add(subDir);
-                        directoryCount++;
-
-                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
-                        WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
-
-                        Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
-                        recursiveFileIndexer(subDir);
                     }
                 }
                 catch (IOException) { }
                 catch (UnauthorizedAccessException) { }
             });
 
-            recursiveFileIndexer(baseDirectory);
+            try
+            {
+                recursiveFileIndexer(baseDirectory, true);
+
+                var subDirs = baseDirectory
+                    .GetDirectories()
+                    .Where(d => !(baseDirectory.Root.FullName == baseDirectory.FullName &&
+                            d.Parent != null && d.Parent.FullName == baseDirectory.FullName &&
+                            (d.Name == "$RECYCLE.BIN" ||
+                             d.Name == "System Volume Information")))
+                    .ToArray();
+
+                var subDirsPerThread = (int)Math.Floor((double)subDirs.Length / opts.Threads);
+                var assignedThreads = 0;
+                var finishedThreads = 0;
+
+                for (int i = 0; i < opts.Threads; i++)
+                {
+                    var threadSubDirs = subDirs
+                        .Skip(i * subDirsPerThread)
+                        .Take(i < opts.Threads - 1 ? subDirsPerThread : (subDirs.Length - assignedThreads));
+
+                    assignedThreads += subDirsPerThread;
+                    new Thread(() =>
+                    {
+                        foreach (var subDir in threadSubDirs)
+                        {
+                            recursiveFileIndexer(subDir, false);
+                        }
+                        finishedThreads++;
+                    }).Start();
+                }
+
+                while (finishedThreads < opts.Threads)
+                    Thread.Sleep(1);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+
+            fileList.Sort((l, r) => l.FullName.CompareTo(r.FullName));
 
             Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}",
                 directoryCount, (directoryCount == 1 ? "y" : "ies"),
@@ -553,6 +603,9 @@ namespace nDiscUtils.Modules
 
             [Option('c', "comparators", HelpText = "File state comparators and their order of execution", Default = null, Required = false)]
             public string Comparators { get; set; }
+
+            [Option('t', "threads", HelpText = "Count of threads used to index directories", Default = 2, Required = false)]
+            public int Threads { get; set; }
 
             [Option("no-directory-meta", HelpText = "Skip synchronizing directory attributes/dates/security", Default = false, Required = false)]
             public bool SkipFileMeta { get; set; }
