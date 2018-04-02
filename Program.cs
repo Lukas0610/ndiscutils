@@ -32,6 +32,7 @@ namespace nDiscUtils
             return Parser.Default.ParseArguments<
                 Clone.Options,
                 Compare.Options,
+                ListDisks.Options,
                 ListPartitions.Options,
                 MakeDirectoryImage.Options,
                 MakeImage.Options,
@@ -43,6 +44,7 @@ namespace nDiscUtils
             >(args).MapResult(
                     (Clone.Options opts) => Clone.Run(opts),
                     (Compare.Options opts) => Compare.Run(opts),
+                    (ListDisks.Options opts) => ListDisks.Run(opts),
                     (ListPartitions.Options opts) => ListPartitions.Run(opts),
                     (MakeDirectoryImage.Options opts) => MakeDirectoryImage.Run(opts),
                     (MakeImage.Options opts) => MakeImage.Run(opts),

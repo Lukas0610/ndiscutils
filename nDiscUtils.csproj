@@ -55,6 +55,7 @@
     <Compile Include="IO\HardDiskType.cs" />
     <Compile Include="IO\SmartAttribute.cs" />
     <Compile Include="IO\SmartValueIdeality.cs" />
+    <Compile Include="Modules\ListDisks.cs" />
     <Compile Include="Modules\Smart.cs" />
     <Compile Include="ReturnCodes.cs" />
     <Compile Include="IO\DirectoryInfoExtensions.cs" />
