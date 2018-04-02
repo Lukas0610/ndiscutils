@@ -53,7 +53,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayUtils.cs" />
-    <Compile Include="ILMethod.cs" />
+    <Compile Include="Runtime\Emit\ILMethod.cs" />
+    <Compile Include="Runtime\Emit\ILMethods.cs" />
     <Compile Include="IO\HardDiskType.cs" />
     <Compile Include="IO\DynamicMemoryStream.cs" />
     <Compile Include="IO\Memory.cs" />

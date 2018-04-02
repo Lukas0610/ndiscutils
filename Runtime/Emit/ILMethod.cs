@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace nDiscUtils
+namespace nDiscUtils.Runtime.Emit
 {
 
     public sealed class ILMethod
@@ -47,6 +47,62 @@ namespace nDiscUtils
             mDelegate = null;
 
             kIlMethodCount++;
+        }
+
+        public static ILMethod Create<T1>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2, T3>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2, T3>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2, T3, T4>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2, T3, T4>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2, T3, T4, T5>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2, T3, T4, T5>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2, T3, T4, T5, T6>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2, T3, T4, T5, T6>();
+            return method;
+        }
+
+        public static ILMethod Create<T1, T2, T3, T4, T5, T6, T7>(Type returnType, params OpCode[] opCodes)
+        {
+            var method = new ILMethod(returnType);
+            method.Write(opCodes);
+            method.Generate<T1, T2, T3, T4, T5, T6, T7>();
+            return method;
         }
 
         public void Write(params OpCode[] opCodes)

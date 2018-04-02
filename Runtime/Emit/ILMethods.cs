@@ -17,29 +17,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
-using static nDiscUtils.Runtime.Emit.ILMethods;
+using System.Reflection.Emit;
 
-namespace nDiscUtils.IO
+namespace nDiscUtils.Runtime.Emit
 {
 
-    public static unsafe class Memory
+    public static class ILMethods
     {
 
-        public static void Set(void* buffer, int count, byte b)
-        {
-            initblk.Run(
-                new IntPtr(buffer),
-                b,
-                count);
-        }
+        public static readonly ILMethod cpblk = ILMethod.Create<IntPtr, byte, int>(
+            typeof(void),
+                OpCodes.Ldarg_0,
+                OpCodes.Ldarg_1,
+                OpCodes.Ldarg_2,
+                OpCodes.Cpblk,
+                OpCodes.Ret);
 
-        public static void Copy(void* sourceBuffer, long sourceIndex, void* destinationBuffer, long destinationIndex, uint count)
-        {
-            cpblk.Run(
-                new IntPtr((byte*)sourceBuffer + sourceIndex),
-                new IntPtr((byte*)destinationBuffer + destinationIndex),
-                count);
-        }
+        public static readonly ILMethod initblk = ILMethod.Create<IntPtr, IntPtr, uint>(
+            typeof(void),
+                OpCodes.Ldarg_0,
+                OpCodes.Ldarg_1,
+                OpCodes.Ldarg_2,
+                OpCodes.Initblk,
+                OpCodes.Ret);
 
     }
 
