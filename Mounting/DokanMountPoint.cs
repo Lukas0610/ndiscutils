@@ -112,9 +112,13 @@ namespace nDiscUtils.Mounting
                 ntfsFileSystem.NtfsOptions.HideMetafiles = !options.ShowHiddenFiles;
             }
 
+            if (mFileSystem is DiscFileSystem discFileSystem)
+                VolumeLabel = discFileSystem.VolumeLabel;
+
             Logger.Info("Detected file system: {0}", mFileSystem.GetType().FullName);
             Logger.Info("File system R/W support: {0}", mFileSystemSupportsRW);
             Logger.Info("File system R/W enabled: {0}", !mIsReadOnly);
+            Logger.Info("File system volume label: {0}", VolumeLabel);
         }
 
         public void Flush()
