@@ -41,14 +41,8 @@ namespace nDiscUtils.Modules
                 return INVALID_ARGUMENT;
             }
 
-            if (opts.BlockSize > (48 * 1024))
-            {
-                Logger.Error("Memory block sized larger than 48K are unsupported");
-                return INVALID_ARGUMENT;
-            }
-
             Logger.Info("Creating memory stream with size 0x{0:X}", opts.Size);
-            var memoryStream = new DynamicMemoryStream(opts.Size, opts.BlockSize, StreamMode.ReadWrite);
+            var memoryStream = new DynamicMemoryStream(opts.Size, 4096, StreamMode.ReadWrite);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
                 return INVALID_ARGUMENT;
@@ -82,14 +76,6 @@ namespace nDiscUtils.Modules
             public int Size
             {
                 get => ParseSizeString(SizeString);
-            }
-
-            [Option('b', "block-size", Default = "48K", HelpText = "Internal memory block size", Required = false)]
-            public string BlockSizeString { get; set; }
-
-            public int BlockSize
-            {
-                get => ParseSizeString(BlockSizeString);
             }
 
             [Option('f', "fs", Default = "NTFS", HelpText = "Type of the filesystem the ramdisk should be formatted with")]
