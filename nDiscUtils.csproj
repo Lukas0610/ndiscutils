@@ -830,6 +830,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(TargetDir)buildtools.exe largeaddressaware $(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>

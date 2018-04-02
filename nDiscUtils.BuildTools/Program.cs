@@ -33,7 +33,7 @@ namespace nDiscUtils.BuildTools
 
         public static void Main(string[] args)
         {
-            if (args[0] == "largeaddressaware")
+            if (args[0] == "update-pe-header")
             {
                 var path = args[1];
                 if (!File.Exists(path))
