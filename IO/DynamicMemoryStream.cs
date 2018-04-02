@@ -119,32 +119,27 @@ namespace nDiscUtils.IO
                 unsafe
                 {
                     void* bufferPtr;
-
-                    fixed (void* fixedBufferPtr = &buffer[offset + readCount])
+                    fixed (void* fixedBufferPtr = buffer)
                         bufferPtr = fixedBufferPtr;
 
                     if (memoryBlock == IntPtr.Zero)
                     {
-                        ZeroMemory(bufferPtr, blockCount);
+                        Memory.Set(bufferPtr, blockCount, 0);
                     }
                     else
                     {
-                        void* blockPtr;
+                        void* blockPtr = memoryBlock.ToPointer();
+                        int blockPtrOffset = 0;
 
                         if ((memoryIndex * mBlockSize) < absoluteOffset)
                         {
                             var delta = (int)(absoluteOffset - (memoryIndex * mBlockSize));
-                            blockPtr = (void*)((byte*)memoryBlock.ToPointer() + delta);
-
+                            blockPtrOffset = delta;
                             if (blockCount + delta > mBlockSize)
                                 blockCount -= delta;
                         }
-                        else
-                        {
-                            blockPtr = memoryBlock.ToPointer();
-                        }
 
-                        CopyMemory(bufferPtr, blockPtr, (uint)blockCount);
+                        Memory.Copy(bufferPtr, offset + readCount, blockPtr, blockPtrOffset, (uint)blockCount);
                     }
                 }
 
@@ -201,31 +196,27 @@ namespace nDiscUtils.IO
                 unsafe
                 {
                     void* bufferPtr;
-
-                    fixed (void* fixedBufferPtr = &buffer[offset + writeCount])
+                    fixed (void* fixedBufferPtr = buffer)
                         bufferPtr = fixedBufferPtr;
 
                     if (memoryBlock == IntPtr.Zero)
                     {
                         memoryBlock = Allocate(memoryIndex);
+                        Memory.Set(memoryBlock.ToPointer(), mBlockSize, 0);
                     }
 
-                    void* blockPtr;
+                    void* blockPtr = memoryBlock.ToPointer();
+                    int blockPtrOffset = 0;
 
                     if ((memoryIndex * mBlockSize) < absoluteOffset)
                     {
                         var delta = (int)(absoluteOffset - (memoryIndex * mBlockSize));
-                        blockPtr = (void*)((byte*)memoryBlock.ToPointer() + delta);
-
+                        blockPtrOffset = delta;
                         if (blockCount + delta > mBlockSize)
                             blockCount -= delta;
                     }
-                    else
-                    {
-                        blockPtr = memoryBlock.ToPointer();
-                    }
 
-                    CopyMemory(blockPtr, bufferPtr, (uint)blockCount);
+                    Memory.Copy(blockPtr, blockPtrOffset, bufferPtr, offset + writeCount, (uint)blockCount);
                 }
 
                 writeCount += blockCount;

@@ -79,12 +79,6 @@ namespace nDiscUtils
             IntPtr lpOverlapped
         );
 
-        [DllImport("kernel32.dll", EntryPoint = "RtlZeroMemory")]
-        public unsafe static extern bool ZeroMemory(void* destination, int length);
-
-        [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "CopyMemory")]
-        public unsafe static extern void CopyMemory(void* destination, void* source, uint length);
-
     }
 
 }
