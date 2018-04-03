@@ -73,7 +73,7 @@ namespace nDiscUtils.Modules
             [Value(1, Default = "256M", HelpText = "Size of the newly created ramdisk", Required = true)]
             public string SizeString { get; set; }
 
-            public int Size
+            public long Size
             {
                 get => ParseSizeString(SizeString);
             }

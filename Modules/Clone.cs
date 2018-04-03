@@ -47,7 +47,7 @@ namespace nDiscUtils.Modules
         private static string mDestinationPath;
         private static Stream mDestinationStream;
 
-        private static int mBufferSize;
+        private static long mBufferSize;
         private static bool mForceExactCloning;
         private static bool mFullClone;
         
@@ -750,7 +750,7 @@ namespace nDiscUtils.Modules
             [Option('b', "buffer-size", Default = "64K", HelpText = "Size of I/O-buffer used for copying data", Required = true)]
             public string BufferSizeString { get; set; }
 
-            public int BufferSize
+            public long BufferSize
             {
                 get => ParseSizeString(BufferSizeString);
             }

@@ -70,15 +70,15 @@ namespace nDiscUtils
             Logger.SetDebug(opts.Debug);
         }
 
-        public static int ParseSizeString(string sizeString)
+        public static long ParseSizeString(string sizeString)
         {
             var sizeChar = sizeString[sizeString.Length - 1];
-            var size = 0;
+            var size = 0L;
 
             if (char.IsLetter(sizeChar))
-                size = int.Parse(sizeString.Substring(0, sizeString.Length - 1));
+                size = long.Parse(sizeString.Substring(0, sizeString.Length - 1));
             else
-                return int.Parse(sizeString.Substring(0, sizeString.Length));
+                return long.Parse(sizeString.Substring(0, sizeString.Length));
 
             switch (sizeChar)
             {
@@ -352,6 +352,15 @@ namespace nDiscUtils
 
                 return true;
             }
+        }
+
+        public static long NextLongRandom(Random rand, long min, long max)
+        {
+            byte[] buf = new byte[8];
+            rand.NextBytes(buf);
+            long longRand = BitConverter.ToInt64(buf, 0);
+
+            return (Math.Abs(longRand % (max - min)) + min);
         }
 
         public static void Cleanup(Stream stream)

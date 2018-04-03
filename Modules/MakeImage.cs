@@ -58,7 +58,7 @@ namespace nDiscUtils.Modules
             [Value(1, Default = "256MB", HelpText = "(Maximal) size of the newly created image", Required = true)]
             public string SizeString { get; set; }
 
-            public int Size
+            public long Size
             {
                 get => ParseSizeString(SizeString);
             }

@@ -51,7 +51,7 @@ namespace nDiscUtils.Modules
         private static Stream mSummaryStream;
         private static StreamWriter mSummaryWriter;
 
-        private static int mBufferSize;
+        private static long mBufferSize;
 
         private static long recordedWarnings;
         private static long recordedErrors;
@@ -879,7 +879,7 @@ namespace nDiscUtils.Modules
             [Option('b', "buffer-size", Default = "64K", HelpText = "Size of I/O-buffer used for copying data", Required = true)]
             public string BufferSizeString { get; set; }
 
-            public int BufferSize
+            public long BufferSize
             {
                 get => ParseSizeString(BufferSizeString);
             }

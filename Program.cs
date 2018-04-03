@@ -31,6 +31,7 @@ namespace nDiscUtils
         public static int Main(string[] args)
         {
             return Parser.Default.ParseArguments<
+                Benchmark.Options,
                 Clone.Options,
                 Compare.Options,
                 ListDisks.Options,
@@ -43,6 +44,7 @@ namespace nDiscUtils
                 Smart.Options,
                 Sync.Options
             >(args).MapResult(
+                    (Benchmark.Options opts) => Benchmark.Run(opts),
                     (Clone.Options opts) => Clone.Run(opts),
                     (Compare.Options opts) => Compare.Run(opts),
                     (ListDisks.Options opts) => ListDisks.Run(opts),
