@@ -58,6 +58,9 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>nDiscUtils.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -846,6 +849,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="nDiscUtils.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
