@@ -855,6 +855,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(ProjectDir)/bin/$(ConfigurationName)/buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>
