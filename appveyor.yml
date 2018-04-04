@@ -5,13 +5,15 @@ branches:
 skip_tags: true
 image: Visual Studio 2017
 configuration: Release
-platform: Any CPU
+platform:
+- x86
+- x64
 build:
   project: nDiscUtils.sln
   verbosity: detailed
 artifacts:
-- path: bin/Debug/nDiscUtils.exe
-  name: ndiscutils.exe
+- path: bin/Debug/$(configuration)/ndiscutils-$(configuration).exe
+  name: ndiscutils-$(configuration).exe
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
@@ -19,4 +21,4 @@ deploy:
   auth_token:
     secure: Dk5VMb+gcTeoyDHWS4Vi1g09ps2PrW7ohAOB/FWnC5DLNZSukUPCPgT+QQLgcoP0
   repository: Lukas0610/nDiscUtils
-  artifact: ndiscutils.exe
+  artifact: /.*\.exe/
