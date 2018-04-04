@@ -15,8 +15,7 @@ after_build:
 - ps: |
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
-    $name = "ndiscutils-$platform.exe"
-    Push-AppveyorArtifact (Resolve-Path ./bin/$platform/$configuration/$name) -FileName $name
+    Push-AppveyorArtifact ./bin/$platform/$configuration/ndiscutils.exe -FileName ndiscutils-$platform.exe
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
