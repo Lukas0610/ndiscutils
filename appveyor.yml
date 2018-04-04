@@ -15,7 +15,7 @@ on_success:
 - ps: |
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
-    $name = ndiscutils-$platform.exe
+    $name = "ndiscutils-$platform.exe"
     Push-AppveyorArtifact "./bin/$platform/$configuration/$name" -FileName $name
 deploy:
 - provider: GitHub
