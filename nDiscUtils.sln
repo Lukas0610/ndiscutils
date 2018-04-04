@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils", "nDiscUtils.cs
 		{C7FDF1A4-8089-450C-B8FD-AF344B74539D} = {C7FDF1A4-8089-450C-B8FD-AF344B74539D}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils.BuildTools", "nDiscUtils.BuildTools\nDiscUtils.BuildTools.csproj", "{C7FDF1A4-8089-450C-B8FD-AF344B74539D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils.BuildTools", "BuildTools\nDiscUtils.BuildTools.csproj", "{C7FDF1A4-8089-450C-B8FD-AF344B74539D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
