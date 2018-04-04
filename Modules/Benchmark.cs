@@ -88,7 +88,7 @@ namespace nDiscUtils.Modules
                 iopsPos[i] = pos;
             }
 
-            using (var stream = new FileStream(handle, FileAccess.ReadWrite, (int)opts.BufferSize))
+            using (var stream = new FileStream(handle, FileAccess.ReadWrite, (int)opts.InternalBufferSize))
             {
                 stream.SetLength(opts.Size);
 
@@ -232,6 +232,14 @@ namespace nDiscUtils.Modules
             public long BufferSize
             {
                 get => ParseSizeString(BufferSizeString);
+            }
+
+            [Option('i', "internal-buffer-size", Default = "512", HelpText = "Size of the internal I/O-buffer used to read/write the test-data", Required = false)]
+            public string InternalBufferSizeString { get; set; }
+
+            public long InternalBufferSize
+            {
+                get => ParseSizeString(InternalBufferSizeString);
             }
 
         }
