@@ -11,7 +11,7 @@ platform:
 build:
   project: nDiscUtils.sln
   verbosity: detailed
-on_success:
+after_build:
 - ps: |
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
