@@ -4,7 +4,7 @@ branches:
   - master
 skip_tags: true
 image: Visual Studio 2017
-configuration: Debug
+configuration: Release
 platform: Any CPU
 build:
   project: nDiscUtils.sln
