@@ -200,9 +200,6 @@ namespace nDiscUtils.Modules
                     Logger.Info("IOPS Read  speed:    {0:N}/s", 
                         (long)(iopsPos.LongLength / duration.TotalSeconds), 3);
                 }
-
-                stream.Position = 0;
-                Logger.Verbose("===== Starting IOPS Read  Process");
             }
 
             if (File.Exists(path))
