@@ -46,6 +46,23 @@ namespace nDiscUtils.Modules
             if (File.Exists(path))
                 File.Delete(path);
 
+            var attributes = 0U;
+
+            if (!opts.NoWriteThrough)
+                attributes |= FILE_FLAG_WRITE_THROUGH;
+            else
+                Logger.Warn("Disabling WRITE_THROUGH flag");
+
+            if (!opts.Buffering)
+                attributes |= FILE_FLAG_NO_BUFFERING;
+            else
+                Logger.Warn("Disabling NO_BUFFERING flag");
+
+            if (!opts.NoSequentialScan)
+                attributes |= FILE_FLAG_SEQUENTIAL_SCAN;
+            else
+                Logger.Warn("Disabling SEQUENTIAL_SCAN flag");
+
             Logger.Info("Attempting to open benchmark-file at \"{0}:\\\"", opts.Drive);
             var handle = CreateFile(
                 path,
@@ -53,7 +70,7 @@ namespace nDiscUtils.Modules
                 FileShare.None,
                 IntPtr.Zero,
                 FileMode.Create,
-                FILE_FLAG_WRITE_THROUGH | FILE_FLAG_NO_BUFFERING | FILE_FLAG_SEQUENTIAL_SCAN,
+                attributes,
                 IntPtr.Zero);
 
             var error = Marshal.GetLastWin32Error();
@@ -238,6 +255,15 @@ namespace nDiscUtils.Modules
             {
                 get => ParseSizeString(InternalBufferSizeString);
             }
+
+            [Option("no-write-through", Default = false, HelpText = "Disable WRITE_THROUGH flag when creating the benchmarking-file", Required = false)]
+            public bool NoWriteThrough { get; set; }
+
+            [Option("buffering", Default = false, HelpText = "Disable NO_BUFFERING flag when creating the benchmarking-file", Required = false)]
+            public bool Buffering { get; set; }
+
+            [Option("no-sequential-scan", Default = false, HelpText = "Disable sequential scan flag when creating the benchmarking-file", Required = false)]
+            public bool NoSequentialScan { get; set; }
 
         }
 
