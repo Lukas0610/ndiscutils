@@ -12,8 +12,8 @@ build:
   project: nDiscUtils.sln
   verbosity: detailed
 artifacts:
-- path: bin/Debug/$(configuration)/ndiscutils-$(configuration).exe
-  name: ndiscutils-$(configuration).exe
+- path: bin/$(platform)/$(configuration)/ndiscutils-$(platform).exe
+  name: ndiscutils-$(platform).exe
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
