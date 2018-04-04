@@ -12,7 +12,7 @@ build:
   project: nDiscUtils.sln
   verbosity: detailed
 on_success:
-- ps: >-
+- ps: |
     $path = $env:APPVEYOR_BUILD_FOLDER
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
