@@ -849,7 +849,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(ProjectDir)/bin/$(ConfigurationName)/buildtools.exe update-pe-header $(TargetPath)
-echo d | xcopy /y /d $(TargetPath) $(TargetDir)$(TargetName)-$(PlatformName).exe</PostBuildEvent>
+    <PostBuildEvent>$(ProjectDir)/bin/$(ConfigurationName)/buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>
