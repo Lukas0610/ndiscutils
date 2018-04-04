@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils", "nDiscUtils.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils.BuildTools", "BuildTools\nDiscUtils.BuildTools.csproj", "{C7FDF1A4-8089-450C-B8FD-AF344B74539D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nDiscUtils.Native", "Native\nDiscUtils.Native.vcxproj", "{089574E8-FC83-4772-A872-09BA1D30106D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +36,14 @@ Global
 		{C7FDF1A4-8089-450C-B8FD-AF344B74539D}.Release|x64.Build.0 = Release|x64
 		{C7FDF1A4-8089-450C-B8FD-AF344B74539D}.Release|x86.ActiveCfg = Release|x86
 		{C7FDF1A4-8089-450C-B8FD-AF344B74539D}.Release|x86.Build.0 = Release|x86
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Debug|x64.ActiveCfg = Debug|x64
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Debug|x64.Build.0 = Debug|x64
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Debug|x86.ActiveCfg = Debug|Win32
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Debug|x86.Build.0 = Debug|Win32
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x64.ActiveCfg = Release|x64
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x64.Build.0 = Release|x64
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x86.ActiveCfg = Release|Win32
+		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
