@@ -13,10 +13,10 @@ build:
   verbosity: detailed
 on_success:
 - ps: |
-    $path = $env:APPVEYOR_BUILD_FOLDER
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
-    Push-AppveyorArtifact "$path/bin/$platform/$configuration/ndiscutils-$platform.exe"
+    $name = ndiscutils-$platform.exe
+    Push-AppveyorArtifact "./bin/$platform/$configuration/$name" -FileName $name
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
