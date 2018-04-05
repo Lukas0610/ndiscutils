@@ -121,7 +121,7 @@ namespace nDiscUtils.IO.FileSystem.Implementations
         {
             return new SimpleFileInfo()
             {
-                Attributes = FileAttributes.Directory,
+                Attributes = FileAttributes.Normal,
                 CreationTime = entry.Created,
                 Directory = path,
                 FullName = entry.FullName,
