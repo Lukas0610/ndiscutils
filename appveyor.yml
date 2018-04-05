@@ -11,6 +11,8 @@ platform:
 build:
   project: nDiscUtils.sln
   verbosity: detailed
+before_build:
+  - nuget restore
 after_build:
 - ps: |
     $platform = $env:PLATFORM
