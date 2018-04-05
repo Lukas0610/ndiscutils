@@ -28,10 +28,12 @@ namespace nDiscUtils
     public static class Program
     {
 
+#if !DEBUG
         static Program()
         {
             CosturaUtility.Initialize();
         }
+#endif
         
         public static int Main(string[] args)
         {
