@@ -31,4 +31,8 @@
  * ConsoleDotNet by Jim Mischel
  * [CSharpx](https://github.com/gsscoder/CSharpx)
  * [DiscUtils](https://github.com/DiscUtils/DiscUtils)
+ * [dokan-dotnet](https://github.com/dokan-dev/dokan-dotnet)
+ * [FluentFTP](https://github.com/robinrodricks/FluentFTP)
+ * [lzo.net](https://github.com/zivillian/lzo.net)
+ * [ProcessPrivileges](https://archive.codeplex.com/?p=processprivileges)
  * [RailwaySharp](https://github.com/gsscoder/railwaysharp)

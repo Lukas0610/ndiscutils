@@ -21,7 +21,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP __x64__</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP NETFX NET45 ASYNC __x64__</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>embedded</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -31,7 +31,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;SKIP_FSHARP __x64__</DefineConstants>
+    <DefineConstants>TRACE;SKIP_FSHARP NETFX NET45 ASYNC __x64__</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <DebugType>embedded</DebugType>
@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP __x86__</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP NETFX NET45 ASYNC __x86__</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>embedded</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -52,7 +52,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;SKIP_FSHARP __x86__</DefineConstants>
+    <DefineConstants>TRACE;SKIP_FSHARP NETFX NET45 ASYNC __x86__</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <DebugType>embedded</DebugType>
@@ -70,6 +70,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -79,7 +80,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayUtils.cs" />
+    <Compile Include="IO\DualStream.cs" />
+    <Compile Include="IO\FileSystem\Implementations\FtpFileSystem.cs" />
+    <Compile Include="IO\FileSystem\ISimpleFileSystem.cs" />
+    <Compile Include="IO\FileSystem\SimpleDirectoryInfo.cs" />
+    <Compile Include="IO\FileSystem\SimpleFileInfo.cs" />
+    <Compile Include="IO\FileSystem\SimpleFileSystemInfo.cs" />
     <Compile Include="Modules\Benchmark.cs" />
+    <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
     <Compile Include="Runtime\Emit\ILMethod.cs" />
     <Compile Include="Runtime\Emit\ILMethods.cs" />
     <Compile Include="IO\HardDiskType.cs" />
@@ -111,7 +119,7 @@
     <Compile Include="Modules\MountPartition.cs" />
     <Compile Include="Modules\Ramdisk.cs" />
     <Compile Include="Mounting\DokanNullLogger.cs" />
-    <Compile Include="Mounting\DokanMountPoint.cs" />
+    <Compile Include="Mounting\DiscFileSystemMountPoint.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ThirdParty\CommandLineParser\src\CommandLine\BaseAttribute.cs" />
@@ -826,6 +834,33 @@
     <Compile Include="ThirdParty\dokan-dotnet\DokanNet\NtStatus.cs" />
     <Compile Include="ThirdParty\dokan-dotnet\DokanNet\NullFormatProvider.cs" />
     <Compile Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.Designer.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_Connection.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_Hash.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_HighLevel.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_Listing.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_LowLevel.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\FtpClient_Management.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Client\IFtpClient.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpEnums.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpEvents.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpExceptions.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpHash.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpListItem.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpListParser.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpReply.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\FtpTrace.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Helpers\IntRef.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Proxy\FtpClientHttp11Proxy.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Proxy\FtpClientProxy.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Proxy\FtpClientUserAtHostProxy.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Proxy\FtpClientUserAtHostProxyBlueCoat.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Proxy\ProxyInfo.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Stream\FtpDataStream.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Stream\FtpSocketStream.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Stream\FtpSslStream.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Utils\FtpExtensions.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Utils\FtpReflection.cs" />
+    <Compile Include="ThirdParty\FluentFTP\FluentFTP\Utils\NET2Compatibility.cs" />
     <Compile Include="ThirdParty\lzo.net\src\LzoStream.cs" />
     <Compile Include="ThirdParty\lzo.net\src\RingBuffer.cs" />
     <Compile Include="ThirdParty\lzo.net\src\SeekableLzoStream.cs" />
@@ -863,6 +898,7 @@
       <Name>nDiscUtils.Native</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>

@@ -129,7 +129,7 @@ namespace nDiscUtils
 
         public static void MountStream(Stream stream, BaseMountOptions opts)
         {
-            using (var mountPoint = new DokanMountPoint(stream, opts))
+            using (var mountPoint = new DiscFileSystemMountPoint(stream, opts))
             {
                 Logger.Info("Preparing mount point at {0}:\\ (read-only={1})", opts.Letter, opts.ReadOnly);
 
@@ -144,7 +144,7 @@ namespace nDiscUtils
                 {
                     Logger.Info("Attempting to mount stream at {0}:\\ with {1} thread(s)", opts.Letter, opts.Threads);
                     mountPoint.Mount($"{opts.Letter}:", mountOptions, opts.Threads,
-                        DokanMountPoint.VERSION, TimeSpan.FromSeconds(5),
+                        DiscFileSystemMountPoint.VERSION, TimeSpan.FromSeconds(5),
                         $"nDiscUtils\\{opts.Letter}", new DokanNullLogger());
                 }
                 catch (DokanException dex)

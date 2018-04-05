@@ -1066,7 +1066,7 @@ namespace FluentFTP {
 						// seek to required offset
 						fileData.Position = offset;
 
-					} catch (Exception ex2) {
+					} catch (Exception) {
 					}
 				}
 
@@ -1207,12 +1207,9 @@ namespace FluentFTP {
 			Stream upStream = null;
 			try {
 				long offset = 0;
-				bool checkFileExistsAgain = false;
 
 				// check if the file exists, and skip, overwrite or append
-				if (existsMode == FtpExists.NoCheck) {
-					checkFileExistsAgain = true;
-				} else {
+				if (existsMode != FtpExists.NoCheck) {
 					if (!fileExistsKnown) {
 						fileExists = await FileExistsAsync(remotePath);
 					}
@@ -1253,7 +1250,7 @@ namespace FluentFTP {
 						// seek to required offset
 						fileData.Position = offset;
 
-					} catch (Exception ex2) {
+					} catch (Exception) {
 					}
 				}
 

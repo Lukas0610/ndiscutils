@@ -22,40 +22,27 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 
-using DiscUtils;
-using DiscUtils.Btrfs;
-using DiscUtils.Ext;
-using DiscUtils.Fat;
-using DiscUtils.HfsPlus;
-using DiscUtils.Iso9660;
-using DiscUtils.Ntfs;
-using DiscUtils.SquashFs;
-using DiscUtils.Udf;
-using DiscUtils.Xfs;
-
 using DokanNet;
 
+using nDiscUtils.IO.FileSystem;
 using nDiscUtils.Options;
 
 namespace nDiscUtils.Mounting
 {
 
-    public sealed class DokanMountPoint : IDokanOperations, IDisposable
-	{
+    public sealed class SimpleFileSystemMountPoint : IDokanOperations, IDisposable
+    {
 
         public const int VERSION_MAJOR = 1;
         public const int VERSION_MINOR = 0;
         public const int VERSION = (VERSION_MAJOR << 8) | (VERSION_MINOR << 0);
 
         private bool mIsReadOnly;
-		private string mVolumeLabel;
+        private string mVolumeLabel;
 
-        private Stream mStream;
         private BaseMountOptions mOptions;
-        private IFileSystem mFileSystem;
+        private ISimpleFileSystem mFileSystem;
         private bool mFileSystemSupportsRW;
-
-        private bool mFileSystemIsNTFS;
 
         private const DokanNet.FileAccess DataAccess = DokanNet.FileAccess.ReadData | DokanNet.FileAccess.WriteData | DokanNet.FileAccess.AppendData |
                                                        DokanNet.FileAccess.Execute |
@@ -66,57 +53,25 @@ namespace nDiscUtils.Mounting
                                                             DokanNet.FileAccess.Delete |
                                                             DokanNet.FileAccess.GenericWrite;
 
-        private readonly string[] kNtfsFileSecurityBlacklist =
-        {
-            "\\$AttrDef",
-            "\\$BadClus",
-            "\\$Bitmap",
-            "\\$Boot",
-            "\\$Extend",
-            "\\$LogFile",
-            "\\$MFT",
-            "\\$MFTMirr",
-            "\\$UpCase",
-            "\\$Volume",
-            "\\System Volume Information\\", // keep trailing slash
-        };
-
-        // Things which the file system doesn't want you to access
-        private readonly string[] kNtfsFileSecurityHardBlacklist =
-        {
-            "\\$Secure",
-        };
-
         public bool IsReadOnly
         {
             get => mIsReadOnly;
         }
 
-		public string VolumeLabel
+        public string VolumeLabel
         {
             get => mVolumeLabel;
             set => mVolumeLabel = value;
         }
 
-        public DokanMountPoint(Stream stream, BaseMountOptions options)
+        public SimpleFileSystemMountPoint(ISimpleFileSystem fileSystem, BaseMountOptions options)
         {
-            mStream = stream;
-            mFileSystem = GetFileSystem(stream);
+            mFileSystem = fileSystem;
             mOptions = options;
-            mFileSystemSupportsRW = !IsFileSystemReadOnly(mFileSystem);
+            mFileSystemSupportsRW = !mFileSystem.IsReadOnly;
             mIsReadOnly = (options.ReadOnly || !mFileSystemSupportsRW);
 
-            mFileSystemIsNTFS = (mFileSystem is NtfsFileSystem);
-            if (mFileSystemIsNTFS)
-            {
-                var ntfsFileSystem = (NtfsFileSystem)mFileSystem;
-                ntfsFileSystem.NtfsOptions.HideHiddenFiles = false;
-                ntfsFileSystem.NtfsOptions.HideSystemFiles = false;
-                ntfsFileSystem.NtfsOptions.HideMetafiles = !options.ShowHiddenFiles;
-            }
-
-            if (mFileSystem is DiscFileSystem discFileSystem)
-                VolumeLabel = discFileSystem.VolumeLabel;
+            VolumeLabel = fileSystem.FriendlyName;
 
             Logger.Info("Detected file system: {0}", mFileSystem.GetType().FullName);
             Logger.Info("File system R/W support: {0}", mFileSystemSupportsRW);
@@ -124,54 +79,11 @@ namespace nDiscUtils.Mounting
             Logger.Info("File system volume label: {0}", VolumeLabel);
         }
 
-        public void Flush()
-        {
-            mStream.Flush();
-        }
-
         public void Dispose()
         {
-            this.Flush();
-            (mFileSystem as IDisposable)?.Dispose();
-            mFileSystem = null;
+
         }
-
-        private IFileSystem GetFileSystem(Stream stream)
-        {
-            if (BtrfsFileSystem.Detect(stream))
-                return new BtrfsFileSystem(stream);
-            else if (FatFileSystem.Detect(stream))
-                return new FatFileSystem(stream);
-            else if (ExtFileSystem.Detect(stream))
-                return new ExtFileSystem(stream);
-            else if (HfsPlusFileSystem.Detect(stream))
-                return new HfsPlusFileSystem(stream);
-            else if (CDReader.Detect(stream)) /* Iso9660 */
-                return new CDReader(stream, true);
-            else if (NtfsFileSystem.Detect(stream))
-                return new NtfsFileSystem(stream);
-            else if (SquashFileSystemReader.Detect(stream))
-                return new SquashFileSystemReader(stream);
-            else if (UdfReader.Detect(stream))
-                return new UdfReader(stream);
-            else if (XfsFileSystem.Detect(stream))
-                return new XfsFileSystem(stream);
-
-            throw new InvalidDataException("Failed to find supported file system");
-        }
-
-        private bool IsFileSystemReadOnly(IFileSystem fs)
-        {
-            return fs is ReadOnlyDiscFileSystem ||
-                fs is BtrfsFileSystem ||
-                fs is ExtFileSystem ||
-                fs is HfsPlusFileSystem ||
-                fs is CDReader /* Iso9660 */ || 
-                fs is SquashFileSystemReader ||
-                fs is UdfReader ||
-                fs is XfsFileSystem;
-        }
-
+        
         private NtStatus HandleException(Exception ex, string path)
         {
             Logger.Exception("FATAL ERROR - {0} - \"{1}\"", ex.Message, path ?? "NO_FILE");
@@ -187,58 +99,25 @@ namespace nDiscUtils.Mounting
         }
 
         private FileInformation GetFileInformation(string path)
-		{
-            DiscFileSystemInfo pathInfo = null;
-
-            if (mFileSystem.FileExists(path))
-                pathInfo = mFileSystem.GetFileInfo(path);
-            else if (mFileSystem.DirectoryExists(path))
-                pathInfo = mFileSystem.GetDirectoryInfo(path);
-            else
-                throw new IOException("Could not find file");
-
-            var attributes = pathInfo.Attributes;
-            var parentIsRoot = (pathInfo.Parent != null && pathInfo.Parent.FullName == "\\");
-
-            if ((pathInfo is DiscDirectoryInfo) && parentIsRoot && 
-                (pathInfo.Name == "$RECYCLE.BIN" || pathInfo.Name == "System Volume Information"))
-			{
-				attributes |= FileAttributes.Hidden;
-				attributes |= FileAttributes.System;
-			}
-
-			return new FileInformation
-			{
-				Attributes = attributes,
-				CreationTime = pathInfo.CreationTime,
-				FileName = pathInfo.Name,
-				LastAccessTime = pathInfo.LastAccessTime,
-				LastWriteTime = pathInfo.LastWriteTime,
-				Length = (mFileSystem.FileExists(path) ? mFileSystem.GetFileLength(path) : 0)
-			};
-		}
-
-        private bool IsBlacklisted(string file, bool skipFlag = false)
         {
-            if (string.IsNullOrWhiteSpace(file))
-                return false;
+            SimpleFileSystemInfo pathInfo = null;
+            if (mFileSystem.DirectoryExists(path))
+                pathInfo = mFileSystem.GetDirectoryInfo(path);
+            else if (mFileSystem.FileExists(path))
+                pathInfo = mFileSystem.GetFileInfo(path);
 
-            if (mFileSystemIsNTFS)
-                return kNtfsFileSecurityHardBlacklist.Any(t => file.StartsWith(t));
-
-            if (mOptions.FullAccess)
-                return false;
-
-            if (skipFlag)
-                return false;
-
-            if (mFileSystemIsNTFS)
-                return kNtfsFileSecurityBlacklist.Any(t => file.StartsWith(t));
-
-            return false;
+            return new FileInformation
+            {
+                Attributes = pathInfo.Attributes,
+                CreationTime = pathInfo.CreationTime,
+                FileName = pathInfo.Name,
+                LastAccessTime = pathInfo.LastAccessTime,
+                LastWriteTime = pathInfo.LastWriteTime,
+                Length = (mFileSystem.FileExists(path) ? ((SimpleFileInfo)pathInfo).Length : 0)
+            };
         }
 
-		public void Cleanup(string fileName, DokanFileInfo info)
+        public void Cleanup(string fileName, DokanFileInfo info)
         {
             try
             {
@@ -256,30 +135,28 @@ namespace nDiscUtils.Mounting
                         mFileSystem.DeleteFile(fileName);
                     }
                 }
-
-                this.Flush();
             }
             catch (Exception) { }
         }
 
         public void CloseFile(string fileName, DokanFileInfo info)
-		{
-			try
+        {
+            try
             {
                 (info.Context as Stream)?.Dispose();
                 info.Context = null;
-
-                this.Flush();
             }
-			catch (Exception) { }
-		}
+            catch (Exception) { }
+        }
 
-		public NtStatus CreateFile(string fileName, DokanNet.FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
-		{
-			try
+        public NtStatus CreateFile(string fileName, DokanNet.FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
+        {
+            try
             {
                 if (string.IsNullOrWhiteSpace(fileName))
                     return DokanResult.InvalidName;
+
+                fileName = mFileSystem.TransformPath(fileName);
 
                 var readWriteAttributes = (access & DataAccess) == 0;
                 var readAccess = (access & DataWriteAccess) == 0;
@@ -306,11 +183,7 @@ namespace nDiscUtils.Mounting
                             if (pathExists)
                                 return DokanResult.AlreadyExists;
 
-                            if (IsBlacklisted(fileName))
-                                return DokanResult.AccessDenied;
-
                             mFileSystem.CreateDirectory(fileName);
-                            this.Flush();
                             break;
                     }
                 }
@@ -353,45 +226,39 @@ namespace nDiscUtils.Mounting
                     if (directoryExists && (mode == FileMode.OpenOrCreate || mode == FileMode.Create))
                         return DokanResult.AlreadyExists;
 
-                    if (IsBlacklisted(fileName, readAccess))
-                        return DokanResult.AccessDenied;
-
-                    info.Context = mFileSystem.OpenFile(fileName, mode, 
+                    info.Context = mFileSystem.Open(fileName, mode,
                         readAccess ? System.IO.FileAccess.Read : System.IO.FileAccess.ReadWrite);
-                    this.Flush();
                 }
 
                 return DokanResult.Success;
             }
-			catch (IOException ioex)
+            catch (IOException ioex)
             {
                 return HandleIOException(ioex, fileName);
             }
-			catch (Exception ex)
-			{
+            catch (Exception ex)
+            {
                 return HandleException(ex, fileName);
             }
-		}
+        }
 
-		public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
+        public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(fileName))
                     return DokanResult.InvalidName;
+
+                fileName = mFileSystem.TransformPath(fileName);
 
                 if (mFileSystem.FileExists(fileName))
                     return NtStatus.NotADirectory;
                 else if (!mFileSystem.DirectoryExists(fileName))
                     return DokanResult.FileNotFound;
 
-                if (mFileSystem.GetDirectoryInfo(fileName).GetFileSystemInfos().Length != 0)
+                if (mFileSystem.GetFileSystemEntries(fileName).Count() != 0)
                     return NtStatus.DirectoryNotEmpty;
 
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
-
-                this.Flush();
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -404,23 +271,21 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus DeleteFile(string fileName, DokanFileInfo info)
+        public NtStatus DeleteFile(string fileName, DokanFileInfo info)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(fileName))
                     return DokanResult.InvalidName;
 
+                fileName = mFileSystem.TransformPath(fileName);
+
                 if (mFileSystem.DirectoryExists(fileName))
                     return DokanResult.AccessDenied;
 
                 if (!mFileSystem.FileExists(fileName))
                     return DokanResult.FileNotFound;
-
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
-
-                this.Flush();
+                
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -433,12 +298,12 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
-		{
-			return FindFilesWithPattern(fileName, "*.*", out files, info);
-		}
+        public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
+        {
+            return FindFilesWithPattern(fileName, "*.*", out files, info);
+        }
 
-		public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, DokanFileInfo info)
+        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, DokanFileInfo info)
         {
             files = new List<FileInformation>();
 
@@ -447,8 +312,10 @@ namespace nDiscUtils.Mounting
                 if (string.IsNullOrWhiteSpace(fileName))
                     return DokanResult.InvalidName;
 
-                var realfiles = mFileSystem.GetDirectoryInfo(fileName)
-                    .GetFileSystemInfos()
+                fileName = mFileSystem.TransformPath(fileName);
+
+                var realfiles = mFileSystem
+                    .GetFileSystemEntries(fileName)
                     .Where(finfo => DokanHelper.DokanIsNameInExpression(searchPattern, finfo.Name, true) && !string.IsNullOrWhiteSpace(finfo.Name))
                     .Select(finfo => GetFileInformation(finfo.FullName)).ToArray();
 
@@ -465,19 +332,18 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, DokanFileInfo info)
-		{
-			streams = new FileInformation[0];
+        public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, DokanFileInfo info)
+        {
+            streams = new FileInformation[0];
 
-			return DokanResult.Error;
-		}
+            return DokanResult.Error;
+        }
 
-		public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
+        public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
             try
             {
                 (info.Context as Stream)?.Flush();
-                this.Flush();
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -490,11 +356,11 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
-		{
-			freeBytesAvailable = 0;
-			totalNumberOfFreeBytes = 0;
-			totalNumberOfBytes = 0;
+        public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
+        {
+            freeBytesAvailable = 0;
+            totalNumberOfFreeBytes = 0;
+            totalNumberOfBytes = 0;
 
             try
             {
@@ -513,22 +379,16 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
-		{
-			fileInfo = new FileInformation();
+        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
+        {
+            fileInfo = new FileInformation();
 
             try
             {
                 if (string.IsNullOrWhiteSpace(fileName))
                     return DokanResult.InvalidName;
 
-                if (fileName.StartsWith("\\$RECYCLE.BIN\\") || fileName.StartsWith("\\System Volume Information\\"))
-                {
-                    if (info.IsDirectory)
-                        return DokanResult.PathNotFound;
-                    else
-                        return DokanResult.FileNotFound;
-                }
+                fileName = mFileSystem.TransformPath(fileName);
 
                 if (!mFileSystem.Exists(fileName))
                     return DokanResult.FileNotFound;
@@ -546,78 +406,26 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
-		{
-			security = null;
-
-            if (mFileSystemIsNTFS)
-            {
-                var ntfsFileSystem = (NtfsFileSystem)mFileSystem;
-
-                try
-                {
-                    if (info.IsDirectory)
-                    {
-                        if (!mFileSystem.DirectoryExists(fileName))
-                            return DokanResult.PathNotFound;
-
-                        security = new DirectorySecurity();
-                    }
-                    else
-                    {
-                        if (!mFileSystem.FileExists(fileName))
-                            return DokanResult.FileNotFound;
-
-                        security = new FileSecurity();
-                    }
-
-                    var secDescriptor = ntfsFileSystem.GetSecurity(fileName);
-                    var binaryForm = new byte[secDescriptor.BinaryLength];
-
-                    secDescriptor.GetBinaryForm(binaryForm, 0);
-                    security.SetSecurityDescriptorBinaryForm(binaryForm);
-                    return DokanResult.Success;
-                }
-                catch (IOException ioex)
-                {
-                    return HandleIOException(ioex, fileName);
-                }
-                catch (Exception ex)
-                {
-                    return HandleException(ex, fileName);
-                }
-            }
-
+        public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
+        {
+            security = null;
             return NtStatus.NotImplemented;
         }
 
-		public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
-		{
-			volumeLabel = "Unknown";
-			features = FileSystemFeatures.None;
-			fileSystemName = "Unknown";
+        public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
+        {
+            volumeLabel = "Unknown";
+            features = FileSystemFeatures.None;
+            fileSystemName = "Unknown";
 
             try
             {
                 volumeLabel = string.IsNullOrWhiteSpace(mVolumeLabel) ? "nDiscUtils Volume" : mVolumeLabel;
-                
+
                 if (mIsReadOnly)
                     features |= FileSystemFeatures.ReadOnlyVolume;
 
-                if (mFileSystemIsNTFS)
-                {
-                    features |= FileSystemFeatures.UnicodeOnDisk |
-                        FileSystemFeatures.PersistentAcls;
-                }
-
-                if (!(mFileSystem is FatFileSystem))
-                    features |= FileSystemFeatures.CasePreservedNames |
-                        FileSystemFeatures.CaseSensitiveSearch;
-
-                if (mFileSystem is DiscFileSystem discFileSystem)
-                    fileSystemName = discFileSystem.FriendlyName;
-                else
-                    fileSystemName = mFileSystem.GetType().Name;
+                fileSystemName = mFileSystem.FriendlyName;
 
                 return DokanResult.Success;
             }
@@ -631,22 +439,22 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
-		{
-			return NtStatus.NotImplemented;
-		}
+        public NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
+        {
+            return NtStatus.NotImplemented;
+        }
 
-		public NtStatus Mounted(DokanFileInfo info)
+        public NtStatus Mounted(DokanFileInfo info)
         {
             return NtStatus.Success;
         }
 
-		public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
-		{
+        public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
+        {
             try
             {
-                if (IsBlacklisted(oldName) || IsBlacklisted(newName))
-                    return DokanResult.AccessDenied;
+                oldName = mFileSystem.TransformPath(oldName);
+                newName = mFileSystem.TransformPath(newName);
 
                 (info.Context as Stream)?.Dispose();
                 info.Context = null;
@@ -658,8 +466,7 @@ namespace nDiscUtils.Mounting
                         mFileSystem.MoveDirectory(oldName, newName);
                     else
                         mFileSystem.MoveFile(oldName, newName);
-
-                    this.Flush();
+                    
                     return DokanResult.Success;
                 }
                 else if (replace)
@@ -667,10 +474,8 @@ namespace nDiscUtils.Mounting
                     info.Context = null;
                     if (info.IsDirectory)
                         return DokanResult.AccessDenied;
-                    
-                    mFileSystem.MoveFile(oldName, newName, replace);
 
-                    this.Flush();
+                    mFileSystem.MoveFile(oldName, newName, replace);                    
                     return DokanResult.Success;
                 }
 
@@ -686,15 +491,17 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
-		{
-			bytesRead = 0;
+        public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
+        {
+            bytesRead = 0;
 
             try
             {
+                fileName = mFileSystem.TransformPath(fileName);
+
                 var memoryMapped = (info.Context == null);
                 if (memoryMapped)
-                    info.Context = mFileSystem.OpenFile(fileName, FileMode.Open, System.IO.FileAccess.Read);
+                    info.Context = mFileSystem.Open(fileName, FileMode.Open, System.IO.FileAccess.Read);
 
                 var stream = info.Context as Stream;
                 lock (stream)
@@ -722,15 +529,11 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
             try
             {
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
-
                 (info.Context as Stream)?.SetLength(length);
-                this.Flush();
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -743,15 +546,11 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
             try
             {
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
-
                 (info.Context as Stream)?.SetLength(length);
-                this.Flush();
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -764,10 +563,12 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
+        public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
         {
             try
             {
+                fileName = mFileSystem.TransformPath(fileName);
+
                 if (info.IsDirectory)
                 {
                     if (!mFileSystem.DirectoryExists(fileName))
@@ -778,12 +579,8 @@ namespace nDiscUtils.Mounting
                     if (!mFileSystem.FileExists(fileName))
                         return DokanResult.FileNotFound;
                 }
-
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
 
                 mFileSystem.SetAttributes(fileName, attributes);
-                this.Flush();
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -796,62 +593,17 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
-		{
-            if (mFileSystem is NtfsFileSystem ntfsFileSystem)
-            {
-                try
-                {
-                    if (info.IsDirectory)
-                    {
-                        if (!mFileSystem.DirectoryExists(fileName))
-                            return DokanResult.PathNotFound;
-                    }
-                    else
-                    {
-                        if (!mFileSystem.FileExists(fileName))
-                            return DokanResult.FileNotFound;
-                    }
-
-                    if (IsBlacklisted(fileName))
-                        return DokanResult.Success;
-
-                    var currentSecurityDescriptor =
-                        ntfsFileSystem.GetSecurity(fileName);
-
-                    var newSecurityDescriptor = new RawSecurityDescriptor(
-                        security.GetSecurityDescriptorBinaryForm(), 0);
-
-                    if ((sections & AccessControlSections.Audit) != 0)
-                        currentSecurityDescriptor.SystemAcl = newSecurityDescriptor.SystemAcl;
-                    if ((sections & AccessControlSections.Access) != 0)
-                        currentSecurityDescriptor.DiscretionaryAcl = newSecurityDescriptor.DiscretionaryAcl;
-                    if ((sections & AccessControlSections.Group) != 0)
-                        currentSecurityDescriptor.Group = newSecurityDescriptor.Group;
-                    if ((sections & AccessControlSections.Owner) != 0)
-                        currentSecurityDescriptor.Owner = newSecurityDescriptor.Owner;
-
-                    ntfsFileSystem.SetSecurity(fileName, currentSecurityDescriptor);
-
-                    return DokanResult.Success;
-                }
-                catch (IOException ioex)
-                {
-                    return HandleIOException(ioex, fileName);
-                }
-                catch (Exception ex)
-                {
-                    return HandleException(ex, fileName);
-                }
-            }
-
+        public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections, DokanFileInfo info)
+        {
             return NtStatus.NotImplemented;
-		}
+        }
 
-		public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
+        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
         {
             try
             {
+                fileName = mFileSystem.TransformPath(fileName);
+
                 if (info.IsDirectory)
                 {
                     if (!mFileSystem.DirectoryExists(fileName))
@@ -862,9 +614,6 @@ namespace nDiscUtils.Mounting
                     if (!mFileSystem.FileExists(fileName))
                         return DokanResult.FileNotFound;
                 }
-
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
 
                 if (creationTime.HasValue)
                     mFileSystem.SetCreationTime(fileName, creationTime.Value);
@@ -874,8 +623,7 @@ namespace nDiscUtils.Mounting
 
                 if (lastWriteTime.HasValue)
                     mFileSystem.SetLastWriteTime(fileName, lastWriteTime.Value);
-
-                this.Flush();
+                
                 return DokanResult.Success;
             }
             catch (IOException ioex)
@@ -888,28 +636,27 @@ namespace nDiscUtils.Mounting
             }
         }
 
-		public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
-		{
-			return NtStatus.NotImplemented;
-		}
+        public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
+        {
+            return NtStatus.NotImplemented;
+        }
 
         public NtStatus Unmounted(DokanFileInfo info)
         {
-			return NtStatus.Success;
+            return NtStatus.Success;
         }
 
-		public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
-		{
-			bytesWritten = 0;
+        public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
+        {
+            bytesWritten = 0;
 
             try
             {
-                if (IsBlacklisted(fileName))
-                    return DokanResult.AccessDenied;
+                fileName = mFileSystem.TransformPath(fileName);
 
                 var memoryMapped = (info.Context == null);
                 if (memoryMapped)
-                    info.Context = mFileSystem.OpenFile(fileName, FileMode.Open, System.IO.FileAccess.ReadWrite);
+                    info.Context = mFileSystem.Open(fileName, FileMode.Open, System.IO.FileAccess.ReadWrite);
 
                 var stream = info.Context as Stream;
                 lock (stream)
@@ -925,7 +672,7 @@ namespace nDiscUtils.Mounting
                     stream.Dispose();
                     info.Context = null;
                 }
-                
+
                 return DokanResult.Success;
             }
             catch (IOException ioex)
