@@ -120,103 +120,59 @@ namespace nDiscUtils.Modules
                     return INVALID_ARGUMENT;
                 }
 
-                //
-                // Data Write Process
-                //
+                var iopsCount = stream.Length / buffer.Length;
+
+                var sequentialAction = new Func<string, Action, TimeSpan>((name, action) =>
                 {
                     stream.Position = 0;
-                    Logger.Verbose("===== Starting Data Write Process");
+                    Logger.Verbose("===== Starting Sequential {0} Process", name);
 
                     var start = DateTime.Now;
-                    Logger.Verbose("Data Write start: {0}", start);
+                    Logger.Verbose("Sequential {0} start: {1}", name, start);
 
                     while (stream.Position < stream.Length)
-                    {
-                        stream.Write(buffer, 0, buffer.Length);
-                        stream.Flush();
-                    }
+                        action();
 
                     var end = DateTime.Now;
-                    Logger.Verbose("Data Write end:   {0}", end);
+                    Logger.Verbose("Sequential {0} end:   {1}", name, end);
 
                     var duration = end.Subtract(start);
-                    Logger.Info("Data Write duration: {0}", duration);
-                    Logger.Info("Data Write speed:    {0}/s", FormatBytes(stream.Length / duration.TotalSeconds, 3));
-                }
+                    Logger.Info("Sequential {0} duration: {1}", name, duration);
+                    Logger.Info("Sequential {0} speed:    {1}/s ({2} ops/s)", name,
+                        FormatBytes(stream.Length / duration.TotalSeconds, 3),
+                        Math.Round(iopsCount / duration.TotalSeconds, 2));
+                    return duration;
+                });
 
-                //
-                // Data Read Process
-                //
+                var randomAction = new Func<string, Action, TimeSpan>((name, action) =>
                 {
                     stream.Position = 0;
-                    Logger.Verbose("===== Starting Data Read  Process");
+                    Logger.Verbose("===== Starting Random {0} Process", name);
 
                     var start = DateTime.Now;
-                    Logger.Verbose("Data Read  start: {0}", start);
+                    Logger.Verbose("Random {0} start: {1}", name, start);
 
-                    while (stream.Position < stream.Length)
-                    {
-                        stream.Read(buffer, 0, buffer.Length);
-                    }
-
-                    var end = DateTime.Now;
-                    Logger.Verbose("Data Read  end:   {0}", end);
-
-                    var duration = end.Subtract(start);
-                    Logger.Info("Data Read  duration: {0}", duration);
-                    Logger.Info("Data Read  speed:    {0}/s", FormatBytes(stream.Length / duration.TotalSeconds, 3));
-                }
-
-                //
-                // IOPS Write Process
-                //
-                {
-                    stream.Position = 0;
-                    Logger.Verbose("===== Starting IOPS Write Process");
-
-                    var start = DateTime.Now;
-                    Logger.Verbose("IOPS Write start: {0}", start);
-
-                    for (long i = 0; i < iopsPos.LongLength; i++)
+                    for (long i = 0; i < iopsPos.Length; i++)
                     {
                         stream.Seek(iopsPos[i], SeekOrigin.Begin);
-                        stream.Write(buffer, 0, buffer.Length);
-                        stream.Flush();
+                        action();
                     }
 
                     var end = DateTime.Now;
-                    Logger.Verbose("IOPS Write end:   {0}", end);
+                    Logger.Verbose("Random {0} end:   {1}", name, end);
 
                     var duration = end.Subtract(start);
-                    Logger.Info("IOPS Write duration: {0}", duration);
-                    Logger.Info("IOPS Write speed:    {0:N}/s",
-                        (long)(iopsPos.LongLength / duration.TotalSeconds), 3);
-                }
-
-                //
-                // IOPS Read Process
-                //
-                {
-                    stream.Position = 0;
-                    Logger.Verbose("===== Starting IOPS Read  Process");
-
-                    var start = DateTime.Now;
-                    Logger.Verbose("IOPS Read  start: {0}", start);
-
-                    for (long i = 0; i < iopsPos.LongLength; i++)
-                    {
-                        stream.Position = iopsPos[i];
-                        stream.Read(buffer, 0, buffer.Length);
-                    }
-
-                    var end = DateTime.Now;
-                    Logger.Verbose("IOPS Read  end:   {0}", end);
-
-                    var duration = end.Subtract(start);
-                    Logger.Info("IOPS Read  duration: {0}", duration);
-                    Logger.Info("IOPS Read  speed:    {0:N}/s", 
-                        (long)(iopsPos.LongLength / duration.TotalSeconds), 3);
-                }
+                    Logger.Info("Random {0} duration: {1}", name, duration);
+                    Logger.Info("Random {0} speed:    {1}/s ({2} ops/s)", name,
+                        FormatBytes(stream.Length / duration.TotalSeconds, 3),
+                        Math.Round(iopsCount / duration.TotalSeconds, 2));
+                    return duration;
+                });
+                
+                var sequentialWriteDuration = sequentialAction("write", (() => { stream.Write(buffer, 0, buffer.Length); stream.Flush(); }));
+                var sequentialReadDuration = sequentialAction("read", (() => { stream.Read(buffer, 0, buffer.Length); }));
+                var randomWriteDuration = randomAction("write", (() => { stream.Write(buffer, 0, buffer.Length); stream.Flush(); }));
+                var randomReadDuration = randomAction("read", (() => { stream.Read(buffer, 0, buffer.Length); }));
             }
 
             if (File.Exists(path))
@@ -225,7 +181,7 @@ namespace nDiscUtils.Modules
             return SUCCESS;
         }
         
-        [Verb("benchmark", HelpText = "Read and print S.M.A.R.T. values of hard drives")]
+        [Verb("benchmark", HelpText = "Run various kind of benchmarks on several kind of disks")]
         public sealed class Options : BaseOptions
         {
 
