@@ -117,8 +117,6 @@ namespace IO {
 
         void AssertRequestedBlockSize();
 
-        void AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count);
-
     };
 
 } // IO

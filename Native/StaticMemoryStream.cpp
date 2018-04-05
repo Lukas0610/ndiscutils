@@ -20,7 +20,7 @@
 
 #include "StaticMemoryStream.h"
 #include "Memory.h"
-#include "StreamMode.h"
+#include "StreamUtils.h"
 
 using namespace System;
 using namespace System::IO;
@@ -43,7 +43,7 @@ namespace IO {
             throw gcnew OverflowException("Detected numeric overflow in capacity");
         }
 
-        AssertRequestedCapacity();
+        StreamUtils::IsAllocationAlignedStrict(mCapacity, "Capacity");
 
         mMemory = nullptr;
         mPosition = 0;
@@ -87,7 +87,7 @@ namespace IO {
     {
         auto readCount = 0;
         
-        AssertBufferParameters(buffer, offset, count);
+        StreamUtils::AssertBufferParameters(mCapacity, mPosition, buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
         auto bufferPointer = (void*)bufferHandle.AddrOfPinnedObject();
@@ -112,7 +112,7 @@ namespace IO {
 
     void StaticMemoryStream::Write(array<unsigned char> ^buffer, int offset, int count)
     {
-        AssertBufferParameters(buffer, offset, count);
+        StreamUtils::AssertBufferParameters(mCapacity, mPosition, buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
         auto bufferPointer = (void*)bufferHandle.AddrOfPinnedObject();
@@ -131,34 +131,6 @@ namespace IO {
             throw gcnew IOException("Failed to unlock memory object", error);
 
         bufferHandle.Free();
-    }
-
-    void StaticMemoryStream::AssertRequestedCapacity()
-    {
-        SYSTEM_INFO info;
-        GetSystemInfo(&info);
-
-        if ((mCapacity & info.dwAllocationGranularity) != 0)
-            throw gcnew ArgumentException(String::Format("Requested capacity is not aligned to allocation granularity ({0})",
-                info.dwAllocationGranularity));
-    }
-
-    void StaticMemoryStream::AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count)
-    {
-        if (buffer->Length <= 0)
-            throw gcnew IOException("<buffer.Length> was expected to be greater than zero");
-
-        if (offset < 0)
-            throw gcnew IOException("<offset> was expected to be greater than or equal to zero");
-
-        if (count <= 0)
-            throw gcnew IOException("<count> was expected to be greater than zero");
-
-        if (buffer->Length - (offset + count) < 0)
-            throw gcnew IOException("Buffer does not contain enough data");
-
-        if (mPosition + count > mCapacity)
-            throw gcnew IOException("Operation would exceed memory limits");
     }
 
 } // IO

@@ -20,8 +20,6 @@
 
 #include "stdafx.h"
 
-#include "StreamMode.h"
-
 using namespace System;
 using namespace System::IO;
 
@@ -103,10 +101,6 @@ namespace nDiscUtils {
             HGLOBAL mMemory;
 
             size_t mPosition;
-
-            void AssertRequestedCapacity();
-
-            void AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count);
 
         };
 

@@ -33,6 +33,9 @@
     <ClInclude Include="StaticMemoryStream.h">
       <Filter>Headerdateien\IO</Filter>
     </ClInclude>
+    <ClInclude Include="StreamUtils.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="StaticMemoryStream.cpp">
       <Filter>Quelldateien\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamUtils.cpp">
+      <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
