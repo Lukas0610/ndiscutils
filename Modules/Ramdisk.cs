@@ -38,8 +38,13 @@ namespace nDiscUtils.Modules
 
             if (opts.ReadOnly)
             {
-                Logger.Error("Are you sure you want to mount a ramdisk as read-only?",
-                    opts.FileSystem);
+                Logger.Error("Are you sure you want to mount a ramdisk as read-only?");
+                return INVALID_ARGUMENT;
+            }
+
+            if ((opts.Size % opts.BlockSize) != 0)
+            {
+                Logger.Error("Requested capacity is not aligned to block size ({0})", opts.BlockSize);
                 return INVALID_ARGUMENT;
             }
 
@@ -49,7 +54,7 @@ namespace nDiscUtils.Modules
             if (opts.MemoryFull)
                 memoryStream = new StaticMemoryStream(opts.Size);
             else
-                memoryStream = new DynamicMemoryStream(opts.Size, 4096);
+                memoryStream = new DynamicMemoryStream(opts.Size, opts.BlockSize);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
                 return INVALID_ARGUMENT;
@@ -83,6 +88,14 @@ namespace nDiscUtils.Modules
             public long Size
             {
                 get => ParseSizeString(SizeString);
+            }
+
+            [Option('b', "block-size", Default = "64K", HelpText = "Size of each block in the internal memory allocation")]
+            public string BlockSizeString { get; set; }
+
+            public int BlockSize
+            {
+                get => (int)ParseSizeString(BlockSizeString);
             }
 
             [Option('f', "fs", Default = "NTFS", HelpText = "Type of the filesystem the ramdisk should be formatted with")]

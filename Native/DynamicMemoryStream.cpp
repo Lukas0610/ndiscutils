@@ -46,6 +46,8 @@ namespace IO {
             throw gcnew OverflowException("Detected numeric overflow in capacity");
         }
 
+        AssertRequestedBlockSize();
+
         mBlockCount = (long)Math::Ceiling((double)mCapacity / mBlockSize);
         mMemorySize = mBlockCount * sizeof(void*);
         mMemory = (void**)Memory::Allocate(mMemorySize);
@@ -186,6 +188,16 @@ namespace IO {
         }
 
         bufferHandle.Free();
+    }
+
+    void DynamicMemoryStream::AssertRequestedBlockSize()
+    {
+        SYSTEM_INFO info;
+        GetSystemInfo(&info);
+
+        if ((mBlockSize % info.dwAllocationGranularity) != 0)
+            throw gcnew ArgumentException(String::Format("Requested block-size is not aligned to allocation granularity ({0})",
+                info.dwAllocationGranularity));
     }
 
     void DynamicMemoryStream::AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count)

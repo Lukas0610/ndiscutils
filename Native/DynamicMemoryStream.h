@@ -115,6 +115,8 @@ namespace IO {
         size_t mLength;
         size_t mPosition;
 
+        void AssertRequestedBlockSize();
+
         void AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count);
 
     };
