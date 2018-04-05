@@ -20,6 +20,10 @@ using CommandLine;
 
 using nDiscUtils.Modules;
 
+using System;
+using System.Reflection;
+
+using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils
@@ -37,6 +41,20 @@ namespace nDiscUtils
         
         public static int Main(string[] args)
         {
+            var assembly = Assembly.GetExecutingAssembly();
+            var version = assembly.GetName().Version;
+            var buildArch = (Is64BitBuild ? 64 : 86);
+
+            Console.WriteLine("{0} {1}.{2}.{3}-{4}  {5:dd-MM-yyyy HH\\:mm\\:ss}  [x{6}-built]",
+                assembly.GetCustomAttribute<AssemblyProductAttribute>().Product,
+                version.Major, version.Minor, version.Build, version.Revision,
+                assembly.GetLinkerTime(), buildArch);
+
+            Console.WriteLine("{0}. Licensed under GPLv3.",
+                assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright);
+
+            Console.WriteLine();
+
             return Parser.Default.ParseArguments<
                 Benchmark.Options,
                 Clone.Options,

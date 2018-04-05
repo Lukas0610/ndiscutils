@@ -61,6 +61,18 @@ namespace nDiscUtils
             }
         }
 
+        public static bool Is64BitBuild
+        {
+            get
+            {
+#if __x64__
+                return true;
+#elif __x86__
+                return false;
+#endif
+            }
+        }
+
         public static void RunHelpers(BaseOptions opts)
         {
             if (opts.LogFile != null)

@@ -256,7 +256,7 @@ namespace nDiscUtils.Modules
                 get => ParseSizeString(InternalBufferSizeString);
             }
 
-            [Option('u', "unbuffered", Default = false, HelpText = "Disables all buffers to get themost realistic physical I/O speed", Required = false)]
+            [Option('u', "unbuffered", Default = false, HelpText = "Disables all buffers to get the most realistic physical I/O speed", Required = false)]
             public bool Unbuffered { get; set; }
 
             [Option('p', "pratical", Default = false, HelpText = "Tries to simulate a default userspace I/O-operation as good as possible", Required = false)]
