@@ -20,9 +20,9 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+
 using CommandLine;
 
-using nDiscUtils.IO;
 using nDiscUtils.Options;
 
 using static nDiscUtils.ModuleHelpers;

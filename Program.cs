@@ -16,12 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+using System;
+using System.Reflection;
+
 using CommandLine;
 
 using nDiscUtils.Modules;
-
-using System;
-using System.Reflection;
 
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
