@@ -87,22 +87,22 @@ namespace nDiscUtils.Modules
             }
 
             var buffer = new byte[opts.BufferSize];
-            var iopsPos = new long[(opts.Size / opts.BufferSize) - 1];
+            var randomPos = new long[(opts.Size / opts.BufferSize) - 1];
 
             // generate random data
             Logger.Debug("Generating random data");
             for (int i = 0; i < Math.Sqrt(buffer.Length); i++)
                 mRandom.NextBytes(buffer);
 
-            // generate random IOPS positions
+            // generate random positions
             Logger.Debug("Generating random IOPS read/write positions");
-            for (long i = 0; i < iopsPos.LongLength; i++)
+            for (long i = 0; i < randomPos.LongLength; i++)
             {
                 var pos = NextLongRandom(mRandom, 0, opts.Size - opts.BufferSize);
                 if ((pos % opts.BufferSize) != 0)
                     pos -= (pos % opts.BufferSize);
 
-                iopsPos[i] = pos;
+                randomPos[i] = pos;
             }
 
             using (var stream = new FileStream(handle, FileAccess.ReadWrite, (int)opts.InternalBufferSize))
@@ -119,8 +119,6 @@ namespace nDiscUtils.Modules
                     Logger.Error("Requested buffer size is not aligned to physical sector size");
                     return INVALID_ARGUMENT;
                 }
-
-                var iopsCount = stream.Length / buffer.Length;
 
                 var sequentialAction = new Func<string, Action, TimeSpan>((name, action) =>
                 {
@@ -139,8 +137,7 @@ namespace nDiscUtils.Modules
                     var duration = end.Subtract(start);
                     Logger.Info("Sequential {0} duration: {1}", name, duration);
                     Logger.Info("Sequential {0} speed:    {1}/s ({2} ops/s)", name,
-                        FormatBytes(stream.Length / duration.TotalSeconds, 3),
-                        Math.Round(iopsCount / duration.TotalSeconds, 2));
+                        FormatBytes(stream.Length / duration.TotalSeconds, 3));
                     return duration;
                 });
 
@@ -152,9 +149,9 @@ namespace nDiscUtils.Modules
                     var start = DateTime.Now;
                     Logger.Verbose("Random {0} start: {1}", name, start);
 
-                    for (long i = 0; i < iopsPos.Length; i++)
+                    for (long i = 0; i < randomPos.Length; i++)
                     {
-                        stream.Seek(iopsPos[i], SeekOrigin.Begin);
+                        stream.Seek(randomPos[i], SeekOrigin.Begin);
                         action();
                     }
 
@@ -163,9 +160,8 @@ namespace nDiscUtils.Modules
 
                     var duration = end.Subtract(start);
                     Logger.Info("Random {0} duration: {1}", name, duration);
-                    Logger.Info("Random {0} speed:    {1}/s ({2} ops/s)", name,
-                        FormatBytes(stream.Length / duration.TotalSeconds, 3),
-                        Math.Round(iopsCount / duration.TotalSeconds, 2));
+                    Logger.Info("Random {0} speed:    {1}/s", name,
+                        FormatBytes(stream.Length / duration.TotalSeconds, 3));
                     return duration;
                 });
                 
