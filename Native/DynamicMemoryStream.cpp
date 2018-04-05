@@ -113,11 +113,11 @@ namespace IO {
             auto nextBlockBegin = (size_t)(blockBegin + mBlockSize);
             auto innerBlockOffset = (size_t)0;
 
-            if (mPosition + readBlockSize > nextBlockBegin)
-                readBlockSize = (mPosition + readBlockSize) - nextBlockBegin;
-
             if (mPosition > blockBegin)
                 innerBlockOffset = mPosition - blockBegin;
+
+            if (innerBlockOffset + readBlockSize > mBlockSize)
+                readBlockSize = mBlockSize - innerBlockOffset;
 
             auto blockMemory = mMemory[blockIndex];
             if (blockMemory == nullptr)
@@ -159,11 +159,11 @@ namespace IO {
             auto nextBlockBegin = (size_t)(blockBegin + mBlockSize);
             auto innerBlockOffset = (size_t)0;
 
-            if (mPosition + writeBlockSize > nextBlockBegin)
-                writeBlockSize = (mPosition + writeBlockSize) - nextBlockBegin;
-
             if (mPosition > blockBegin)
                 innerBlockOffset = mPosition - blockBegin;
+
+            if (innerBlockOffset + writeBlockSize > mBlockSize)
+                writeBlockSize = mBlockSize - innerBlockOffset;
 
             auto blockMemory = mMemory[blockIndex];
             if (blockMemory == nullptr)
