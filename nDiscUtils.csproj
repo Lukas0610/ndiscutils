@@ -854,7 +854,7 @@
     <EmbeddedResource Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.resx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="FodyWeavers.xml" />
+    <Content Include="FodyWeavers.xml" Condition=" '$(Configuration)' == 'Release' " />
     <Content Include="nDiscUtils.ico" />
   </ItemGroup>
   <ItemGroup>
