@@ -19,7 +19,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-
+using System.Threading;
 using CommandLine;
 
 using nDiscUtils.IO;
@@ -48,17 +48,17 @@ namespace nDiscUtils.Modules
 
             var attributes = 0U;
 
-            if (!opts.NoWriteThrough)
+            if ((!opts.NoWriteThrough || opts.Unbuffered) && !opts.Pratical)
                 attributes |= FILE_FLAG_WRITE_THROUGH;
             else
                 Logger.Warn("Disabling WRITE_THROUGH flag");
 
-            if (!opts.Buffering)
+            if ((!opts.Buffering || opts.Unbuffered) && !opts.Pratical)
                 attributes |= FILE_FLAG_NO_BUFFERING;
             else
                 Logger.Warn("Disabling NO_BUFFERING flag");
 
-            if (!opts.NoSequentialScan)
+            if ((!opts.NoSequentialScan || opts.Unbuffered) && !opts.Pratical)
                 attributes |= FILE_FLAG_SEQUENTIAL_SCAN;
             else
                 Logger.Warn("Disabling SEQUENTIAL_SCAN flag");
@@ -87,15 +87,30 @@ namespace nDiscUtils.Modules
             }
 
             var buffer = new byte[opts.BufferSize];
+            var secondaryBuffer = new byte[0];
             var randomPos = new long[(opts.Size / opts.BufferSize) - 1];
 
             // generate random data
             Logger.Debug("Generating random data");
-            for (int i = 0; i < Math.Sqrt(buffer.Length); i++)
+            for (int i = 0; i < 4; i++)
+            {
                 mRandom.NextBytes(buffer);
+                Thread.Sleep(mRandom.Next(1, 25));
+            }
+
+            if (opts.Pratical)
+            {
+                Logger.Debug("Generating secondary random data");
+                secondaryBuffer = new byte[opts.BufferSize];
+                for (int i = 0; i < 4; i++)
+                {
+                    mRandom.NextBytes(secondaryBuffer);
+                    Thread.Sleep(mRandom.Next(1, 25));
+                }
+            }
 
             // generate random positions
-            Logger.Debug("Generating random IOPS read/write positions");
+            Logger.Debug("Generating random read/write positions");
             for (long i = 0; i < randomPos.LongLength; i++)
             {
                 var pos = NextLongRandom(mRandom, 0, opts.Size - opts.BufferSize);
@@ -104,6 +119,20 @@ namespace nDiscUtils.Modules
 
                 randomPos[i] = pos;
             }
+
+            var usePrimaryBuffer = true;
+            var getBuffer = new Func<byte[]>(() =>
+            {
+                if (opts.Pratical)
+                {
+                    usePrimaryBuffer = !usePrimaryBuffer;
+                    return (usePrimaryBuffer ? buffer : secondaryBuffer);
+                }
+                else
+                {
+                    return buffer;
+                }
+            });
 
             using (var stream = new FileStream(handle, FileAccess.ReadWrite, (int)opts.InternalBufferSize))
             {
@@ -123,7 +152,7 @@ namespace nDiscUtils.Modules
                 var sequentialAction = new Func<string, Action, TimeSpan>((name, action) =>
                 {
                     stream.Position = 0;
-                    Logger.Verbose("===== Starting Sequential {0} Process", name);
+                    Logger.Info("===== Starting Sequential {0} Process", name);
 
                     var start = DateTime.Now;
                     Logger.Verbose("Sequential {0} start: {1}", name, start);
@@ -136,7 +165,7 @@ namespace nDiscUtils.Modules
 
                     var duration = end.Subtract(start);
                     Logger.Info("Sequential {0} duration: {1}", name, duration);
-                    Logger.Info("Sequential {0} speed:    {1}/s ({2} ops/s)", name,
+                    Logger.Info("Sequential {0} speed:    {1}/s", name,
                         FormatBytes(stream.Length / duration.TotalSeconds, 3));
                     return duration;
                 });
@@ -144,7 +173,7 @@ namespace nDiscUtils.Modules
                 var randomAction = new Func<string, Action, TimeSpan>((name, action) =>
                 {
                     stream.Position = 0;
-                    Logger.Verbose("===== Starting Random {0} Process", name);
+                    Logger.Info("===== Starting Random {0} Process", name);
 
                     var start = DateTime.Now;
                     Logger.Verbose("Random {0} start: {1}", name, start);
@@ -164,11 +193,30 @@ namespace nDiscUtils.Modules
                         FormatBytes(stream.Length / duration.TotalSeconds, 3));
                     return duration;
                 });
-                
-                var sequentialWriteDuration = sequentialAction("write", (() => { stream.Write(buffer, 0, buffer.Length); stream.Flush(); }));
-                var sequentialReadDuration = sequentialAction("read", (() => { stream.Read(buffer, 0, buffer.Length); }));
-                var randomWriteDuration = randomAction("write", (() => { stream.Write(buffer, 0, buffer.Length); stream.Flush(); }));
-                var randomReadDuration = randomAction("read", (() => { stream.Read(buffer, 0, buffer.Length); }));
+
+                var write = new Action(() =>
+                {
+                    var useBuffer = getBuffer();
+                    stream.Write(useBuffer, 0, useBuffer.Length);
+                    stream.Flush();
+                });
+
+                var read = new Action(() =>
+                {
+                    stream.Read(buffer, 0, buffer.Length);
+                });
+
+                if (!opts.SkipSequential)
+                {
+                    var sequentialWriteDuration = sequentialAction("write", write);
+                    var sequentialReadDuration = sequentialAction("read", read);
+                }
+
+                if (!opts.SkipRandom)
+                {
+                    var randomWriteDuration = randomAction("write", write);
+                    var randomReadDuration = randomAction("read", read);
+                }
             }
 
             if (File.Exists(path))
@@ -207,6 +255,18 @@ namespace nDiscUtils.Modules
             {
                 get => ParseSizeString(InternalBufferSizeString);
             }
+
+            [Option('u', "unbuffered", Default = false, HelpText = "Disables all buffers to get themost realistic physical I/O speed", Required = false)]
+            public bool Unbuffered { get; set; }
+
+            [Option('p', "pratical", Default = false, HelpText = "Tries to simulate a default userspace I/O-operation as good as possible", Required = false)]
+            public bool Pratical { get; set; }
+
+            [Option("skip-sequential", Default = false, HelpText = "Skips sequential read/write tests", Required = false)]
+            public bool SkipSequential { get; set; }
+
+            [Option("skip-random", Default = false, HelpText = "Skips random-positioned read/write tests", Required = false)]
+            public bool SkipRandom { get; set; }
 
             [Option("no-write-through", Default = false, HelpText = "Disable WRITE_THROUGH flag when creating the benchmarking-file", Required = false)]
             public bool NoWriteThrough { get; set; }
