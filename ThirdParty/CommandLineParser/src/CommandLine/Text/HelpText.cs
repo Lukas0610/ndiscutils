@@ -606,10 +606,11 @@ namespace CommandLine.Text
             const int ExtraLength = 10;
             return
                 new StringBuilder(
-                    heading.SafeLength() + copyright.SafeLength() + preOptionsHelp.SafeLength() +
-                        optionsHelp.SafeLength() + ExtraLength).Append(heading)
-                    .AppendWhen(!string.IsNullOrEmpty(copyright), Environment.NewLine, copyright)
-                    .AppendWhen(preOptionsHelp.Length > 0, Environment.NewLine, preOptionsHelp.ToString())
+                    /* heading.SafeLength() + copyright.SafeLength() */ + preOptionsHelp.SafeLength() +
+                        optionsHelp.SafeLength() + ExtraLength)
+                    // .Append(heading)
+                    // .AppendWhen(!string.IsNullOrEmpty(copyright), Environment.NewLine, copyright)
+                    .AppendWhen(preOptionsHelp.Length > 0, /* Environment.NewLine, */ preOptionsHelp.ToString())
                     .AppendWhen(
                         optionsHelp != null && optionsHelp.Length > 0,
                         Environment.NewLine,
