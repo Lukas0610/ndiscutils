@@ -744,7 +744,7 @@ namespace nDiscUtils.Modules
             [Value(0, Default = null, HelpText = "Path to the name of drive which the data should be cloned from", Required = true)]
             public string Source { get; set; }
 
-            [Value(0, Default = null, HelpText = "Path to the name of drive which the data should be cloned to", Required = true)]
+            [Value(1, Default = null, HelpText = "Path to the name of drive which the data should be cloned to", Required = true)]
             public string Destination { get; set; }
 
             [Option('b', "buffer-size", Default = "64K", HelpText = "Size of I/O-buffer used for copying data", Required = true)]
