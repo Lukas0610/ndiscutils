@@ -96,15 +96,15 @@ namespace IO {
         void Write(array<unsigned char> ^buffer, int offset, int count) override;
 
     private:
-        long long mCapacity;
-        int mBlockSize;
-        long long mBlockCount;
+        size_t mCapacity;
+        size_t mBlockSize;
+        size_t mBlockCount;
         StreamMode mMode;
         void** mMemory;
-        long long mMemorySize;
+        size_t mMemorySize;
 
-        long long mLength;
-        long long mPosition;
+        size_t mLength;
+        size_t mPosition;
 
         void AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count);
 

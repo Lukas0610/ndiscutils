@@ -29,27 +29,33 @@ using namespace System::IO;
 namespace nDiscUtils {
 namespace IO {
 
-    void* Memory::Allocate(size_t count) {
+    void* Memory::Allocate(size_t count)
+    {
         return std::malloc(count);
     }
 
-    void Memory::Free(void* ptr) {
+    void Memory::Free(void* ptr)
+    {
         return free(ptr);
     }
 
-    void Memory::Set(void* ptr, unsigned char data, size_t count) {
+    void Memory::Set(void* ptr, unsigned char data, size_t count)
+    {
         Set(ptr, 0, data, count);
     }
 
-    void Memory::Set(void* ptr, long long offset, unsigned char data, size_t count) {
+    void Memory::Set(void* ptr, long long offset, unsigned char data, size_t count)
+    {
         std::memset(((unsigned char*)ptr) + offset, data, count);
     }
 
-    void Memory::Copy(void *src, const void *dst, size_t count) {
+    void Memory::Copy(void *src, const void *dst, size_t count)
+    {
         Copy(src, (long long)0, dst, (long long)0, count);
     }
 
-    void Memory::Copy(void *src, long long srcOffset, const void *dst, long long dstOffset, size_t count) {
+    void Memory::Copy(void *src, long long srcOffset, const void *dst, long long dstOffset, size_t count)
+    {
         memcpy(
             ((unsigned char*)dst) + dstOffset,
             ((unsigned char*)src) + srcOffset,

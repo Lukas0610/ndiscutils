@@ -44,10 +44,19 @@ namespace IO {
         DynamicMemoryStream(capacity, 4096, streamMode) { }
 
     DynamicMemoryStream::DynamicMemoryStream(long long capacity, int blockSize, StreamMode streamMode) :
+
+#pragma warning(push)
+#pragma warning(disable: 4244) // possible loss of data
         mCapacity(capacity),
+#pragma warning(pop)
+
         mBlockSize(blockSize),
         mMode(streamMode)
     {
+        if (capacity != (long long)mCapacity) {
+            throw gcnew OverflowException("Detected numeric overflow in capacity");
+        }
+
         mBlockCount = (long)Math::Ceiling((double)mCapacity / mBlockSize);
         mMemorySize = mBlockCount * sizeof(void*);
         mMemory = (void**)Memory::Allocate(mMemorySize);
@@ -56,11 +65,13 @@ namespace IO {
 
     long long DynamicMemoryStream::Seek(long long offset, SeekOrigin origin)
     {
+        auto soffs = (size_t)offset;
+
         switch (origin)
         {
-            case SeekOrigin::Begin: mPosition = offset; break;
-            case SeekOrigin::Current: mPosition += offset; break;
-            case SeekOrigin::End: mPosition = mCapacity - offset; break;
+            case SeekOrigin::Begin: mPosition = soffs; break;
+            case SeekOrigin::Current: mPosition += soffs; break;
+            case SeekOrigin::End: mPosition = mCapacity - soffs; break;
         }
 
         if (mPosition < 0)
@@ -93,11 +104,11 @@ namespace IO {
         {
             auto bufferOffset = offset + readCount;
 
-            auto readBlockSize = (long long)Math::Min(count - readCount, mBlockSize);
-            auto blockIndex = (long long)Math::Floor((double)mPosition / mBlockSize);
-            auto blockBegin = (blockIndex * mBlockSize);
-            auto nextBlockBegin = blockBegin + mBlockSize;
-            auto innerBlockOffset = 0LL;
+            auto readBlockSize = (size_t)Math::Min(__mem_cast(count - readCount), __mem_cast(mBlockSize));
+            auto blockIndex = (size_t)Math::Floor((double)mPosition / mBlockSize);
+            auto blockBegin = (size_t)(blockIndex * mBlockSize);
+            auto nextBlockBegin = (size_t)(blockBegin + mBlockSize);
+            auto innerBlockOffset = (size_t)0;
 
             if (mPosition + readBlockSize > nextBlockBegin)
                 readBlockSize = (mPosition + readBlockSize) - nextBlockBegin;
@@ -142,11 +153,11 @@ namespace IO {
         {
             auto bufferOffset = offset + writeCount;
 
-            auto writeBlockSize = (long long)Math::Min(count - writeCount, mBlockSize);
-            auto blockIndex = (long long)Math::Floor((double)mPosition / mBlockSize);
-            auto blockBegin = (blockIndex * mBlockSize);
-            auto nextBlockBegin = blockBegin + mBlockSize;
-            auto innerBlockOffset = 0LL;
+            auto writeBlockSize = (size_t)Math::Min(__mem_cast(count - writeCount), __mem_cast(mBlockSize));
+            auto blockIndex = (size_t)Math::Floor((double)mPosition / mBlockSize);
+            auto blockBegin = (size_t)(blockIndex * mBlockSize);
+            auto nextBlockBegin = (size_t)(blockBegin + mBlockSize);
+            auto innerBlockOffset = (size_t)0;
 
             if (mPosition + writeBlockSize > nextBlockBegin)
                 writeBlockSize = (mPosition + writeBlockSize) - nextBlockBegin;

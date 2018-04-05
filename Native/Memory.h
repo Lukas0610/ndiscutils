@@ -25,6 +25,12 @@
 using namespace System;
 using namespace System::IO;
 
+#ifdef WIN32
+#define __mem_cast  (unsigned int)
+#else
+#define __mem_cast  (unsigned long long)
+#endif
+
 namespace nDiscUtils {
 namespace IO {
 
