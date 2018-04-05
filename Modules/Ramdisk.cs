@@ -21,6 +21,8 @@ using CommandLine;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
 
+using System.IO;
+
 using static nDiscUtils.ModuleHelpers;
 using static nDiscUtils.ReturnCodes;
 
@@ -42,7 +44,12 @@ namespace nDiscUtils.Modules
             }
 
             Logger.Info("Creating memory stream with size 0x{0:X}", opts.Size);
-            var memoryStream = new DynamicMemoryStream(opts.Size, 4096);
+            Stream memoryStream = null;
+
+            if (opts.MemoryFull)
+                memoryStream = new StaticMemoryStream(opts.Size);
+            else
+                memoryStream = new DynamicMemoryStream(opts.Size, 4096);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
                 return INVALID_ARGUMENT;
@@ -80,6 +87,9 @@ namespace nDiscUtils.Modules
 
             [Option('f', "fs", Default = "NTFS", HelpText = "Type of the filesystem the ramdisk should be formatted with")]
             public string FileSystem { get; set; }
+
+            [Option('m', "memory-full", Default = false, HelpText = "Allocate the full memory region at once")]
+            public bool MemoryFull { get; set; }
 
         }
 
