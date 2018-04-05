@@ -192,7 +192,7 @@ namespace nDiscUtils.Modules
                 get => ParseSizeString(SizeString);
             }
 
-            [Option('b', "buffer-size", Default = "64K", HelpText = "Size of the I/O-buffer used to read/write the test-data", Required = false)]
+            [Option('b', "buffer-size", Default = "16M", HelpText = "Size of the I/O-buffer used to read/write the test-data", Required = false)]
             public string BufferSizeString { get; set; }
 
             public long BufferSize
