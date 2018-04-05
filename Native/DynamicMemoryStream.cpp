@@ -84,17 +84,7 @@ namespace IO {
         if (!CanRead)
             throw gcnew ArgumentException("Stream is not opened for read-access");
 
-        if (buffer->Length <= 0)
-            throw gcnew IOException("<buffer.Length> was expected to be greater than zero");
-
-        if (offset < 0)
-            throw gcnew IOException("<offset> was expected to be greater than or equal to zero");
-
-        if (count <= 0)
-            throw gcnew IOException("<count> was expected to be greater than zero");
-
-        if (buffer->Length - (offset + count) < 0)
-            throw gcnew IOException("Buffer does not contain enough data");
+        AssertBufferParameters(buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
         auto bufferPointer = (void*)bufferHandle.AddrOfPinnedObject();
@@ -141,19 +131,9 @@ namespace IO {
         auto writeCount = 0;
 
         if (!CanWrite)
-            throw gcnew ArgumentException("Stream is not opened for read-access");
+            throw gcnew ArgumentException("Stream is not opened for write-access");
 
-        if (buffer->Length <= 0)
-            throw gcnew IOException("<buffer.Length> was expected to be greater than zero");
-
-        if (offset < 0)
-            throw gcnew IOException("<offset> was expected to be greater than or equal to zero");
-
-        if (count <= 0)
-            throw gcnew IOException("<count> was expected to be greater than zero");
-
-        if (buffer->Length - (offset + count) < 0)
-            throw gcnew IOException("Buffer does not contain enough data");
+        AssertBufferParameters(buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
         auto bufferPointer = (void*)bufferHandle.AddrOfPinnedObject();
@@ -194,6 +174,21 @@ namespace IO {
         }
 
         bufferHandle.Free();
+    }
+
+    void DynamicMemoryStream::AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count)
+    {
+        if (buffer->Length <= 0)
+            throw gcnew IOException("<buffer.Length> was expected to be greater than zero");
+
+        if (offset < 0)
+            throw gcnew IOException("<offset> was expected to be greater than or equal to zero");
+
+        if (count <= 0)
+            throw gcnew IOException("<count> was expected to be greater than zero");
+
+        if (buffer->Length - (offset + count) < 0)
+            throw gcnew IOException("Buffer does not contain enough data");
     }
 
 } // IO

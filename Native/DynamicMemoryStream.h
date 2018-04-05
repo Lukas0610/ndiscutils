@@ -106,6 +106,8 @@ namespace IO {
         long long mLength;
         long long mPosition;
 
+        void AssertBufferParameters(array<unsigned char> ^buffer, int offset, int count);
+
     };
 
 } // IO
