@@ -42,7 +42,7 @@ namespace nDiscUtils.Modules
             }
 
             Logger.Info("Creating memory stream with size 0x{0:X}", opts.Size);
-            var memoryStream = new DynamicMemoryStream(opts.Size, 4096, StreamMode.ReadWrite);
+            var memoryStream = new DynamicMemoryStream(opts.Size, 4096);
 
             if (FormatStream(opts.FileSystem, memoryStream, opts.Size, "nDiscUtils Ramdisk") == null)
                 return INVALID_ARGUMENT;

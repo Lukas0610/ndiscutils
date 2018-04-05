@@ -16,11 +16,9 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include "stdafx.h"
-#include "stdio.h"
-#include "stdlib.h"
+#pragma once
 
-#include "StreamMode.h"
+#include "stdafx.h"
 
 using namespace System;
 using namespace System::IO;
@@ -28,59 +26,71 @@ using namespace System::IO;
 namespace nDiscUtils {
 namespace IO {
 
-    public ref class DynamicMemoryStream : Stream
+    public ref class DynamicMemoryStream : Stream, IDisposable
     {
 
     public:
         DynamicMemoryStream(long long capacity);
         DynamicMemoryStream(long long capacity, int blockSize);
-        DynamicMemoryStream(long long capacity, StreamMode streamMode);
-        DynamicMemoryStream(long long capacity, int blockSize, StreamMode streamMode);
 
-        property bool CanRead {
-            bool get() override {
-                return ((mMode & StreamMode::Read) == StreamMode::Read);
-            }
-        }
+        ~DynamicMemoryStream();
 
-        property bool CanWrite {
-            bool get() override {
-                return ((mMode & StreamMode::Write) == StreamMode::Write);
-            }
-        }
-
-        property bool CanSeek {
-            bool get() override {
+        property bool CanRead
+        {
+            bool get() override
+            {
                 return true;
             }
         }
 
-        property bool CanTimeout {
-            bool get() override {
+        property bool CanWrite
+        {
+            bool get() override
+            {
+                return true;
+            }
+        }
+
+        property bool CanSeek
+        {
+            bool get() override
+            {
+                return true;
+            }
+        }
+
+        property bool CanTimeout
+        {
+            bool get() override
+            {
                 return false;
             }
         }
 
         property long long Length
         {
-            long long get() override {
+            long long get() override
+            {
                 return mCapacity;
             }
         }
 
         property long long Size
         {
-            long long get() {
+            long long get()
+            {
                 return mLength;
             }
         }
 
         property long long Position
         {
-            long long get() override {
+            long long get() override
+            {
                 return mPosition;
             }
-            void set(long long value) override {
+            void set(long long value) override
+            {
                 Seek(value, SeekOrigin::Begin);
             }
         }
@@ -99,7 +109,6 @@ namespace IO {
         size_t mCapacity;
         size_t mBlockSize;
         size_t mBlockCount;
-        StreamMode mMode;
         void** mMemory;
         size_t mMemorySize;
 

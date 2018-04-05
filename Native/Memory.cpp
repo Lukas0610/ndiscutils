@@ -17,11 +17,8 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include "stdafx.h"
-#include <iostream>
-#include <cstring>
 
 #include "Memory.h"
-#include "StreamMode.h"
 
 using namespace System;
 using namespace System::IO;

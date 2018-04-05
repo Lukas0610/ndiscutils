@@ -24,13 +24,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="StreamMode.h">
-      <Filter>Headerdateien\IO</Filter>
-    </ClInclude>
     <ClInclude Include="DynamicMemoryStream.h">
       <Filter>Headerdateien\IO</Filter>
     </ClInclude>
     <ClInclude Include="Memory.h">
+      <Filter>Headerdateien\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMemoryStream.h">
       <Filter>Headerdateien\IO</Filter>
     </ClInclude>
   </ItemGroup>
@@ -45,6 +45,9 @@
       <Filter>Quelldateien\IO</Filter>
     </ClCompile>
     <ClCompile Include="Memory.cpp">
+      <Filter>Quelldateien\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMemoryStream.cpp">
       <Filter>Quelldateien\IO</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,13 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 #include "stdafx.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
 
 #include "DynamicMemoryStream.h"
 #include "Memory.h"
-#include "StreamMode.h"
 
 using namespace System;
 using namespace System::IO;
@@ -35,23 +31,16 @@ namespace nDiscUtils {
 namespace IO {
 
     DynamicMemoryStream::DynamicMemoryStream(long long capacity) :
-        DynamicMemoryStream(capacity, 4096, StreamMode::ReadWrite) { }
+        DynamicMemoryStream(capacity, 4096) { }
 
     DynamicMemoryStream::DynamicMemoryStream(long long capacity, int blockSize) :
-        DynamicMemoryStream(capacity, blockSize, StreamMode::ReadWrite) { }
-
-    DynamicMemoryStream::DynamicMemoryStream(long long capacity, StreamMode streamMode) :
-        DynamicMemoryStream(capacity, 4096, streamMode) { }
-
-    DynamicMemoryStream::DynamicMemoryStream(long long capacity, int blockSize, StreamMode streamMode) :
 
 #pragma warning(push)
 #pragma warning(disable: 4244) // possible loss of data
         mCapacity(capacity),
 #pragma warning(pop)
 
-        mBlockSize(blockSize),
-        mMode(streamMode)
+        mBlockSize(blockSize)
     {
         if (capacity != (long long)mCapacity) {
             throw gcnew OverflowException("Detected numeric overflow in capacity");
@@ -61,6 +50,9 @@ namespace IO {
         mMemorySize = mBlockCount * sizeof(void*);
         mMemory = (void**)Memory::Allocate(mMemorySize);
         Memory::Set(mMemory, 0, mMemorySize);
+
+        mLength = __mem_cast(0);
+        mPosition = __mem_cast(0);
     }
 
     long long DynamicMemoryStream::Seek(long long offset, SeekOrigin origin)
@@ -88,13 +80,24 @@ namespace IO {
         return mPosition;
     }
 
+    DynamicMemoryStream::~DynamicMemoryStream()
+    {
+        for (size_t i = 0; i < mBlockCount; i++)
+        {
+            if (mMemory[i] != nullptr)
+            {
+                VirtualFree(mMemory[i], 0, MEM_RELEASE);
+                mMemory[i] = nullptr;
+
+                mLength -= mBlockSize;
+            }
+        }
+    }
+
     int DynamicMemoryStream::Read(array<unsigned char> ^buffer, int offset, int count)
     {
         auto readCount = 0;
-
-        if (!CanRead)
-            throw gcnew ArgumentException("Stream is not opened for read-access");
-
+        
         AssertBufferParameters(buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
@@ -141,9 +144,6 @@ namespace IO {
     {
         auto writeCount = 0;
 
-        if (!CanWrite)
-            throw gcnew ArgumentException("Stream is not opened for write-access");
-
         AssertBufferParameters(buffer, offset, count);
 
         auto bufferHandle = GCHandle::Alloc(buffer, GCHandleType::Pinned);
@@ -168,11 +168,12 @@ namespace IO {
             auto blockMemory = mMemory[blockIndex];
             if (blockMemory == nullptr)
             {
-                blockMemory = Memory::Allocate(mBlockSize);
+                blockMemory = VirtualAlloc(nullptr, mBlockSize, MEM_COMMIT, PAGE_READWRITE);
                 if (blockMemory == nullptr)
                     throw gcnew IOException("Failed to allocate " + mBlockSize + " bytes of memory");
 
                 mMemory[blockIndex] = blockMemory;
+                mLength += mBlockSize;
             }
 
             Memory::Copy(
@@ -200,6 +201,9 @@ namespace IO {
 
         if (buffer->Length - (offset + count) < 0)
             throw gcnew IOException("Buffer does not contain enough data");
+
+        if (mPosition + count > mCapacity)
+            throw gcnew IOException("Operation would exceed memory limits");
     }
 
 } // IO

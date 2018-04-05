@@ -16,19 +16,17 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-#include "stdafx.h"
-#include <iostream>
-#include <cstring>
+#pragma once
 
-#include "StreamMode.h"
+#include "stdafx.h"
 
 using namespace System;
 using namespace System::IO;
 
-#ifdef WIN32
-#define __mem_cast  (unsigned int)
-#else
-#define __mem_cast  (unsigned long long)
+#ifdef __x86__
+#define __mem_cast(x)  ((unsigned int)(x))
+#elif __x64__
+#define __mem_cast(x)  ((unsigned long long)(x))
 #endif
 
 namespace nDiscUtils {
