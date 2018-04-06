@@ -86,6 +86,7 @@
     <Compile Include="IO\FileSystem\SimpleDirectoryInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileSystemInfo.cs" />
+    <Compile Include="IO\MemoryWrapper.cs" />
     <Compile Include="IO\XPath.cs" />
     <Compile Include="Modules\Benchmark.cs" />
     <Compile Include="Modules\Erase.cs" />

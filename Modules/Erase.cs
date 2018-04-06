@@ -179,7 +179,7 @@ namespace nDiscUtils.Modules
                 unsafe
                 {
                     fixed (void* bufferPtr = buffer)
-                        Memory.Set(bufferPtr, 0, (ulong)buffer.Length);
+                        MemoryWrapper.Set(bufferPtr, 0, buffer.Length);
                 }
             }
 
