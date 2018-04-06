@@ -27,7 +27,7 @@ namespace nDiscUtils.Service
 
         public static readonly string BaseName = "nDiscUtilsPrivSvc";
 
-        public static readonly int Version = 2;
+        public static readonly int Version = 3;
 
         public static readonly string FullName = BaseName + Version;
 

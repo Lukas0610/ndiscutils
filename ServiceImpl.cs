@@ -180,7 +180,7 @@ validationExit:
 start:
                 Console.WriteLine("Attempting to launch nDiscUtils through privilege elevation service...");
                 
-                service.Start(new string[] { Environment.CommandLine });
+                service.Start(new string[] { Environment.CommandLine, Directory.GetCurrentDirectory() });
                 return false;
             }
         }

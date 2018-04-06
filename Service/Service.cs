@@ -40,7 +40,7 @@ namespace nDiscUtils.Service
 
         protected override void OnStart(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length != 2)
             {
                 EventLog.WriteEntry($"Invalid count of arguments received", EventLogEntryType.Error);
                 this.Stop();
@@ -48,6 +48,7 @@ namespace nDiscUtils.Service
             }
 
             var commandLine = args[0];
+            var workingDirectory = args[1];
 
             var registryValidation = false;
             var registryValidationData = "";
@@ -79,12 +80,18 @@ namespace nDiscUtils.Service
             {
                 if (commandLine.EndsWith(" --"))
                 {
-                    Process.Start(registryValidationData, arguments);
+                    var procInfo = new ProcessStartInfo
+                    {
+                        FileName = registryValidationData,
+                        Arguments = arguments,
+                        WorkingDirectory = workingDirectory
+                    };
+                    Process.Start(procInfo);
                     EventLog.WriteEntry($"Started background process with (<[{registryValidationData}]>, <[{arguments}]>)");
                 }
                 else
                 {
-                    if (!ApplicationLoader.StartProcessAndBypassUAC(commandLine + " /SVCR", out var procInfo))
+                    if (!ApplicationLoader.StartProcessAndBypassUAC(commandLine + " /SVCR", workingDirectory, out var procInfo))
                     {
                         EventLog.WriteEntry($"Failed to launch process with elevated permissions", EventLogEntryType.Error);
                     }
