@@ -44,6 +44,7 @@ namespace nDiscUtils
     {
 
         private static int osVersionPlatform = (int)Environment.OSVersion.Platform;
+        private static bool? isServiceEnvironment = null;
 
         public static bool IsLinux
         {
@@ -52,6 +53,19 @@ namespace nDiscUtils
                 return (osVersionPlatform == 4) ||
                        (osVersionPlatform == 6) ||
                        (osVersionPlatform == 128);
+            }
+        }
+
+        public static bool IsServiceEnvironment
+        {
+            get
+            {
+                return isServiceEnvironment ?? false;
+            }
+            set
+            {
+                if (!isServiceEnvironment.HasValue)
+                    isServiceEnvironment = value;
             }
         }
 

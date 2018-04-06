@@ -98,6 +98,9 @@ validationExit:
                 argsList.RemoveAt(args.Length - 1);
                 args = argsList.ToArray();
 
+                // tell program services launched this instance
+                ModuleHelpers.IsServiceEnvironment = true;
+
                 // fall through service-barrier as this run is intended
                 return true;
             }
