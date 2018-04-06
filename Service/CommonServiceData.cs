@@ -43,9 +43,6 @@ namespace nDiscUtils.Service
         {
             if (!Directory.Exists(ServiceDirectory))
                 Directory.CreateDirectory(ServiceDirectory);
-
-            if (BaseName + Version != FullName)
-                throw new ArgumentException("FullName and Version are out of sync");
         }
 
     }

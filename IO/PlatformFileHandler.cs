@@ -48,20 +48,16 @@ namespace nDiscUtils.IO
             if (error != 0)
                 throw new IOException("Failed to call CreateFile() on " + diskPath + ": " + 
                     "Error " + error);
-            
-            // Lock disk
-            if (!DeviceIoControl(handle, FSCTL_LOCK_VOLUME, IntPtr.Zero, 0, IntPtr.Zero, 0,
-                out var dummy, IntPtr.Zero))
-            {
-                throw new IOException("Failed to call DeviceIoControl(FSCTL_LOCK_VOLUME) on "
-                    + diskPath + ": Error " + error);
-            }
 
+            // Lock disk
+            var result = DeviceIoControl(handle, FSCTL_LOCK_VOLUME, IntPtr.Zero, 0, IntPtr.Zero, 0,
+                out var dummy, IntPtr.Zero);
             error = Marshal.GetLastWin32Error();
+
             Logger.Info("DeviceIoControl(0x{0:X}, FSCTL_LOCK_VOLUME) returned with {1}",
                 handle.DangerousGetHandle(), error);
 
-            if (error != 0)
+            if (!result || error != 0)
                 throw new IOException("Failed to call DeviceIoControl(FSCTL_LOCK_VOLUME) on "
                     + diskPath + ": Error " + error);
 
