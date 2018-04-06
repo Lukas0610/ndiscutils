@@ -299,6 +299,11 @@ namespace nDiscUtils
             }
         }
 
+        public static bool ConsoleBuffersInUse
+        {
+            get => UseConsoleBuffers && (kPrimaryBuffer != null) && (kPrivateBuffer != null);
+        }
+
         public static void OpenNewConsoleBuffer()
         {
             if (UseConsoleBuffers)

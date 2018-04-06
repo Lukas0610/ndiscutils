@@ -517,7 +517,7 @@ namespace nDiscUtils
             if (!Environment.UserInteractive)
                 return;
 
-            if (UseConsoleBuffers)
+            if (ConsoleBuffersInUse)
             {
                 WaitForUserExitImpl();
             }
