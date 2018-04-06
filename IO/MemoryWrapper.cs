@@ -16,11 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace nDiscUtils.IO
 {
@@ -28,12 +23,12 @@ namespace nDiscUtils.IO
     public static unsafe class MemoryWrapper
     {
 
-        public static void Allocate(long count)
+        public static void* Allocate(long count)
         {
 #if __x64__
-            Memory.Allocate((ulong)count);
+            return Memory.Allocate((ulong)count);
 #elif __x86__
-            Memory.Allocate((uint)count);
+            return Memory.Allocate((uint)count);
 #endif
         }
 
