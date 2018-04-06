@@ -70,6 +70,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -91,6 +92,11 @@
     <Compile Include="Modules\Benchmark.cs" />
     <Compile Include="Modules\Erase.cs" />
     <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Runtime\Emit\ILMethod.cs" />
     <Compile Include="Runtime\Emit\ILMethods.cs" />
     <Compile Include="IO\HardDiskType.cs" />
@@ -125,6 +131,8 @@
     <Compile Include="Mounting\DiscFileSystemMountPoint.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceImpl.cs" />
+    <Compile Include="Service\CommonServiceData.cs" />
     <Compile Include="ThirdParty\CommandLineParser\src\CommandLine\BaseAttribute.cs" />
     <Compile Include="ThirdParty\CommandLineParser\src\CommandLine\Core\ArgumentsExtensions.cs" />
     <Compile Include="ThirdParty\CommandLineParser\src\CommandLine\Core\InstanceBuilder.cs" />
@@ -889,9 +897,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.resx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="bin\Resources\ndiscutilsprivsvc.exe" />
     <Content Include="FodyWeavers.xml" Condition=" '$(Configuration)' == 'Release' " />
     <Content Include="nDiscUtils.ico" />
   </ItemGroup>

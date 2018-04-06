@@ -52,6 +52,14 @@ namespace nDiscUtils.BuildTools
                     peHeader.WriteFileHeader();
                 }
             }
+            else if (args[0] == "mkdir")
+            {
+                Directory.CreateDirectory(args[1]);
+            }
+            else if (args[0] == "copy")
+            {
+                File.Copy(args[1], args[2], true);
+            }
         }
 
     }

@@ -6,11 +6,14 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils", "nDiscUtils.csproj", "{34F0410B-9FE0-4762-94B9-3ED74DB88276}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C7FDF1A4-8089-450C-B8FD-AF344B74539D} = {C7FDF1A4-8089-450C-B8FD-AF344B74539D}
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B} = {60A1D6DC-5E54-46FC-A712-B74C78D8D84B}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils.BuildTools", "BuildTools\nDiscUtils.BuildTools.csproj", "{C7FDF1A4-8089-450C-B8FD-AF344B74539D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nDiscUtils.Native", "Native\nDiscUtils.Native.vcxproj", "{089574E8-FC83-4772-A872-09BA1D30106D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nDiscUtils.Service", "Service\nDiscUtils.Service.csproj", "{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +47,14 @@ Global
 		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x64.Build.0 = Release|x64
 		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x86.ActiveCfg = Release|Win32
 		{089574E8-FC83-4772-A872-09BA1D30106D}.Release|x86.Build.0 = Release|Win32
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Debug|x64.ActiveCfg = Debug|x64
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Debug|x64.Build.0 = Debug|x64
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Debug|x86.ActiveCfg = Debug|x86
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Debug|x86.Build.0 = Debug|x86
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Release|x64.ActiveCfg = Release|x64
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Release|x64.Build.0 = Release|x64
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Release|x86.ActiveCfg = Release|x86
+		{60A1D6DC-5E54-46FC-A712-B74C78D8D84B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

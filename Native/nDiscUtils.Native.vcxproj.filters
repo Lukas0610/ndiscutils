@@ -34,7 +34,7 @@
       <Filter>Headers\IO</Filter>
     </ClInclude>
     <ClInclude Include="StreamUtils.h">
-      <Filter>Headers</Filter>
+      <Filter>Headers\IO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -54,7 +54,7 @@
       <Filter>Sources\IO</Filter>
     </ClCompile>
     <ClCompile Include="StreamUtils.cpp">
-      <Filter>Sources</Filter>
+      <Filter>Sources\IO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

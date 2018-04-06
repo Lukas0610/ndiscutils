@@ -310,6 +310,13 @@ namespace nDiscUtils
             }
         }
 
+        public static void InitializeSystemConsole()
+        {
+            Console.WindowWidth = Math.Max(Console.WindowWidth, 120);
+            Console.WindowHeight = Math.Max(Console.WindowHeight, 30);
+            Console.BufferHeight = Math.Max(Console.BufferHeight, 3000);
+        }
+
         public static void InitializeConsole()
         {
             // reset everything

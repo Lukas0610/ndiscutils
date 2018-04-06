@@ -24,6 +24,7 @@ using CommandLine;
 using nDiscUtils.Modules;
 
 using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.nConsole;
 using static nDiscUtils.ReturnCodes;
 
 namespace nDiscUtils
@@ -45,6 +46,9 @@ namespace nDiscUtils
             var version = assembly.GetName().Version;
             var buildArch = (Is64BitBuild ? 64 : 86);
 
+            InitializeSystemConsole();
+            ServiceImpl.ServiceEarlyMain(args);
+
             Console.WriteLine("{0} {1}.{2}.{3}-{4}  {5:dd-MM-yyyy HH\\:mm\\:ss}  [x{6}-built]",
                 assembly.GetCustomAttribute<AssemblyProductAttribute>().Product,
                 version.Major, version.Minor, version.Build, version.Revision,
@@ -53,7 +57,12 @@ namespace nDiscUtils
             Console.WriteLine("{0}. Licensed under GPLv3.",
                 assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright);
 
+            Console.WriteLine("Running as {0}.", Environment.UserName);
+
             Console.WriteLine();
+
+            if (!ServiceImpl.ServiceMain(ref args))
+                return 0;
 
             return Parser.Default.ParseArguments<
                 Benchmark.Options,
