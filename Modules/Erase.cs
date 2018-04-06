@@ -176,11 +176,7 @@ namespace nDiscUtils.Modules
             }
             else
             {
-                unsafe
-                {
-                    fixed (void* bufferPtr = buffer)
-                        MemoryWrapper.Set(bufferPtr, 0, buffer.Length);
-                }
+                MemoryWrapper.Set(buffer, 0, buffer.Length);
             }
 
             var relativeProgressWidth = ContentWidth - 1;
