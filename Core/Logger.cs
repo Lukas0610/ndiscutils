@@ -22,9 +22,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-using static nDiscUtils.nConsole;
+using static nDiscUtils.Core.nConsole;
 
-namespace nDiscUtils
+namespace nDiscUtils.Core
 {
 
     public sealed class Logger

@@ -22,6 +22,8 @@ using System.IO;
 using DiscUtils;
 using DiscUtils.Ntfs;
 
+using nDiscUtils.Core;
+
 namespace nDiscUtils.IO
 {
 

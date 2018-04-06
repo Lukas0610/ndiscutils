@@ -19,6 +19,8 @@
 using System;
 using System.IO;
 
+using nDiscUtils.Core;
+
 namespace nDiscUtils.IO
 {
 

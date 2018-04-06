@@ -23,10 +23,11 @@ using System.Management;
 
 using CommandLine;
 
+using nDiscUtils.Core;
 using nDiscUtils.Options;
 
-using static nDiscUtils.ModuleHelpers;
-using static nDiscUtils.ReturnCodes;
+using static nDiscUtils.Core.ModuleHelpers;
+using static nDiscUtils.Core.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {

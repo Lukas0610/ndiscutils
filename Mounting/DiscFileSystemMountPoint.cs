@@ -35,6 +35,7 @@ using DiscUtils.Xfs;
 
 using DokanNet;
 
+using nDiscUtils.Core;
 using nDiscUtils.Options;
 
 namespace nDiscUtils.Mounting

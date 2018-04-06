@@ -21,7 +21,9 @@ using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
 
-using static nDiscUtils.NativeMethods;
+using nDiscUtils.Core;
+
+using static nDiscUtils.Core.NativeMethods;
 
 namespace nDiscUtils.IO
 {

@@ -34,10 +34,10 @@ using nDiscUtils.IO;
 using nDiscUtils.Mounting;
 using nDiscUtils.Options;
 
-using static nDiscUtils.NativeMethods;
-using static nDiscUtils.nConsole;
+using static nDiscUtils.Core.NativeMethods;
+using static nDiscUtils.Core.nConsole;
 
-namespace nDiscUtils
+namespace nDiscUtils.Core
 {
 
     public static class ModuleHelpers

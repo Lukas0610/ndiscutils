@@ -27,13 +27,14 @@ using DiscUtils.Fat;
 using DiscUtils.Ntfs;
 using DiscUtils.Partitions;
 
+using nDiscUtils.Core;
 using nDiscUtils.IO;
 using nDiscUtils.Modules.Events;
 using nDiscUtils.Options;
 
-using static nDiscUtils.ModuleHelpers;
-using static nDiscUtils.nConsole;
-using static nDiscUtils.ReturnCodes;
+using static nDiscUtils.Core.ModuleHelpers;
+using static nDiscUtils.Core.nConsole;
+using static nDiscUtils.Core.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {

@@ -23,11 +23,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
+
 using Microsoft.Win32;
+
 using nDiscUtils.Properties;
 using nDiscUtils.Service;
 
-namespace nDiscUtils
+namespace nDiscUtils.Core
 {
 
     public static class ServiceImpl

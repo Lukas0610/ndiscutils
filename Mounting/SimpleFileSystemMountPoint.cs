@@ -24,6 +24,7 @@ using System.Security.AccessControl;
 
 using DokanNet;
 
+using nDiscUtils.Core;
 using nDiscUtils.IO.FileSystem;
 using nDiscUtils.Options;
 

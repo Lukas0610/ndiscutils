@@ -22,12 +22,13 @@ using System.Runtime.InteropServices;
 
 using CommandLine;
 
+using nDiscUtils.Core;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
 
-using static nDiscUtils.ModuleHelpers;
-using static nDiscUtils.NativeMethods;
-using static nDiscUtils.ReturnCodes;
+using static nDiscUtils.Core.ModuleHelpers;
+using static nDiscUtils.Core.NativeMethods;
+using static nDiscUtils.Core.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {

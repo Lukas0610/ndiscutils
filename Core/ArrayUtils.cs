@@ -18,7 +18,7 @@
  */
 using System.Linq;
 
-namespace nDiscUtils
+namespace nDiscUtils.Core
 {
 
     public static class ArrayUtils

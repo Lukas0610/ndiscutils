@@ -21,9 +21,9 @@ using System.Text;
 
 using Mischel.ConsoleDotNet;
 
-using static nDiscUtils.ModuleHelpers;
+using static nDiscUtils.Core.ModuleHelpers;
 
-namespace nDiscUtils
+namespace nDiscUtils.Core
 {
 
     public static class nConsole

@@ -25,10 +25,11 @@ using CommandLine;
 using DiscUtils.Iso9660;
 using DiscUtils.SquashFs;
 
+using nDiscUtils.Core;
 using nDiscUtils.Options;
 
-using static nDiscUtils.ModuleHelpers;
-using static nDiscUtils.ReturnCodes;
+using static nDiscUtils.Core.ModuleHelpers;
+using static nDiscUtils.Core.ReturnCodes;
 
 namespace nDiscUtils.Modules
 {
