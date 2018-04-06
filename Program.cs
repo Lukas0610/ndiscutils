@@ -77,6 +77,7 @@ namespace nDiscUtils
                 MountImage.Options,
                 MountPartition.Options,
                 Ramdisk.Options,
+                Security.Options,
                 Smart.Options,
                 Sync.Options
             >(args).MapResult(
@@ -91,6 +92,7 @@ namespace nDiscUtils
                     (MountImage.Options opts) => MountImage.Run(opts),
                     (MountPartition.Options opts) => MountPartition.Run(opts),
                     (Ramdisk.Options opts) => Ramdisk.Run(opts),
+                    (Security.Options opts) => Security.Run(opts),
                     (Smart.Options opts) => Smart.Run(opts),
                     (Sync.Options opts) => Sync.Run(opts),
                     (errcode) => INVALID_ARGUMENT

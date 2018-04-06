@@ -44,8 +44,12 @@ namespace nDiscUtils.Core
         internal static void SetVerbose(bool flag)
             => mVerbose = flag;
 
+        public static bool IsVerbose => mVerbose;
+
         internal static void SetDebug(bool flag)
             => mDebug = flag;
+
+        public static bool IsDebug => mDebug;
 
         internal static void SetAdvancedLoggingOffset(int offset)
             => mAdvancedLoggingOffset = offset;
