@@ -39,12 +39,14 @@ namespace nDiscUtils.Modules
             if (opts.ReadOnly)
             {
                 Logger.Error("Are you sure you want to mount a ramdisk as read-only?");
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
             if ((opts.Size % opts.BlockSize) != 0)
             {
                 Logger.Error("Requested capacity is not aligned to block size ({0})", opts.BlockSize);
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
@@ -75,6 +77,7 @@ namespace nDiscUtils.Modules
             MountStream(memoryStream, opts);
 
             Cleanup(memoryStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 

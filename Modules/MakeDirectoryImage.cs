@@ -50,6 +50,7 @@ namespace nDiscUtils.Modules
 
                 default:
                     Logger.Error("Requested file system is not supported (Requested {0}, supported: ISO, SquashFS)", opts.FileSystem);
+                    WaitForUserExit();
                     return INVALID_ARGUMENT;
             }
 
@@ -120,6 +121,7 @@ namespace nDiscUtils.Modules
             Logger.Info("Done!");
 
             Cleanup(imageStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 

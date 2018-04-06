@@ -77,12 +77,14 @@ namespace nDiscUtils.Modules
             if (handle.IsInvalid || error != 0)
             {
                 Logger.Error("Failed to open benchmark-file: Error {0}", error);
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
             if ((opts.Size % opts.BufferSize) != 0)
             {
                 Logger.Error("Requested size if not divisible by buffer size", error);
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
@@ -146,6 +148,7 @@ namespace nDiscUtils.Modules
                 catch (IOException)
                 {
                     Logger.Error("Requested buffer size is not aligned to physical sector size");
+                    WaitForUserExit();
                     return INVALID_ARGUMENT;
                 }
 
@@ -222,6 +225,7 @@ namespace nDiscUtils.Modules
             if (File.Exists(path))
                 File.Delete(path);
 
+            WaitForUserExit();
             return SUCCESS;
         }
         

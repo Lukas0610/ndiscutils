@@ -47,6 +47,8 @@ namespace nDiscUtils.Service
                 return;
             }
 
+            var commandLine = args[0];
+
             var registryValidation = false;
             var registryValidationData = "";
 
@@ -58,22 +60,38 @@ namespace nDiscUtils.Service
                 if (executableValue != null)
                 {
                     registryValidationData = $"\"{executableValue}\"";
-                    registryValidation = args[0].StartsWith(registryValidationData);
+                    registryValidation = commandLine.StartsWith(registryValidationData);
                 }
 
                 subkey.Close();
                 subkey.Dispose();
             }
 
-            EventLog.WriteEntry($"Received startup command:\n\"{args[0]}\"\n\n" +
-                $"Validated against whitelisted executable path:\n\"{registryValidationData}\"\n\n" + 
-                $"Validated succeeded: {registryValidation}", EventLogEntryType.Information);
+            var arguments = commandLine.Substring(registryValidationData.Length);
+            arguments = arguments.Substring(0, arguments.Length - 3) + " /SVCR";
+
+            EventLog.WriteEntry($"Received startup command:\n\"{commandLine}]>\n\n" +
+                $"Validated against whitelisted executable path:\n<[{registryValidationData}]>\n\n" +
+                $"Validated succeeded: {registryValidation}\n\n" + 
+                $"Parsed command line arguments: <[{arguments}]>", EventLogEntryType.Information);
 
             if (registryValidation)
             {
-                if (!ApplicationLoader.StartProcessAndBypassUAC(args[0] + " /SVCR", out var procInfo))
+                if (commandLine.EndsWith(" --"))
                 {
-                    EventLog.WriteEntry($"Failed to launch process with elevated permissions", EventLogEntryType.Error);
+                    Process.Start(registryValidationData, arguments);
+                    EventLog.WriteEntry($"Started background process with (<[{registryValidationData}]>, <[{arguments}]>)");
+                }
+                else
+                {
+                    if (!ApplicationLoader.StartProcessAndBypassUAC(commandLine + " /SVCR", out var procInfo))
+                    {
+                        EventLog.WriteEntry($"Failed to launch process with elevated permissions", EventLogEntryType.Error);
+                    }
+                    else
+                    {
+                        EventLog.WriteEntry($"Started visible process with (<[{commandLine} /SVCR]>)");
+                    }
                 }
             }
 

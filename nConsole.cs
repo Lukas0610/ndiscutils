@@ -354,7 +354,7 @@ namespace nDiscUtils
             DrawWindow();
         }
 
-        public static void WaitForUserExit()
+        public static void WaitForUserExitImpl()
         {
             ForegroundColor = ConsoleColor.Black;
             Write(Left + 6, Top + Height - 2, " Press any key to exit... ");

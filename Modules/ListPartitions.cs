@@ -40,13 +40,18 @@ namespace nDiscUtils.Modules
             if (!File.Exists(opts.Path))
             {
                 Logger.Info("Could not find image \"{0}\"", opts.Path);
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
             Logger.Info("Opening image \"{0}\"", opts.Path);
             var imageStream = OpenPath(opts.Path, FileMode.Open, FileAccess.Read, FileShare.None);
             if (imageStream == null)
+            {
+                Logger.Error("Failed to open image!");
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
+            }
 
             var partitionTable = FindPartitionTable(imageStream);
 
@@ -76,6 +81,7 @@ namespace nDiscUtils.Modules
             }
 
             Cleanup(imageStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 

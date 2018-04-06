@@ -35,6 +35,7 @@ using nDiscUtils.Mounting;
 using nDiscUtils.Options;
 
 using static nDiscUtils.NativeMethods;
+using static nDiscUtils.nConsole;
 
 namespace nDiscUtils
 {
@@ -509,6 +510,23 @@ namespace nDiscUtils
             long longRand = BitConverter.ToInt64(buf, 0);
 
             return (Math.Abs(longRand % (max - min)) + min);
+        }
+
+        public static void WaitForUserExit()
+        {
+            if (!Environment.UserInteractive)
+                return;
+
+            if (UseConsoleBuffers)
+            {
+                WaitForUserExitImpl();
+            }
+            else 
+            {
+                Console.WriteLine();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey(true);
+            }
         }
 
         public static void Cleanup(Stream stream)

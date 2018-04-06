@@ -43,7 +43,11 @@ namespace nDiscUtils.Modules
                 FileShare.None);
 
             if (imageStream == null)
+            {
+                Logger.Error("Failed to open image!");
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
+            }
 
             if (imageStream is FixedLengthStream fixedStream)
             {
@@ -54,6 +58,7 @@ namespace nDiscUtils.Modules
             MountStream(imageStream, opts);
 
             Cleanup(imageStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 

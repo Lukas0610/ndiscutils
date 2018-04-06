@@ -40,7 +40,8 @@ namespace nDiscUtils.Modules
 
             if (opts.Partition < 0)
             {
-                Logger.Info("Invalid partition index (Expected number greater than 0)");
+                Logger.Error("Invalid partition index (Expected number greater than 0)");
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
@@ -51,13 +52,18 @@ namespace nDiscUtils.Modules
                 FileShare.None);
 
             if (imageStream == null)
+            {
+                Logger.Error("Failed to open image!");
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
+            }
 
             var partitionTable = FindPartitionTable(imageStream);
 
             if (opts.Partition >= partitionTable.Count)
             {
-                Logger.Info("Invalid partition index (Expected number lower than than {0})", partitionTable.Count);
+                Logger.Error("Invalid partition index (Expected number lower than than {0})", partitionTable.Count);
+                WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
 
@@ -85,6 +91,7 @@ namespace nDiscUtils.Modules
                 MountStream(partitionStream, opts);
 
             Cleanup(imageStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 

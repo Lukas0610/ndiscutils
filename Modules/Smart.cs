@@ -149,13 +149,7 @@ namespace nDiscUtils.Modules
                     " | ", attributeId, attribute.Name, value, worst, data);
             }
 
-            if (Environment.UserInteractive)
-            {
-                Console.WriteLine();
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey(true);
-            }
-
+            WaitForUserExit();
 exit:
             return returnCode;
         }

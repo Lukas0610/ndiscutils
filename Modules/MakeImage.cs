@@ -45,6 +45,7 @@ namespace nDiscUtils.Modules
                 return INVALID_ARGUMENT;
 
             Cleanup(imageStream);
+            WaitForUserExit();
             return SUCCESS;
         }
 
