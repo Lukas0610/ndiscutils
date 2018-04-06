@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,7 +35,7 @@ using DokanNet;
 using nDiscUtils.IO;
 using nDiscUtils.Mounting;
 using nDiscUtils.Options;
-
+using ProcessPrivileges;
 using static nDiscUtils.Core.NativeMethods;
 using static nDiscUtils.Core.nConsole;
 
@@ -524,6 +526,29 @@ namespace nDiscUtils.Core
             long longRand = BitConverter.ToInt64(buf, 0);
 
             return (Math.Abs(longRand % (max - min)) + min);
+        }
+
+        public static PrivilegeEnabler EnableAllPrivileges()
+        {
+            var privileges = (Privilege[])Enum.GetValues(typeof(Privilege));
+            var process = Process.GetCurrentProcess();
+            var privilegeEnabler = new PrivilegeEnabler(process);
+
+            foreach (var priv in privileges)
+            {
+                try
+                {
+                    var result = privilegeEnabler.EnablePrivilege(priv);
+                    /* if (process.GetPrivilegeState(Privilege.TakeOwnership) != PrivilegeState.Enabled)
+                        Logger.Error("Failed to grant privilege {0}", priv.ToString()); */
+                }
+                catch (Win32Exception /* ex */)
+                {
+                    /* Logger.Error("Failed to grant privilege {0}: {1}", priv.ToString(), ex.Message); */
+                }
+            }
+
+            return privilegeEnabler;
         }
 
         public static void WaitForUserExit()

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Security.AccessControl;
@@ -28,8 +27,6 @@ using CommandLine;
 
 using nDiscUtils.Core;
 using nDiscUtils.Options;
-
-using ProcessPrivileges;
 
 using static nDiscUtils.Core.ModuleHelpers;
 using static nDiscUtils.Core.nConsole;
@@ -95,13 +92,9 @@ namespace nDiscUtils.Modules
                 }
             }
             
-            var privilegeEnabler = new PrivilegeEnabler(Process.GetCurrentProcess(),
-                Privilege.Audit, Privilege.Backup, Privilege.EnableDelegation,
-                Privilege.Restore, Privilege.Security, Privilege.TakeOwnership);
+            var privilegeEnabler = EnableAllPrivileges();
 
             var returnCode = StartInternal(opts);
-
-            privilegeEnabler.Dispose();
 
             if (returnCode == SUCCESS)
                 Logger.Fine("Finished!");
@@ -109,6 +102,8 @@ namespace nDiscUtils.Modules
                 Logger.Error("One or more errors occurred...");
             
             WaitForUserExit();
+
+            privilegeEnabler.Dispose();
             return SUCCESS;
         }
 

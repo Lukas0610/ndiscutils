@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
@@ -28,8 +27,6 @@ using CommandLine;
 using nDiscUtils.Core;
 using nDiscUtils.IO;
 using nDiscUtils.Options;
-
-using ProcessPrivileges;
 
 using static nDiscUtils.Core.ModuleHelpers;
 using static nDiscUtils.Core.nConsole;
@@ -179,9 +176,7 @@ namespace nDiscUtils.Modules
                 }
             });
 
-            var privilegeEnabler = new PrivilegeEnabler(Process.GetCurrentProcess(),
-                Privilege.Audit, Privilege.Backup, Privilege.EnableDelegation,
-                Privilege.Restore, Privilege.Security, Privilege.TakeOwnership);
+            var privilegeEnabler = EnableAllPrivileges();
 
             foreach (var sourceFile in fileList)
             {
