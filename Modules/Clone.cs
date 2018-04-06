@@ -167,8 +167,8 @@ namespace nDiscUtils.Modules
             mSourcePath = opts.Source;
             mDestinationPath = opts.Destination;
 
-            mSourceStream = OpenPath(opts.Source, FileMode.Open, FileAccess.Read, FileShare.Read);
-            mDestinationStream = OpenPath(opts.Destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+            mSourceStream = OpenPathUncached(opts.Source, FileMode.Open, FileAccess.Read, FileShare.Read);
+            mDestinationStream = OpenPathUncached(opts.Destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
             
             mTaskIdCounter = 0;
 

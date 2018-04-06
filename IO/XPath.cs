@@ -16,20 +16,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+using System.IO;
 
-namespace nDiscUtils
+namespace nDiscUtils.IO
 {
 
-    public static class ReturnCodes
+    public static class XPath
     {
 
-        public const int SUCCESS = 0;
+        public static int GetDirectoryCount(string path)
+        {
+            var info = new DirectoryInfo(path);
+            path = path.Substring(info.Root.FullName.Length);
+            return path.Split('\\').Length;
+        }
 
-        public const int ERROR = 1;
+        public static int CompareFileInfo(FileInfo left, FileInfo right)
+        {
+            var leftDirCount = GetDirectoryCount(left.FullName);
+            var rightDirCount = GetDirectoryCount(right.FullName);
 
-        public const int INVALID_ARGUMENT = 2;
+            if (leftDirCount != rightDirCount)
+                return leftDirCount - rightDirCount;
 
-        public const int NOT_IMPLEMENTED = 3;
+            return left.FullName.CompareTo(right.FullName);
+        }
 
     }
 

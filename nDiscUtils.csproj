@@ -86,7 +86,9 @@
     <Compile Include="IO\FileSystem\SimpleDirectoryInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileSystemInfo.cs" />
+    <Compile Include="IO\XPath.cs" />
     <Compile Include="Modules\Benchmark.cs" />
+    <Compile Include="Modules\Erase.cs" />
     <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
     <Compile Include="Runtime\Emit\ILMethod.cs" />
     <Compile Include="Runtime\Emit\ILMethods.cs" />

@@ -17,8 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 using DiscUtils;
 using DiscUtils.Fat;
@@ -30,6 +33,8 @@ using DokanNet;
 using nDiscUtils.IO;
 using nDiscUtils.Mounting;
 using nDiscUtils.Options;
+
+using static nDiscUtils.NativeMethods;
 
 namespace nDiscUtils
 {
@@ -103,11 +108,14 @@ namespace nDiscUtils
             }
         }
 
-        public static Stream OpenPath(string path, FileMode mode, System.IO.FileAccess access, FileShare share)
+        public static Stream OpenPathUncached(string path, FileMode mode, System.IO.FileAccess access, FileShare share)
+            => OpenPath(path, mode, access, share, FILE_FLAG_NO_BUFFERING | FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_WRITE_THROUGH);
+
+        public static Stream OpenPath(string path, FileMode mode, System.IO.FileAccess access, FileShare share, uint attributes = 0)
         {
             if (!IsLinux && path.StartsWith("\\\\.\\"))
             {
-                return PlatformFileHandler.OpenDisk(path, access, share);
+                return PlatformFileHandler.OpenDisk(path, access, share, attributes | FILE_FLAG_NO_BUFFERING);
             }
             else if (IsLinux && path.StartsWith("/dev/"))
             {
@@ -116,14 +124,14 @@ namespace nDiscUtils
             }
             else
             {
-                if (!System.IO.File.Exists(path) && !(mode == FileMode.Create || 
+                if (!System.IO.File.Exists(path) && !(mode == FileMode.Create ||
                     mode == FileMode.OpenOrCreate || mode == FileMode.CreateNew))
                 {
                     Logger.Info("Could not find image \"{0}\"", path);
                     return null;
                 }
 
-                return new FileStream(path, mode, access, share);
+                return new FileStream(path, mode, access, share, 4096, (FileOptions)attributes);
             }
         }
 
@@ -364,6 +372,134 @@ namespace nDiscUtils
 
                 return true;
             }
+        }
+
+        public static void IndexDirectory(string path, int threadCount,
+            ref List<FileInfo> fileList, ref List<DirectoryInfo> directoryList,
+            ref long fileSize, ref long fileCount, ref long directoryCount, 
+            Action<long, long> countCallback = null)
+        {
+            IndexDirectory(new DirectoryInfo(path), threadCount, ref fileList, ref directoryList, 
+                ref fileSize, ref fileCount, ref directoryCount, countCallback);
+        }
+
+        public static void IndexDirectory(DirectoryInfo baseDirectory, int threadCount,
+            ref List<FileInfo> fileList, ref List<DirectoryInfo> directoryList,
+            ref long fileSize, ref long fileCount, ref long directoryCount,
+            Action<long, long> countCallback = null)
+        {
+
+            Logger.Info("Indexing files and directories in \"{0}\"", baseDirectory.FullName);
+            long iFileSize = 0, iFileCount = 0, iDirectoryCount = 0;
+
+            var iFileList = new List<FileInfo>();
+            var iDirectoryList = new List<DirectoryInfo>();
+
+            Action<DirectoryInfo, bool> recursiveFileIndexer = null;
+            recursiveFileIndexer = new Action<DirectoryInfo, bool>((parentDir, skipSubDirectories) =>
+            {
+                try
+                {
+                    foreach (var file in parentDir.GetFiles())
+                    {
+                        lock (iFileList)
+                        {
+                            iFileList.Add(file);
+
+                            iFileCount++;
+                            iFileSize += file.Length;
+                        }
+                    }
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+
+                if (skipSubDirectories)
+                    return;
+
+                try
+                {
+                    foreach (var subDir in parentDir.GetDirectories())
+                    {
+                        lock (iDirectoryList)
+                        {
+                            if (baseDirectory.Root.FullName == baseDirectory.FullName &&
+                            parentDir.FullName == baseDirectory.FullName &&
+                            (subDir.Name == "$RECYCLE.BIN" ||
+                             subDir.Name == "System Volume Information"))
+                            {
+                                Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
+                                continue;
+                            }
+
+                            iDirectoryList.Add(subDir);
+                            iDirectoryCount++;
+
+                            countCallback?.Invoke(iFileCount, iDirectoryCount);
+
+                            Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
+                            recursiveFileIndexer(subDir, false);
+                        }
+                    }
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            });
+
+            try
+            {
+                recursiveFileIndexer(baseDirectory, true);
+
+                var subDirs = baseDirectory
+                    .GetDirectories()
+                    .Where(d => !(baseDirectory.Root.FullName == baseDirectory.FullName &&
+                            d.Parent != null && d.Parent.FullName == baseDirectory.FullName &&
+                            (d.Name == "$RECYCLE.BIN" ||
+                             d.Name == "System Volume Information")))
+                    .ToArray();
+
+                var subDirsPerThread = (int)Math.Floor((double)subDirs.Length / threadCount);
+                var assignedThreads = 0;
+                var finishedThreads = 0;
+
+                for (int i = 0; i < threadCount; i++)
+                {
+                    var threadSubDirs = subDirs
+                        .Skip(i * subDirsPerThread)
+                        .Take(i < threadCount - 1 ? subDirsPerThread : (subDirs.Length - assignedThreads));
+
+                    assignedThreads += subDirsPerThread;
+                    new Thread(() =>
+                    {
+                        foreach (var subDir in threadSubDirs)
+                        {
+                            recursiveFileIndexer(subDir, false);
+                            iDirectoryList.Add(subDir);
+                        }
+                        finishedThreads++;
+                    }).Start();
+                }
+
+                while (finishedThreads < threadCount)
+                    Thread.Sleep(1);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+
+            iFileList.Sort((l, r) => XPath.CompareFileInfo(l, r));
+            iDirectoryList.Sort((l, r) => l.FullName.CompareTo(r.FullName));
+
+            Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}",
+                iDirectoryCount, (iDirectoryCount == 1 ? "y" : "ies"),
+                iFileCount, (iFileCount == 1 ? "" : "s"),
+                FormatBytes(iFileSize, 3));
+
+            fileList = new List<FileInfo>(iFileList);
+            directoryList = new List<DirectoryInfo>(iDirectoryList);
+
+            fileSize = iFileSize;
+            fileCount = iFileCount;
+            directoryCount = iDirectoryCount;
         }
 
         public static long NextLongRandom(Random rand, long min, long max)

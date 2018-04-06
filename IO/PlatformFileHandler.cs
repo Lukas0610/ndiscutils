@@ -33,15 +33,11 @@ namespace nDiscUtils.IO
     {
         
         public static Stream OpenDisk(string diskPath,
-            FileAccess access, FileShare share)
+            FileAccess access, FileShare share, uint attributes)
         {
-            uint diskAttributes = 0;
-
-            diskAttributes |= FILE_FLAG_NO_BUFFERING;
-
             // Open disk
             var handle = CreateFile(diskPath, access, share, IntPtr.Zero,
-                    FileMode.Open, diskAttributes, IntPtr.Zero);
+                    FileMode.Open, attributes, IntPtr.Zero);
 
             var error = Marshal.GetLastWin32Error();
             Logger.Info("CreateFile({0}) returned with {1} (hwnd 0x{2:X})",

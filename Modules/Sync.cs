@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
-using System.Threading;
 
 using CommandLine;
 
@@ -118,109 +117,17 @@ namespace nDiscUtils.Modules
                 return INVALID_ARGUMENT;
             }
 
-            Logger.Info("Indexing files and directories in \"{0}\"", opts.Source);
-            var fileList = new List<FileInfo>();
-            var directoryList = new List<DirectoryInfo>();
-            var baseDirectory = new DirectoryInfo(opts.Source);
             long fileSize = 0, fileCount = 0, directoryCount = 0;
+            List<FileInfo> fileList = null;
+            List<DirectoryInfo> directoryList = null;
 
-            Action<DirectoryInfo, bool> recursiveFileIndexer = null;
-            recursiveFileIndexer = new Action<DirectoryInfo, bool>((parentDir, skipSubDirectories) =>
-            {
-                try
+            var baseDirectory = new DirectoryInfo(opts.Source);
+            IndexDirectory(baseDirectory, opts.Threads, ref fileList, ref directoryList, ref fileSize, ref fileCount, ref directoryCount,
+                (iFileCount, iDirectoryCount) =>
                 {
-                    foreach (var file in parentDir.GetFiles())
-                    {
-                        lock (fileList)
-                        {
-                            fileList.Add(file);
-
-                            fileCount++;
-                            fileSize += file.Length;
-                        }
-                    }
-                }
-                catch (IOException) { }
-                catch (UnauthorizedAccessException) { }
-
-                if (skipSubDirectories)
-                    return;
-
-                try
-                {
-                    foreach (var subDir in parentDir.GetDirectories())
-                    {
-                        lock (directoryList)
-                        {
-                            if (baseDirectory.Root.FullName == baseDirectory.FullName &&
-                            parentDir.FullName == baseDirectory.FullName &&
-                            (subDir.Name == "$RECYCLE.BIN" ||
-                             subDir.Name == "System Volume Information"))
-                            {
-                                Logger.Warn("Skipping \"{0}\"...", subDir.FullName);
-                                continue;
-                            }
-
-                            directoryList.Add(subDir);
-                            directoryCount++;
-
-                            WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
-                            WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
-
-                            Logger.Verbose("Advancing recursion into \"{0}\"", subDir.FullName);
-                            recursiveFileIndexer(subDir, false);
-                        }
-                    }
-                }
-                catch (IOException) { }
-                catch (UnauthorizedAccessException) { }
-            });
-
-            try
-            {
-                recursiveFileIndexer(baseDirectory, true);
-
-                var subDirs = baseDirectory
-                    .GetDirectories()
-                    .Where(d => !(baseDirectory.Root.FullName == baseDirectory.FullName &&
-                            d.Parent != null && d.Parent.FullName == baseDirectory.FullName &&
-                            (d.Name == "$RECYCLE.BIN" ||
-                             d.Name == "System Volume Information")))
-                    .ToArray();
-
-                var subDirsPerThread = (int)Math.Floor((double)subDirs.Length / opts.Threads);
-                var assignedThreads = 0;
-                var finishedThreads = 0;
-
-                for (int i = 0; i < opts.Threads; i++)
-                {
-                    var threadSubDirs = subDirs
-                        .Skip(i * subDirsPerThread)
-                        .Take(i < opts.Threads - 1 ? subDirsPerThread : (subDirs.Length - assignedThreads));
-
-                    assignedThreads += subDirsPerThread;
-                    new Thread(() =>
-                    {
-                        foreach (var subDir in threadSubDirs)
-                        {
-                            recursiveFileIndexer(subDir, false);
-                        }
-                        finishedThreads++;
-                    }).Start();
-                }
-
-                while (finishedThreads < opts.Threads)
-                    Thread.Sleep(1);
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
-
-            fileList.Sort((l, r) => l.FullName.CompareTo(r.FullName));
-
-            Logger.Info("Found {0} director{1} and {2} file{3} with a size of {4}",
-                directoryCount, (directoryCount == 1 ? "y" : "ies"),
-                fileCount, (fileCount == 1 ? "" : "s"),
-                FormatBytes(fileSize, 3));
+                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, iFileCount);
+                    WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, iDirectoryCount);
+                });
 
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop, "Files: {0,10} / {1,10}", 0, fileCount);
             WriteFormatRight(ContentLeft + ContentWidth, ContentTop + 1, "Directories: {0,10} / {1,10}", 0, directoryCount);
