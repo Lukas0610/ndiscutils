@@ -300,7 +300,7 @@ namespace nDiscUtils.Modules
 
                                 var speedMeasureNow = DateTime.Now;
                                 var speedMeasureDiff = speedMeasureNow.Subtract(lastSpeedMeasure);
-                                if (speedMeasureDiff.TotalSeconds >= 1.0 || sourceStream.Position == sourceStream.Length)
+                                if (speedMeasureDiff.TotalSeconds >= 1.0 || sourceStream.Position == sourceStream.Length || opts.FastRefresh)
                                 {
                                     var current = sourceStream.Position;
                                     var total = sourceStream.Length;
@@ -540,6 +540,9 @@ namespace nDiscUtils.Modules
 
             [Option("no-directory-security", HelpText = "Skip synchronizing directory security data", Default = false, Required = false)]
             public bool SkipDirectorySecurity { get; set; }
+
+            [Option('g', "fast-refresh", Default = false, HelpText = "Fast-refresh the outputted progress. May slow down the erase process.", Required = false)]
+            public bool FastRefresh { get; set; }
 
         }
 

@@ -117,7 +117,7 @@ namespace nDiscUtils.Modules
                 // the actual progress
                 var speedMeasureNow = DateTime.Now;
                 var speedMeasureDiff = DateTime.Now.Subtract(lastSpeedMeasure);
-                if (speedMeasureDiff.TotalSeconds >= 1.0 || (e.Current >= e.Total))
+                if (speedMeasureDiff.TotalSeconds >= 1.0 || (e.Current >= e.Total) || opts.FastRefresh)
                 {
                     var progress = ((double)e.Current / e.Total) * 100;
                     var widthProgress = (int)Math.Min(((double)e.Current / e.Total)
@@ -760,6 +760,9 @@ namespace nDiscUtils.Modules
 
             [Option('f', "full-clone", Default = false, HelpText = "Forces a byte-for-byte for the full source, including partition tables")]
             public bool FullClone { get; set; }
+
+            [Option('g', "fast-refresh", Default = false, HelpText = "Fast-refresh the outputted progress. May slow down the erase process.", Required = false)]
+            public bool FastRefresh { get; set; }
 
         }
 

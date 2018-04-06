@@ -206,7 +206,7 @@ namespace nDiscUtils.Modules
 
                 var now = DateTime.Now;
                 var timeDelta = now.Subtract(lastTime);
-                if (timeDelta.TotalSeconds >= 1.0 || destination.Position == destination.Length)
+                if (timeDelta.TotalSeconds >= 1.0 || destination.Position == destination.Length || opts.FastRefresh)
                 {
 
                     ResetColor();
@@ -330,6 +330,9 @@ namespace nDiscUtils.Modules
 
             [Option("cached", Default = false, HelpText = "Opens files with basic disk caches. May not properly delete files on phyiscal layer", Required = false)]
             public bool Cached { get; set; }
+
+            [Option('g', "fast-refresh", Default = false, HelpText = "Fast-refresh the outputted progress. May slow down the erase process.", Required = false)]
+            public bool FastRefresh { get; set; }
 
         }
 
