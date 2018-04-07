@@ -69,7 +69,7 @@ namespace nDiscUtils.Service
             }
 
             var arguments = commandLine.Substring(registryValidationData.Length);
-            arguments = arguments.Substring(0, arguments.Length - 3) + " /SVCR";
+            arguments = $"{arguments} /SVCR";
 
             EventLog.WriteEntry($"Received startup command:\n\"{commandLine}]>\n\n" +
                 $"Validated against whitelisted executable path:\n<[{registryValidationData}]>\n\n" +
@@ -91,7 +91,7 @@ namespace nDiscUtils.Service
                 }
                 else
                 {
-                    if (!ApplicationLoader.StartProcessAndBypassUAC(commandLine + " /SVCR", workingDirectory, out var procInfo))
+                    if (!ApplicationLoader.StartProcessAndBypassUAC($"{commandLine} /SVCR", workingDirectory, out var procInfo))
                     {
                         EventLog.WriteEntry($"Failed to launch process with elevated permissions", EventLogEntryType.Error);
                     }

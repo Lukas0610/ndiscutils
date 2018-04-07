@@ -38,6 +38,8 @@ namespace nDiscUtils.Core
 
         public const uint IOCTL_STORAGE_PREDICT_FAILURE = 0x002D1100;
 
+        public const int CTRL_C_EVENT = 0;
+
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true,
             BestFitMapping = true, ThrowOnUnmappableChar = true)]
         public static extern SafeFileHandle CreateFile(
@@ -79,6 +81,18 @@ namespace nDiscUtils.Core
 
             IntPtr lpOverlapped
         );
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool AttachConsole(uint dwProcessId);
+
+        [DllImport("kernel32", SetLastError = true)]
+        public static extern bool FreeConsole();
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+        [DllImport("kernel32.dll")]
+        internal static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
 
     }
 

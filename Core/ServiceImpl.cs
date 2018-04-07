@@ -21,11 +21,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.ServiceProcess;
-
-using Microsoft.Win32;
-
+using System.Threading;
 using nDiscUtils.Service;
 
 namespace nDiscUtils.Core
@@ -33,6 +30,54 @@ namespace nDiscUtils.Core
 
     public static class ServiceImpl
     {
+
+        public static void ServiceEarlyParseArguments(ref string[] args)
+        {
+            if (args.Length >= 1 && args[args.Length - 1] == "/SVCR")
+            {
+                if (!File.Exists(CommonServiceData.ServicePath))
+                    return;
+
+                var svcArgCount = 1;
+
+                if (args.Length >= 2)
+                {
+                    if (args[args.Length - 2].StartsWith("/CHWND:"))
+                    {
+                        Program.CHWND = long.Parse(args[args.Length - 2].Substring(7));
+                        svcArgCount++;
+                    }
+                }
+
+                if (args.Length >= 3)
+                {
+                    if (args[args.Length - 3].StartsWith("/PPID:"))
+                    {
+                        Program.PPID = int.Parse(args[args.Length - 3].Substring(6));
+
+                        NativeMethods.FreeConsole();
+                        NativeMethods.SetParent(Process.GetCurrentProcess().MainWindowHandle, new IntPtr(Program.CHWND));
+                        NativeMethods.AttachConsole((uint)Program.PPID);
+
+                        svcArgCount++;
+                    }
+                }
+
+                if (Program.CHWND > 0)
+                {
+                    // reassign system console buffer
+                    nConsole.InitializeSystemConsole(new IntPtr(Program.CHWND));
+                }
+
+                // remove /SVCR key-param from argument list
+                var argsList = new List<string>(args);
+                argsList.RemoveRange(args.Length - svcArgCount, svcArgCount);
+                args = argsList.ToArray();
+
+                // tell program services launched this instance
+                ModuleHelpers.IsServiceEnvironment = true;
+            }
+        }
 
 #if STANDALONE
         private static bool IsValidServiceControlMode(string[] args)
@@ -45,25 +90,25 @@ namespace nDiscUtils.Core
         {
             return args.Length == 1 && args[0] == "/SVCV";
         }
-
+        
         public static void ServiceEarlyMain(string[] args)
         {
 #if STANDALONE
             if (IsValidServiceControlMode(args))
             {
-                Console.WriteLine("*** ENTERING SERVICE CONTROL MODE !!!");
-                Console.WriteLine();
+                nConsole.WriteLine("*** ENTERING SERVICE CONTROL MODE !!!");
+                nConsole.WriteLine();
             }
             else
 #endif
             if (IsValidServiceValidationMode(args))
             {
-                Console.WriteLine("*** ENTERING SERVICE VALIDATION MODE !!!");
-                Console.WriteLine();
+                nConsole.WriteLine("*** ENTERING SERVICE VALIDATION MODE !!!");
+                nConsole.WriteLine();
             }
         }
 
-        public static bool ServiceMain(ref string[] args)
+        public static bool ServiceMain(string[] args)
         {
 #if STANDALONE
             if (IsValidServiceControlMode(args))
@@ -81,39 +126,27 @@ namespace nDiscUtils.Core
                 {
                     var hasOutdatedService = FindOutdatedService((outdatedService) =>
                     {
-                        Console.WriteLine("*** OUTDATED SERVICE INSTALLED: {0} !!!", outdatedService.ServiceName);
-                        Console.WriteLine("*** LATEST SERVICE IS: {0} ---", CommonServiceData.FullName);
+                        nConsole.WriteLine("*** OUTDATED SERVICE INSTALLED: {0} !!!", outdatedService.ServiceName);
+                        nConsole.WriteLine("*** LATEST SERVICE IS: {0} ---", CommonServiceData.FullName);
                         return true;
                     });
 
                     if (hasOutdatedService)
                         goto validationExit;
 
-                    Console.WriteLine("*** SERVICE NOT INSTALLED !!!");
+                    nConsole.WriteLine("*** SERVICE NOT INSTALLED !!!");
                 }
                 else
                 {
-                    Console.WriteLine("*** LATEST SERVICE INSTALLED: {0} ---", service.ServiceName);
+                    nConsole.WriteLine("*** LATEST SERVICE INSTALLED: {0} ---", service.ServiceName);
                 }
 
 validationExit:
-                Console.WriteLine();
+                nConsole.WriteLine();
                 return false;
             }
-            else if (args.Length != 0 && args[args.Length - 1] == "/SVCR")
+            else if (ModuleHelpers.IsServiceEnvironment)
             {
-                if (!File.Exists(CommonServiceData.ServicePath))
-                    return true;
-
-                // remove /SVCR key-param from argument list
-                var argsList = new List<string>(args);
-                argsList.RemoveAt(args.Length - 1);
-                args = argsList.ToArray();
-
-                // tell program services launched this instance
-                ModuleHelpers.IsServiceEnvironment = true;
-
-                // fall through service-barrier as this run is intended
                 return true;
             }
             else
@@ -125,83 +158,89 @@ validationExit:
 
                 if (service == null)
                 {
-#if STANDALONE
                     var hasOutdatedService = FindOutdatedService((outdatedService) =>
                     {
-                        Console.WriteLine("*** FOUND OUTDATED SERVICE: {0} !!!", outdatedService.ServiceName);
+                        nConsole.WriteLine("*** FOUND OUTDATED SERVICE: {0} !!!", outdatedService.ServiceName);
+#if !STANDALONE
+                        while (true) ;
+#else
+                        nConsole.WriteLine("*** UPDATING SERVICE !!!");
 
-                        Console.WriteLine("*** PRESS ANY KEY TO UPDATE SERVICE ...");
-                        Console.ReadKey(true);
-
-                        Console.WriteLine("*** UPDATING SERVICE !!!");
-
-                        Console.WriteLine("    *** STOPPING SERVICE ...");
+                        nConsole.WriteLine("    *** STOPPING SERVICE ...");
                         if (outdatedService.Status == ServiceControllerStatus.Running)
                         {
                             outdatedService.Stop();
                             outdatedService.WaitForStatus(ServiceControllerStatus.Stopped);
                         }
-                        Console.WriteLine("        *** SERVICE STOPPED ---");
+                        nConsole.WriteLine("        *** SERVICE STOPPED ---");
 
-                        Console.WriteLine("    *** UNINSTALLING SERVICE ...");
+                        nConsole.WriteLine("    *** UNINSTALLING SERVICE ...");
                         if (UninstallService())
                         {
-                            Console.WriteLine("        *** SERVICE UNINSTALLED ---");
+                            nConsole.WriteLine("        *** SERVICE UNINSTALLED ---");
                         }
                         else
                         {
-                            Console.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
+                            nConsole.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
 
-                            Console.WriteLine("*** PRESS ANY KEY TO EXIT ...");
+                            nConsole.WriteLine("*** PRESS ANY KEY TO EXIT ...");
                             Console.ReadKey(true);
 
                             return false;
                         }
 
-                        Console.WriteLine("    *** UPDATING SERVICE ...");
+                        nConsole.WriteLine("    *** UPDATING SERVICE ...");
 
                         ExtractService();
 
-                        Console.WriteLine("        *** SERVICE UPDATED ---");
+                        nConsole.WriteLine("        *** SERVICE UPDATED ---");
 
-                        Console.WriteLine("    *** INSTALLING SERVICE ...");
+                        nConsole.WriteLine("    *** INSTALLING SERVICE ...");
                         if (InstallService())
                         {
-                            Console.WriteLine("        *** SERVICE INSTALLED ---");
+                            nConsole.WriteLine("        *** SERVICE INSTALLED ---");
                         }
                         else
                         {
-                            Console.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
+                            nConsole.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
 
-                            Console.WriteLine("*** PRESS ANY KEY TO EXIT ...");
+                            nConsole.WriteLine("*** PRESS ANY KEY TO EXIT ...");
                             Console.ReadKey(true);
 
                             return false;
                         }
 
-                        Console.WriteLine("*** SERVICE SUCCESSFULLY UPDATED ---");
+                        nConsole.WriteLine("*** SERVICE SUCCESSFULLY UPDATED ---");
 
-                        Console.WriteLine("*** PRESS ANY KEY TO CONTINUE ...");
+                        nConsole.WriteLine("*** PRESS ANY KEY TO CONTINUE ...");
                         Console.ReadKey(true);
 
                         return true;
+#endif
                     });
 
                     if (hasOutdatedService)
                         goto start;
-#endif
 
-                    return true;
+                        return true;
                 }
 
 #pragma warning disable CS0164
 start:
 #pragma warning restore CS0164
 
-                Console.WriteLine("Attempting to launch nDiscUtils through privilege elevation service...");
+                nConsole.WriteLine("Attempting to re-launch nDiscUtils with privilege elevation service...");
+                nConsole.WriteLine();
+
+                var currentProc = Process.GetCurrentProcess();
+
+                service.Start(new string[]
+                {
+                    $"{Environment.CommandLine} /PPID:{currentProc.Id.ToString()} /CHWND:{currentProc.MainWindowHandle.ToInt64()}",
+                    Directory.GetCurrentDirectory()
+                });
                 
-                service.Start(new string[] { Environment.CommandLine, Directory.GetCurrentDirectory() });
-                return false;
+                while (true) { }
             }
         }
         private static ServiceController TryFindService()
@@ -237,40 +276,40 @@ start:
         {
             if (mode == "/I")
             {
-                Console.WriteLine("*** INSTALLING SERVICE ...");
+                nConsole.WriteLine("*** INSTALLING SERVICE ...");
                 if (InstallService())
-                    Console.WriteLine("*** SERVICE INSTALLED ---");
+                    nConsole.WriteLine("*** SERVICE INSTALLED ---");
                 else
-                    Console.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
+                    nConsole.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
             }
             else if (mode == "/U")
             {
-                Console.WriteLine("*** UNINSTALLING SERVICE ...");
+                nConsole.WriteLine("*** UNINSTALLING SERVICE ...");
                 if (UninstallService())
-                    Console.WriteLine("*** SERVICE UNINSTALLED ---");
+                    nConsole.WriteLine("*** SERVICE UNINSTALLED ---");
                 else
-                    Console.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
+                    nConsole.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
             }
             else if (mode == "/C")
             {
-                Console.WriteLine("*** UNINSTALLING SERVICE ...");
+                nConsole.WriteLine("*** UNINSTALLING SERVICE ...");
                 if (UninstallService())
                 {
-                    Console.WriteLine("*** SERVICE UNINSTALLED ---");
+                    nConsole.WriteLine("*** SERVICE UNINSTALLED ---");
 
-                    Console.WriteLine("*** INSTALLING SERVICE ...");
+                    nConsole.WriteLine("*** INSTALLING SERVICE ...");
                     if (InstallService())
-                        Console.WriteLine("*** SERVICE INSTALLED ---");
+                        nConsole.WriteLine("*** SERVICE INSTALLED ---");
                     else
-                        Console.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
+                        nConsole.WriteLine("*** FAILED TO INSTALL SERVICE !!!");
                 }
                 else
                 {
-                    Console.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
+                    nConsole.WriteLine("*** FAILED TO UNINSTALL SERVICE !!!");
                 }
             }
 
-            Console.WriteLine();
+            nConsole.WriteLine();
         }
 
         private static bool InstallService()
@@ -310,7 +349,7 @@ start:
         {
             if (!File.Exists(CommonServiceData.ServicePath))
             {
-                Console.WriteLine("*** SERVICE EXECUTABLE NOT FOUND !!!");
+                nConsole.WriteLine("*** SERVICE EXECUTABLE NOT FOUND !!!");
                 return false;
             }
 

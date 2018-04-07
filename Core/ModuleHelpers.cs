@@ -556,14 +556,14 @@ namespace nDiscUtils.Core
             if (!Environment.UserInteractive)
                 return;
 
-            if (ConsoleBuffersInUse)
+            if (PrivateConsoleBufferInUse)
             {
                 WaitForUserExitImpl();
             }
             else 
             {
-                Console.WriteLine();
-                Console.WriteLine("Press any key to exit...");
+                WriteLine();
+                WriteLine("Press any key to exit...");
                 Console.ReadKey(true);
             }
         }

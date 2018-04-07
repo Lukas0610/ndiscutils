@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
+using System.Diagnostics;
 using System.Text;
 
 using Mischel.ConsoleDotNet;
@@ -32,6 +33,9 @@ namespace nDiscUtils.Core
         private static ConsoleScreenBuffer
             kPrimaryBuffer = null,
             kPrivateBuffer = null;
+
+        private static ConsoleScreenBuffer
+            kCurrentBuffer = null;
 
         public static bool UseAdvancedConsoleLogging = false;
 
@@ -51,27 +55,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.ForegroundColor;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.ForegroundColor;
-                }
+                return kCurrentBuffer.ForegroundColor;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.ForegroundColor = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.ForegroundColor = value;
-                }
+                kCurrentBuffer.ForegroundColor = value;
             }
         }
 
@@ -79,27 +67,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.BackgroundColor;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.BackgroundColor;
-                }
+                return kCurrentBuffer.BackgroundColor;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.BackgroundColor = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.BackgroundColor = value;
-                }
+                kCurrentBuffer.BackgroundColor = value;
             }
         }
 
@@ -107,27 +79,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.CursorTop;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.CursorTop;
-                }
+                return kCurrentBuffer.CursorTop;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.CursorTop = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.CursorTop = value;
-                }
+                kCurrentBuffer.CursorTop = value;
             }
         }
 
@@ -135,27 +91,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.CursorLeft;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.CursorLeft;
-                }
+                return kCurrentBuffer.CursorLeft;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.CursorLeft = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.CursorLeft = value;
-                }
+                kCurrentBuffer.CursorLeft = value;
             }
         }
 
@@ -163,27 +103,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.CursorVisible;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.CursorVisible;
-                }
+                return kCurrentBuffer.CursorVisible;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.CursorVisible = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.CursorVisible = value;
-                }
+                kCurrentBuffer.CursorVisible = value;
             }
         }
 
@@ -191,27 +115,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.BufferWidth;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.Width;
-                }
+                return kCurrentBuffer.Width;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.BufferWidth = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.Width = value;
-                }
+                kCurrentBuffer.Width = value;
             }
         }
 
@@ -219,27 +127,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.BufferHeight;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.Height;
-                }
+                return kCurrentBuffer.Height;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.BufferHeight = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.Height = value;
-                }
+                kCurrentBuffer.Height = value;
             }
         }
 
@@ -247,27 +139,11 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.WindowWidth;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.WindowWidth;
-                }
+                return kCurrentBuffer.WindowWidth;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.WindowWidth = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.WindowWidth = value;
-                }
+                kCurrentBuffer.WindowWidth = value;
             }
         }
 
@@ -275,51 +151,75 @@ namespace nDiscUtils.Core
         {
             get
             {
-                if (!UseConsoleBuffers)
-                {
-                    return Console.WindowHeight;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        return buffer.WindowHeight;
-                }
+                return kCurrentBuffer.WindowHeight;
             }
             set
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.WindowHeight = value;
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                        buffer.WindowHeight = value;
-                }
+                kCurrentBuffer.WindowHeight = value;
             }
         }
 
-        public static bool ConsoleBuffersInUse
+        public static IntPtr PrimaryBufferHandle
         {
-            get => UseConsoleBuffers && (kPrimaryBuffer != null) && (kPrivateBuffer != null);
+            get => kPrimaryBuffer.Handle;
+        }
+
+        public static bool PrivateConsoleBufferInUse
+        {
+            get => (kPrivateBuffer != null);
+        }
+
+        private static void AttachCurrentConsoleBuffer()
+        {
+            if (Program.PPID > 0)
+            {
+                NativeMethods.FreeConsole();
+                NativeMethods.SetParent(kCurrentBuffer.Handle, new IntPtr(Program.CHWND));
+                NativeMethods.AttachConsole((uint)Program.PPID);
+            }
         }
 
         public static void OpenNewConsoleBuffer()
         {
-            if (UseConsoleBuffers)
-            {
-                kPrimaryBuffer = JConsole.GetActiveScreenBuffer();
-                kPrivateBuffer = new ConsoleScreenBuffer();
+            kPrivateBuffer = new ConsoleScreenBuffer();
 
-                JConsole.SetActiveScreenBuffer(kPrivateBuffer);
+            kCurrentBuffer = kPrivateBuffer;
+            AttachCurrentConsoleBuffer();
+
+            JConsole.SetActiveScreenBuffer(kCurrentBuffer);
+        }
+
+        public static void ExchangeBuffers()
+        {
+            if (kCurrentBuffer == kPrimaryBuffer)
+            {
+                kCurrentBuffer = kPrivateBuffer;
             }
+            else if (kCurrentBuffer == kPrivateBuffer)
+            {
+                kCurrentBuffer = kPrimaryBuffer;
+            }
+
+            AttachCurrentConsoleBuffer();
+            JConsole.SetActiveScreenBuffer(kCurrentBuffer);
         }
 
         public static void InitializeSystemConsole()
         {
-            Console.WindowWidth = Math.Max(Console.WindowWidth, 120);
-            Console.WindowHeight = Math.Max(Console.WindowHeight, 30);
-            Console.BufferHeight = Math.Max(Console.BufferHeight, 3000);
+            kPrimaryBuffer = JConsole.GetActiveScreenBuffer();
+            kCurrentBuffer = kPrimaryBuffer;
+            WindowWidth = Math.Max(WindowWidth, 120);
+            WindowHeight = Math.Max(WindowHeight, 30);
+            BufferHeight = Math.Max(BufferHeight, 3000);
+        }
+
+        public static void InitializeSystemConsole(IntPtr hwnd)
+        {
+            kPrimaryBuffer = new ConsoleScreenBuffer(hwnd);
+            kCurrentBuffer = kPrimaryBuffer;
+            WindowWidth = Math.Max(WindowWidth, 120);
+            WindowHeight = Math.Max(WindowHeight, 30);
+            BufferHeight = Math.Max(BufferHeight, 3000);
         }
 
         public static void InitializeConsole()
@@ -368,24 +268,27 @@ namespace nDiscUtils.Core
 
         public static void RestoreOldConsoleBuffer()
         {
-            if (UseConsoleBuffers)
-            {
-                JConsole.SetActiveScreenBuffer(kPrimaryBuffer);
-                kPrivateBuffer.Dispose();
-            }
+            kCurrentBuffer = kPrimaryBuffer;
+
+            AttachCurrentConsoleBuffer();
+            JConsole.SetActiveScreenBuffer(kPrimaryBuffer);
+
+            kPrivateBuffer.Dispose();
+            kPrivateBuffer = null;
+        }
+
+        public static void Cleanup()
+        {
+            if (kPrivateBuffer != null)
+                RestoreOldConsoleBuffer();
+
+            kCurrentBuffer.Dispose();
+            kCurrentBuffer = null;
         }
 
         public static void Clear()
         {
-            if (!UseConsoleBuffers)
-            {
-                Console.Clear();
-            }
-            else
-            {
-                using (var buffer = JConsole.GetActiveScreenBuffer())
-                    buffer.Clear();
-            }
+            kCurrentBuffer.Clear();
         }
 
         public static ConsoleKeyInfo ReadKey(bool intercept)
@@ -395,38 +298,16 @@ namespace nDiscUtils.Core
 
         public static void ResetColor()
         {
-            if (!UseConsoleBuffers)
-            {
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.BackgroundColor = ConsoleColor.Gray;
-            }
-            else
-            {
-                using (var buffer = JConsole.GetActiveScreenBuffer())
-                {
-                    buffer.ForegroundColor = ConsoleColor.Black;
-                    buffer.BackgroundColor = ConsoleColor.Gray;
-                }
-            }
+            kCurrentBuffer.ForegroundColor = ConsoleColor.Black;
+            kCurrentBuffer.BackgroundColor = ConsoleColor.Gray;
         }
 
         public static void Write(int x, int y, string str)
         {
             lock(kWriteLock)
             {
-                if (!UseConsoleBuffers)
-                {
-                    Console.SetCursorPosition(x, y);
-                    Console.Write(str);
-                }
-                else
-                {
-                    using (var buffer = JConsole.GetActiveScreenBuffer())
-                    {
-                        buffer.SetCursorPosition(x, y);
-                        buffer.Write(str);
-                    }
-                }
+                kCurrentBuffer.SetCursorPosition(x, y);
+                kCurrentBuffer.Write(str);
             }
         }
 
@@ -466,6 +347,24 @@ namespace nDiscUtils.Core
                 Write(x, y + i, str);
         }
 
+        public static void Write(string format, params object[] args)
+        {
+            lock (kWriteLock)
+                kCurrentBuffer.Write(string.Format(format, args));
+        }
+
+        public static void WriteLine()
+        {
+            lock (kWriteLock)
+                kCurrentBuffer.WriteLine("");
+        }
+
+        public static void WriteLine(string format, params object[] args)
+        {
+            lock (kWriteLock)
+                kCurrentBuffer.WriteLine(string.Format(format, args));
+        }
+
         private static void DrawWindow()
         {
             if (UseConsoleBuffers)
@@ -483,26 +382,26 @@ namespace nDiscUtils.Core
         private static void DrawWindowImpl(char topLeft, char topRight, char bottomLeft,
             char bottomRight, char horizontal, char vertical)
         {
-            nConsole.ResetColor();
+            ResetColor();
 
             // top
-            nConsole.Write(Left + 4, Top + 2, topLeft);
-            nConsole.Write(Left + Width - 4, Top + 2, topRight);
+            Write(Left + 4, Top + 2, topLeft);
+            Write(Left + Width - 4, Top + 2, topRight);
 
             // bottom
-            nConsole.Write(Left + 4, Top + Height - 2, bottomLeft);
-            nConsole.Write(Left + Width - 4, Top + Height - 2, bottomRight);
+            Write(Left + 4, Top + Height - 2, bottomLeft);
+            Write(Left + Width - 4, Top + Height - 2, bottomRight);
 
             // horizontal lines
-            nConsole.Write(Left + 5, Top + 2, horizontal, Width - 9);
-            nConsole.Write(Left + 5, Top + Height - 2, horizontal, Width - 9);
+            Write(Left + 5, Top + 2, horizontal, Width - 9);
+            Write(Left + 5, Top + Height - 2, horizontal, Width - 9);
 
             // vertical lines
-            nConsole.WriteVertical(Left + 4, Top + 3, char.ToString(vertical), Height - 5);
-            nConsole.WriteVertical(Left + Width - 4, Top + 3, char.ToString(vertical), Height - 5);
+            WriteVertical(Left + 4, Top + 3, char.ToString(vertical), Height - 5);
+            WriteVertical(Left + Width - 4, Top + 3, char.ToString(vertical), Height - 5);
 
             // content
-            nConsole.WriteVertical(Left + 5, Top + 3, new string(' ', Width - 9), Height - 5);
+            WriteVertical(Left + 5, Top + 3, new string(' ', Width - 9), Height - 5);
         }
 
         public static void UpdateBackgroundIfRequired(int returnCode)
@@ -518,11 +417,8 @@ namespace nDiscUtils.Core
             ForegroundColor = color;
             BackgroundColor = color;
 
-            if (UseConsoleBuffers)
-            {
-                outputMode = kPrivateBuffer.OutputMode;
-                kPrivateBuffer.OutputMode = ConsoleOutputModeFlags.Processed;
-            }
+            outputMode = kCurrentBuffer.OutputMode;
+            kCurrentBuffer.OutputMode = ConsoleOutputModeFlags.Processed;
 
             for (int y = 0; y < BufferHeight; y++)
             {
@@ -535,8 +431,7 @@ namespace nDiscUtils.Core
                 }
             }
 
-            if (UseConsoleBuffers)
-                kPrivateBuffer.OutputMode = outputMode;
+            kCurrentBuffer.OutputMode = outputMode;
 
             ResetColor();
         }

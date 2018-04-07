@@ -202,11 +202,11 @@ namespace nDiscUtils.Modules
             {
                 if (name.Length < BufferWidth)
                 {
-                    Console.Write("{0}\r", name);
+                    nConsole.Write("{0}\r", name);
                 }
                 else
                 {
-                    Console.Write("{0}...\r", name.Substring(0, BufferWidth - 3));
+                    nConsole.Write("{0}...\r", name.Substring(0, BufferWidth - 3));
                 }
             }
         }

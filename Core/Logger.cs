@@ -126,7 +126,7 @@ namespace nDiscUtils.Core
             }
             else
             {
-                Console.WriteLine(consoleText);
+                nConsole.WriteLine(consoleText);
             }
 
             // file
