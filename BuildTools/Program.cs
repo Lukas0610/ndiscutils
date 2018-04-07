@@ -72,7 +72,7 @@ namespace nDiscUtils.BuildTools
                     foreach (byte b in hash)
                         hashString.AppendFormat("{0:x2}", b);
 
-                    hashString.AppendFormat(" *{0}\r\n", args[1]);
+                    hashString.AppendFormat(" *{0}\r\n", Path.GetFileName(args[1]));
                     File.WriteAllText($"{args[1]}.sha512sum", hashString.ToString());
                 }
             }
