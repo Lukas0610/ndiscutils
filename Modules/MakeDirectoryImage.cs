@@ -26,6 +26,7 @@ using DiscUtils.Iso9660;
 using DiscUtils.SquashFs;
 
 using nDiscUtils.Core;
+using nDiscUtils.IO;
 using nDiscUtils.Options;
 
 using static nDiscUtils.Core.ModuleHelpers;
@@ -92,7 +93,10 @@ namespace nDiscUtils.Modules
                 FileMode.Create,
                 FileAccess.ReadWrite,
                 FileShare.None);
-        
+            
+            if (opts.Offset > 0)
+                imageStream = new OffsetableStream(imageStream, opts.Offset);
+
             switch (opts.FileSystem)
             {
                 case "SquashFS":
@@ -159,6 +163,14 @@ namespace nDiscUtils.Modules
 
             [Option('f', "fs", Default = "NTFS", HelpText = "Type of the filesystem the new image should be formatted with")]
             public string FileSystem { get; set; }
+
+            [Option('o', "offset", Default = "0", HelpText = "Offset in bytes at which the image will be written to the target")]
+            public string OffsetString { get; set; }
+
+            public long Offset
+            {
+                get => ParseSizeString(OffsetString);
+            }
 
         }
 

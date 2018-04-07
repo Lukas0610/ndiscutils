@@ -54,10 +54,13 @@ namespace nDiscUtils.Modules
 
             if (imageStream == null)
             {
-                Logger.Error("Failed to open image!");
+                Logger.Error("Failed to open image/access disk!");
                 WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
+
+            if (opts.Offset > 0)
+                imageStream = new OffsetableStream(imageStream, opts.Offset);
 
             var partitionTable = FindPartitionTable(imageStream);
 
@@ -88,8 +91,15 @@ namespace nDiscUtils.Modules
             if (imageStream is FixedLengthStream fixedStream)
                 fixedStream.SetLength(geometry.TotalSectorsLong * geometry.BytesPerSector);
 
-            using (var partitionStream = new FixedLengthStream(partition.Open(), size))
+            using (Stream dPartitionStream = new FixedLengthStream(partition.Open(), size))
+            {
+                var partitionStream = dPartitionStream;
+
+                if (opts.Offset > 0)
+                    partitionStream = new OffsetableStream(partitionStream, opts.Offset);
+
                 MountStream(partitionStream, opts);
+            }
 
             Cleanup(imageStream);
             WaitForUserExit();
@@ -105,6 +115,22 @@ namespace nDiscUtils.Modules
 
             [Value(2, HelpText = "Index of the partition which should be mounted", Required = true)]
             public int Partition { get; set; }
+
+            [Option('o', "offset", Default = "0", HelpText = "Offset in bytes at which the partitioning table is expected to start")]
+            public string OffsetString { get; set; }
+
+            public long Offset
+            {
+                get => ParseSizeString(OffsetString);
+            }
+
+            [Option('p', "partition-offset", Default = "0", HelpText = "Offset in bytes at which the partition is expected to start")]
+            public string PartitionOffsetString { get; set; }
+
+            public long PartitionOffset
+            {
+                get => ParseSizeString(PartitionOffsetString);
+            }
 
         }
 

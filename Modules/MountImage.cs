@@ -45,10 +45,13 @@ namespace nDiscUtils.Modules
 
             if (imageStream == null)
             {
-                Logger.Error("Failed to open image!");
+                Logger.Error("Failed to open image/access disk!");
                 WaitForUserExit();
                 return INVALID_ARGUMENT;
             }
+
+            if (opts.Offset > 0)
+                imageStream = new OffsetableStream(imageStream, opts.Offset);
 
             if (imageStream is FixedLengthStream fixedStream)
             {
@@ -69,6 +72,14 @@ namespace nDiscUtils.Modules
 
             [Value(1, Default = null, HelpText = "Path to the image or the disk which should be mounted", Required = true)]
             public string Path { get; set; }
+
+            [Option('o', "offset", Default = "0", HelpText = "Offset in bytes at which the image is expected to start")]
+            public string OffsetString { get; set; }
+
+            public long Offset
+            {
+                get => ParseSizeString(OffsetString);
+            }
 
         }
 
