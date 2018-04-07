@@ -24,11 +24,11 @@ after_build:
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
     Push-AppveyorArtifact ./bin/$platform/$configuration/ndiscutils.exe -FileName ndiscutils-$platform.exe
-deploy:
-- provider: GitHub
-  tag: v$(appveyor_build_version)
-  release: nDiscUtils $(appveyor_build_version)
-  auth_token:
-    secure: Dk5VMb+gcTeoyDHWS4Vi1g09ps2PrW7ohAOB/FWnC5DLNZSukUPCPgT+QQLgcoP0
-  repository: Lukas0610/nDiscUtils
-  artifact: /.*\.exe/
+# deploy:
+# - provider: GitHub
+#   tag: v$(appveyor_build_version)
+#   release: nDiscUtils $(appveyor_build_version)
+#   auth_token:
+#     secure: Dk5VMb+gcTeoyDHWS4Vi1g09ps2PrW7ohAOB/FWnC5DLNZSukUPCPgT+QQLgcoP0
+#   repository: Lukas0610/nDiscUtils
+#   artifact: /.*\.exe/
