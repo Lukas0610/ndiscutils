@@ -56,19 +56,25 @@ namespace nDiscUtils
 
             ServiceImpl.ServiceEarlyMain(args);
 
-            WriteLine("{0} {1}.{2}.{3}-{4}  {5:dd-MM-yyyy HH\\:mm\\:ss}  [x{6}-built]",
-                assembly.GetCustomAttribute<AssemblyProductAttribute>().Product,
-                version.Major, version.Minor, version.Build, version.Revision,
-                assembly.GetLinkerTime(), buildArch);
+            if (!IsServiceEnvironment)
+            {
+                WriteLine("{0} {1}.{2}.{3}-{4}  {5:dd-MM-yyyy HH\\:mm\\:ss}  [x{6}-built]",
+                    assembly.GetCustomAttribute<AssemblyProductAttribute>().Product,
+                    version.Major, version.Minor, version.Build, version.Revision,
+                    assembly.GetLinkerTime(), buildArch);
 
-            WriteLine("{0}. Licensed under GPLv3.",
-                assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright);
+                WriteLine("{0}. Licensed under GPLv3.",
+                    assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright);
+            }
+
+            if (!ServiceImpl.ServiceMain(args))
+            {
+                CloseParent();
+                return 0;
+            }
 
             WriteLine("Running as {0}.", Environment.UserName);
             WriteLine();
-
-            if (!ServiceImpl.ServiceMain(args))
-                return 0;
 
             var result = Parser.Default.ParseArguments<
                 Benchmark.Options,
@@ -102,13 +108,19 @@ namespace nDiscUtils
                     (Sync.Options opts) => Sync.Run(opts),
                     (errcode) => -INVALID_ARGUMENT
                 );
-
-            // ugly hack...
-            NativeMethods.GenerateConsoleCtrlEvent(NativeMethods.CTRL_C_EVENT, (uint)PPID);
-
+            
+            CloseParent();
             return result;
         }
 
+        private static void CloseParent()
+        {
+            if (PPID > 0)
+            {
+                // ugly hack...
+                NativeMethods.GenerateConsoleCtrlEvent(NativeMethods.CTRL_C_EVENT, (uint)PPID);
+            }
+        }
 
     }
 
