@@ -21,8 +21,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if STANDALONE
+using System.Reflection;
+#endif
 using System.ServiceProcess;
-using System.Threading;
+#if STANDALONE
+using Microsoft.Win32;
+#endif
 using nDiscUtils.Service;
 
 namespace nDiscUtils.Core
