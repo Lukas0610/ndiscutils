@@ -17,7 +17,7 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ;
 #define AppName "nDiscUtils"
-#define AppVersion "0.4.0"
+#define AppVersion "0.4.1"
 #define AppPublisher "Lukas Berger" 
 #define AppURL "https://lukasberger.at/"
 #define SourceDir "D:\Projekte\Windows\nDiscUtils\bin"
