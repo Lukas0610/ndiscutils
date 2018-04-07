@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -59,6 +60,21 @@ namespace nDiscUtils.BuildTools
             else if (args[0] == "copy")
             {
                 File.Copy(args[1], args[2], true);
+            }
+            else if (args[0] == "sha512sum")
+            {
+                using (var sha = SHA512.Create())
+                using (var input = new FileStream(args[1], FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var hash = sha.ComputeHash(input);
+                    var hashString = new StringBuilder();
+
+                    foreach (byte b in hash)
+                        hashString.AppendFormat("{0:x2}", b);
+
+                    hashString.AppendFormat(" *{0}\r\n", args[1]);
+                    File.WriteAllText($"{args[1]}.sha512sum", hashString.ToString());
+                }
             }
         }
 

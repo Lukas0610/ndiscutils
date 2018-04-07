@@ -948,7 +948,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)
+$(TargetDir)buildtools.exe sha512sum $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
   <Import Project="packages\Fody.3.0.0\build\Fody.targets" Condition="Exists('packages\Fody.3.0.0\build\Fody.targets') And '$(Configuration)' == 'Standalone'" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild" Condition=" '$(Configuration)' == 'Standalone' ">
