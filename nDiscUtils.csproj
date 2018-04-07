@@ -7,7 +7,7 @@
     <ProjectGuid>{34F0410B-9FE0-4762-94B9-3ED74DB88276}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>nDiscUtils</RootNamespace>
-    <AssemblyName>ndiscutils</AssemblyName>
+    <AssemblyName>nDiscUtils</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -21,47 +21,83 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP NETFX NET45 ASYNC __x64__</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;__x64__ SKIP_FSHARP NETFX NET45 ASYNC </DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Standalone|x64' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;SKIP_FSHARP NETFX NET45 ASYNC __x64__</DefineConstants>
+    <OutputPath>bin\x64\Standalone\</OutputPath>
+    <DefineConstants>TRACE;__x64__ SKIP_FSHARP NETFX NET45 ASYNC STANDALONE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <DebugType>embedded</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SKIP_FSHARP NETFX NET45 ASYNC __x86__</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;__x86__ SKIP_FSHARP NETFX NET45 ASYNC</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>embedded</DebugType>
+    <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Standalone|x86' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;SKIP_FSHARP NETFX NET45 ASYNC __x86__</DefineConstants>
+    <OutputPath>bin\x86\Standalone\</OutputPath>
+    <DefineConstants>TRACE;__x86__ SKIP_FSHARP NETFX NET45 ASYNC STANDALONE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <DebugType>embedded</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>nDiscUtils.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;__x64__ SKIP_FSHARP NETFX NET45 ASYNC RELEASE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;__x86__ SKIP_FSHARP NETFX NET45 ASYNC RELEASE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Costura, Version=2.0.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
@@ -95,11 +131,6 @@
     <Compile Include="Modules\Erase.cs" />
     <Compile Include="Modules\Security.cs" />
     <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Runtime\Emit\ILMethod.cs" />
     <Compile Include="Runtime\Emit\ILMethods.cs" />
     <Compile Include="IO\HardDiskType.cs" />
@@ -900,15 +931,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Include="ThirdParty\dokan-dotnet\DokanNet\Properties\Resources.resx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\Resources\ndiscutilsprivsvc.exe" />
-    <Content Include="FodyWeavers.xml" Condition=" '$(Configuration)' == 'Release' " />
+    <EmbeddedResource Include="bin\x64\Standalone\nDiscUtilsPrivSvc.exe" Condition=" '$(Configuration)' == 'Standalone' And '$(Platform)' == 'x64' " />
+    <EmbeddedResource Include="bin\x86\Standalone\nDiscUtilsPrivSvc.exe" Condition=" '$(Configuration)' == 'Standalone' And '$(Platform)' == 'x86' " />
+    <Content Include="FodyWeavers.xml" Condition=" '$(Configuration)' == 'Standalone' " />
     <Content Include="nDiscUtils.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -922,13 +950,13 @@
   <PropertyGroup>
     <PostBuildEvent>$(TargetDir)buildtools.exe update-pe-header $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="packages\Fody.3.0.0\build\Fody.targets" Condition="Exists('packages\Fody.3.0.0\build\Fody.targets') And '$(Configuration)' == 'Release'" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild" Condition=" '$(Configuration)' == 'Release' ">
+  <Import Project="packages\Fody.3.0.0\build\Fody.targets" Condition="Exists('packages\Fody.3.0.0\build\Fody.targets') And '$(Configuration)' == 'Standalone'" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild" Condition=" '$(Configuration)' == 'Standalone' ">
     <PropertyGroup>
       <ErrorText>Dieses Projekt verweist auf mindestens ein NuGet-Paket, das auf diesem Computer fehlt. Verwenden Sie die Wiederherstellung von NuGet-Paketen, um die fehlenden Dateien herunterzuladen. Weitere Informationen finden Sie unter "http://go.microsoft.com/fwlink/?LinkID=322105". Die fehlende Datei ist "{0}".</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\Fody.3.0.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Fody.3.0.0\build\Fody.targets'))" />
     <Error Condition="!Exists('packages\Costura.Fody.2.0.0\build\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Costura.Fody.2.0.0\build\Costura.Fody.targets'))" />
   </Target>
-  <Import Project="packages\Costura.Fody.2.0.0\build\Costura.Fody.targets" Condition="Exists('packages\Costura.Fody.2.0.0\build\Costura.Fody.targets') And '$(Configuration)' == 'Release'" />
+  <Import Project="packages\Costura.Fody.2.0.0\build\Costura.Fody.targets" Condition="Exists('packages\Costura.Fody.2.0.0\build\Costura.Fody.targets') And '$(Configuration)' == 'Standalone'" />
 </Project>

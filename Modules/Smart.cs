@@ -150,8 +150,8 @@ namespace nDiscUtils.Modules
                     " | ", attributeId, attribute.Name, value, worst, data);
             }
 
-            WaitForUserExit();
 exit:
+            WaitForUserExit();
             return returnCode;
         }
 

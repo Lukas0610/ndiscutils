@@ -10,7 +10,7 @@ branches:
   - master
 skip_tags: true
 image: Visual Studio 2017
-configuration: Release
+configuration: Standalone
 platform:
 - x86
 - x64
@@ -23,7 +23,7 @@ after_build:
 - ps: |
     $platform = $env:PLATFORM
     $configuration = $env:CONFIGURATION
-    Push-AppveyorArtifact ./bin/$platform/$configuration/ndiscutils.exe -FileName ndiscutils-$platform.exe
+    Push-AppveyorArtifact ./bin/$platform/$configuration/nDiscUtils.exe -FileName ndiscutils-$platform.exe
 # deploy:
 # - provider: GitHub
 #   tag: v$(appveyor_build_version)

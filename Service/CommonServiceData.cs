@@ -16,8 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-using System;
 using System.IO;
+using System.Reflection;
 
 namespace nDiscUtils.Service
 {
@@ -27,13 +27,17 @@ namespace nDiscUtils.Service
 
         public static readonly string BaseName = "nDiscUtilsPrivSvc";
 
-        public static readonly int Version = 3;
+        public static readonly int Version = 4;
 
         public static readonly string FullName = BaseName + Version;
 
+#if STANDALONE
         public static readonly string ServiceDirectory = "C:\\ProgramData\\nDiscUtils\\";
+#else
+        public static readonly string ServiceDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+#endif
 
-        public static readonly string ServicePath = ServiceDirectory + "ndiscutilsprivsvc.exe";
+        public static readonly string ServicePath = Path.Combine(ServiceDirectory, "nDiscUtilsPrivSvc.exe");
 
         public static readonly string RegistrySubKeyPath = "SOFTWARE\\Lukas Berger\\nDiscUtils";
 

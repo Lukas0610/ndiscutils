@@ -34,7 +34,7 @@ namespace nDiscUtils
     public static class Program
     {
 
-#if !DEBUG
+#if STANDALONE
         static Program()
         {
             CosturaUtility.Initialize();

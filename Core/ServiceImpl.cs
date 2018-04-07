@@ -26,7 +26,6 @@ using System.ServiceProcess;
 
 using Microsoft.Win32;
 
-using nDiscUtils.Properties;
 using nDiscUtils.Service;
 
 namespace nDiscUtils.Core
@@ -35,10 +34,12 @@ namespace nDiscUtils.Core
     public static class ServiceImpl
     {
 
+#if STANDALONE
         private static bool IsValidServiceControlMode(string[] args)
         {
             return args.Length == 2 && args[0] == "/SVCC" && (args[1] == "/I" || args[1] == "/U" || args[1] == "/C");
         }
+#endif
 
         private static bool IsValidServiceValidationMode(string[] args)
         {
@@ -46,13 +47,16 @@ namespace nDiscUtils.Core
         }
 
         public static void ServiceEarlyMain(string[] args)
-        {            
+        {
+#if STANDALONE
             if (IsValidServiceControlMode(args))
             {
                 Console.WriteLine("*** ENTERING SERVICE CONTROL MODE !!!");
                 Console.WriteLine();
             }
-            else if (IsValidServiceValidationMode(args))
+            else
+#endif
+            if (IsValidServiceValidationMode(args))
             {
                 Console.WriteLine("*** ENTERING SERVICE VALIDATION MODE !!!");
                 Console.WriteLine();
@@ -61,12 +65,15 @@ namespace nDiscUtils.Core
 
         public static bool ServiceMain(ref string[] args)
         {
+#if STANDALONE
             if (IsValidServiceControlMode(args))
             {
                 ServiceControlMain(args[1]);
                 return false;
             }
-            else if (IsValidServiceValidationMode(args))
+            else 
+#endif
+            if (IsValidServiceValidationMode(args))
             {
                 var service = TryFindService();
 
@@ -95,6 +102,9 @@ validationExit:
             }
             else if (args.Length != 0 && args[args.Length - 1] == "/SVCR")
             {
+                if (!File.Exists(CommonServiceData.ServicePath))
+                    return true;
+
                 // remove /SVCR key-param from argument list
                 var argsList = new List<string>(args);
                 argsList.RemoveAt(args.Length - 1);
@@ -108,10 +118,14 @@ validationExit:
             }
             else
             {
+                if (!File.Exists(CommonServiceData.ServicePath))
+                    return true;
+
                 var service = TryFindService();
 
                 if (service == null)
                 {
+#if STANDALONE
                     var hasOutdatedService = FindOutdatedService((outdatedService) =>
                     {
                         Console.WriteLine("*** FOUND OUTDATED SERVICE: {0} !!!", outdatedService.ServiceName);
@@ -146,10 +160,7 @@ validationExit:
 
                         Console.WriteLine("    *** UPDATING SERVICE ...");
 
-                        if (File.Exists(CommonServiceData.ServicePath))
-                            File.Decrypt(CommonServiceData.ServicePath);
-
-                        File.WriteAllBytes(CommonServiceData.ServicePath, Resources.ndiscutilsprivsvc);
+                        ExtractService();
 
                         Console.WriteLine("        *** SERVICE UPDATED ---");
 
@@ -178,18 +189,50 @@ validationExit:
 
                     if (hasOutdatedService)
                         goto start;
+#endif
 
                     return true;
                 }
 
+#pragma warning disable CS0164
 start:
+#pragma warning restore CS0164
+
                 Console.WriteLine("Attempting to launch nDiscUtils through privilege elevation service...");
                 
                 service.Start(new string[] { Environment.CommandLine, Directory.GetCurrentDirectory() });
                 return false;
             }
         }
+        private static ServiceController TryFindService()
+        {
+            var services = ServiceController.GetServices();
+            return services
+                .Where(s => s.ServiceName == CommonServiceData.FullName)
+                .FirstOrDefault();
+        }
+
+        private static bool FindOutdatedService(Func<ServiceController, bool> callback)
+        {
+            var services = ServiceController.GetServices();
+
+            for (int i = CommonServiceData.Version - 1; i > 0; i--)
+            {
+                var outdatedService = services
+                    .Where(s => s.ServiceName == (CommonServiceData.BaseName + i))
+                    .FirstOrDefault();
+
+                if (outdatedService != null)
+                {
+                    return callback(outdatedService);
+                }
+            }
+
+            return false;
+        }
         
+#if STANDALONE
+
         private static void ServiceControlMain(string mode)
         {
             if (mode == "/I")
@@ -230,39 +273,9 @@ start:
             Console.WriteLine();
         }
 
-        private static ServiceController TryFindService()
-        {
-            var services = ServiceController.GetServices();
-            return services
-                .Where(s => s.ServiceName == CommonServiceData.FullName)
-                .FirstOrDefault();
-        }
-
-        private static bool FindOutdatedService(Func<ServiceController, bool> callback)
-        {
-            var services = ServiceController.GetServices();
-
-            for (int i = CommonServiceData.Version - 1; i > 0; i--)
-            {
-                var outdatedService = services
-                    .Where(s => s.ServiceName == (CommonServiceData.BaseName + i))
-                    .FirstOrDefault();
-
-                if (outdatedService != null)
-                {
-                    return callback(outdatedService);
-                }
-            }
-
-            return false;
-        }
-
         private static bool InstallService()
         {
-            if (!File.Exists(CommonServiceData.ServicePath))
-            {
-                File.WriteAllBytes(CommonServiceData.ServicePath, Resources.ndiscutilsprivsvc);
-            }
+           ExtractService();
 
             var proc = new Process
             {
@@ -295,6 +308,12 @@ start:
 
         private static bool UninstallService()
         {
+            if (!File.Exists(CommonServiceData.ServicePath))
+            {
+                Console.WriteLine("*** SERVICE EXECUTABLE NOT FOUND !!!");
+                return false;
+            }
+
             var proc = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -325,6 +344,26 @@ start:
 
             return result;
         }
+
+        private static void ExtractService()
+        {
+            if (File.Exists(CommonServiceData.ServicePath))
+                File.Delete(CommonServiceData.ServicePath);
+
+#if __x64__
+            const string resource = "nDiscUtils.bin.x64.Standalone.nDiscUtilsPrivSvc.exe";
+#elif __x86__
+            const string resource = "nDiscUtils.bin.x86.Standalone.nDiscUtilsPrivSvc.exe";
+#endif
+
+            using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
+            using (var fileStream = new FileStream(CommonServiceData.ServicePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                resourceStream.CopyTo(fileStream);
+            }
+        }
+
+#endif
 
     }
 

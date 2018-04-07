@@ -81,11 +81,17 @@ namespace nDiscUtils.Core
                 GetPrefix(logType),
                 string.Format(format, args));
 
-            var fileText = string.Format("{0} [{1}]: {2}:{3}: {4}",
+            var tracing = "";
+#if DEBUG
+            tracing = string.Format("{0}:{1}: ",
+                Path.GetFileName(caller.GetFileName()),
+                caller.GetFileLineNumber());
+#endif
+
+            var fileText = string.Format("{0} [{1}]: {2}{3}",
                 DateTime.Now.ToString(),
                 GetPrefix(logType),
-                Path.GetFileName(caller.GetFileName()),
-                caller.GetFileLineNumber(),
+                tracing,
                 string.Format(format, args));
             
             // console
