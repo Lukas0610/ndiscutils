@@ -556,6 +556,9 @@ namespace nDiscUtils.Core
             if (!Environment.UserInteractive)
                 return;
 
+            while (Console.KeyAvailable)
+                Console.ReadKey(true);
+
             if (PrivateConsoleBufferInUse)
             {
                 WaitForUserExitImpl();
