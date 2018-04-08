@@ -34,13 +34,11 @@ namespace nDiscUtils.IO
 
         public static void Copy(byte[] src, byte[] dst, long count)
         {
-#if __x64__
             fixed (void* srcptr = src)
             fixed (void* dstptr = dst)
+#if __x64__
                 Memory.Copy(srcptr, dstptr, (ulong)count);
 #elif __x86__
-            fixed (void* srcptr = src)
-            fixed (void* dstptr = dst)
                 Memory.Copy(srcptr, dstptr, (uint)count);
 #endif
         }
@@ -56,13 +54,11 @@ namespace nDiscUtils.IO
 
         public static void Copy(byte[] src, long srcOffset, byte[] dst, long dstOffset, long count)
         {
-#if __x64__
             fixed (void* srcptr = src)
             fixed (void* dstptr = dst)
+#if __x64__
                 Memory.Copy(srcptr, srcOffset, dstptr, dstOffset, (ulong)count);
 #elif __x86__
-            fixed (void* srcptr = src)
-            fixed (void* dstptr = dst)
                 Memory.Copy(srcptr, srcOffset, dstptr, dstOffset, (uint)count);
 #endif
         }
@@ -78,31 +74,21 @@ namespace nDiscUtils.IO
 
         public static void Free(byte[] buffer)
         {
-#if __x64__
             fixed (void* bufferptr = buffer)
                 Memory.Free(bufferptr);
-#elif __x86__
-            fixed (void* bufferptr = buffer)
-                Memory.Free(bufferptr);
-#endif
         }
 
         public static void Free(void* ptr)
         {
-#if __x64__
             Memory.Free(ptr);
-#elif __x86__
-            Memory.Free(ptr);
-#endif
         }
 
         public static void Set(byte[] buffer, byte data, long count)
         {
-#if __x64__
             fixed (void* bufferptr = buffer)
+#if __x64__
                 Memory.Set(bufferptr, data, (ulong)count);
 #elif __x86__
-            fixed (void* bufferptr = buffer)
                 Memory.Set(bufferptr, data, (uint)count);
 #endif
         }
