@@ -51,10 +51,12 @@ namespace nDiscUtils
             var version = assembly.GetName().Version;
             var buildArch = (Is64BitBuild ? 64 : 86);
 
-            ServiceImpl.ServiceEarlyParseArguments(ref args);
-            InitializeSystemConsole();
-
-            ServiceImpl.ServiceEarlyMain(args);
+            if (!IsLinux)
+            {
+                ServiceImpl.ServiceEarlyParseArguments(ref args);
+                InitializeSystemConsole();
+                ServiceImpl.ServiceEarlyMain(args);
+            }
 
             if (!IsServiceEnvironment)
             {
@@ -67,7 +69,7 @@ namespace nDiscUtils
                     assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright);
             }
 
-            if (!ServiceImpl.ServiceMain(args))
+            if (!IsLinux && !ServiceImpl.ServiceMain(args))
             {
                 CloseParent();
                 return 0;
@@ -109,7 +111,9 @@ namespace nDiscUtils
                     (errcode) => -INVALID_ARGUMENT
                 );
             
-            CloseParent();
+            if (!IsLinux)
+                CloseParent();
+
             return result;
         }
 
