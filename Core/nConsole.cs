@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
-using System.Diagnostics;
 using System.Text;
 
 using Mischel.ConsoleDotNet;
@@ -55,11 +54,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.ForegroundColor;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.ForegroundColor;
+                else
+                    return Console.ForegroundColor;
             }
             set
             {
-                kCurrentBuffer.ForegroundColor = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.ForegroundColor = value;
+                else
+                    Console.ForegroundColor = value;
             }
         }
 
@@ -67,11 +72,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.BackgroundColor;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.BackgroundColor;
+                else
+                    return Console.BackgroundColor;
             }
             set
             {
-                kCurrentBuffer.BackgroundColor = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.BackgroundColor = value;
+                else
+                    Console.BackgroundColor = value;
             }
         }
 
@@ -79,11 +90,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.CursorTop;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.CursorTop;
+                else
+                    return Console.CursorTop;
             }
             set
             {
-                kCurrentBuffer.CursorTop = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.CursorTop = value;
+                else
+                    Console.CursorTop = value;
             }
         }
 
@@ -91,11 +108,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.CursorLeft;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.CursorLeft;
+                else
+                    return Console.CursorLeft;
             }
             set
             {
-                kCurrentBuffer.CursorLeft = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.CursorLeft = value;
+                else
+                    Console.CursorLeft = value;
             }
         }
 
@@ -103,11 +126,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.CursorVisible;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.CursorVisible;
+                else
+                    return Console.CursorVisible;
             }
             set
             {
-                kCurrentBuffer.CursorVisible = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.CursorVisible = value;
+                else
+                    Console.CursorVisible = value;
             }
         }
 
@@ -115,11 +144,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.Width;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.Width;
+                else
+                    return Console.BufferWidth;
             }
             set
             {
-                kCurrentBuffer.Width = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.Width = value;
+                else
+                    Console.BufferWidth = value;
             }
         }
 
@@ -127,11 +162,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.Height;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.Height;
+                else
+                    return Console.BufferHeight;
             }
             set
             {
-                kCurrentBuffer.Height = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.Height = value;
+                else
+                    Console.BufferHeight = value;
             }
         }
 
@@ -139,11 +180,17 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.WindowWidth;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.WindowWidth;
+                else
+                    return Console.WindowWidth;
             }
             set
             {
-                kCurrentBuffer.WindowWidth = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.WindowWidth = value;
+                else
+                    Console.WindowWidth = value;
             }
         }
 
@@ -151,17 +198,18 @@ namespace nDiscUtils.Core
         {
             get
             {
-                return kCurrentBuffer.WindowHeight;
+                if (UseConsoleBuffers)
+                    return kCurrentBuffer.WindowHeight;
+                else
+                    return Console.WindowHeight;
             }
             set
             {
-                kCurrentBuffer.WindowHeight = value;
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.WindowHeight = value;
+                else
+                    Console.WindowHeight = value;
             }
-        }
-
-        public static IntPtr PrimaryBufferHandle
-        {
-            get => kPrimaryBuffer.Handle;
         }
 
         public static bool PrivateConsoleBufferInUse
@@ -171,7 +219,7 @@ namespace nDiscUtils.Core
 
         private static void AttachCurrentConsoleBuffer()
         {
-            if (Program.PPID > 0)
+            if (UseConsoleBuffers && Program.PPID > 0)
             {
                 NativeMethods.FreeConsole();
                 NativeMethods.SetParent(kCurrentBuffer.Handle, new IntPtr(Program.CHWND));
@@ -181,33 +229,24 @@ namespace nDiscUtils.Core
 
         public static void OpenNewConsoleBuffer()
         {
-            kPrivateBuffer = new ConsoleScreenBuffer();
-
-            kCurrentBuffer = kPrivateBuffer;
-            AttachCurrentConsoleBuffer();
-
-            JConsole.SetActiveScreenBuffer(kCurrentBuffer);
-        }
-
-        public static void ExchangeBuffers()
-        {
-            if (kCurrentBuffer == kPrimaryBuffer)
+            if (UseConsoleBuffers)
             {
+                kPrivateBuffer = new ConsoleScreenBuffer();
+
                 kCurrentBuffer = kPrivateBuffer;
-            }
-            else if (kCurrentBuffer == kPrivateBuffer)
-            {
-                kCurrentBuffer = kPrimaryBuffer;
-            }
+                AttachCurrentConsoleBuffer();
 
-            AttachCurrentConsoleBuffer();
-            JConsole.SetActiveScreenBuffer(kCurrentBuffer);
+                JConsole.SetActiveScreenBuffer(kCurrentBuffer);
+            }
         }
 
         public static void InitializeSystemConsole()
         {
-            kPrimaryBuffer = JConsole.GetActiveScreenBuffer();
-            kCurrentBuffer = kPrimaryBuffer;
+            if (UseConsoleBuffers)
+            {
+                kPrimaryBuffer = JConsole.GetActiveScreenBuffer();
+                kCurrentBuffer = kPrimaryBuffer;
+            }
             WindowWidth = Math.Max(WindowWidth, 120);
             WindowHeight = Math.Max(WindowHeight, 30);
             BufferHeight = Math.Max(BufferHeight, 3000);
@@ -268,27 +307,24 @@ namespace nDiscUtils.Core
 
         public static void RestoreOldConsoleBuffer()
         {
-            kCurrentBuffer = kPrimaryBuffer;
+            if (UseConsoleBuffers)
+            {
+                kCurrentBuffer = kPrimaryBuffer;
 
-            AttachCurrentConsoleBuffer();
-            JConsole.SetActiveScreenBuffer(kPrimaryBuffer);
+                AttachCurrentConsoleBuffer();
+                JConsole.SetActiveScreenBuffer(kPrimaryBuffer);
 
-            kPrivateBuffer.Dispose();
-            kPrivateBuffer = null;
+                kPrivateBuffer.Dispose();
+                kPrivateBuffer = null;
+            }
         }
-
-        public static void Cleanup()
-        {
-            if (kPrivateBuffer != null)
-                RestoreOldConsoleBuffer();
-
-            kCurrentBuffer.Dispose();
-            kCurrentBuffer = null;
-        }
-
+        
         public static void Clear()
         {
-            kCurrentBuffer.Clear();
+            if (UseConsoleBuffers)
+                kCurrentBuffer.Clear();
+            else
+                Console.Clear();
         }
 
         public static ConsoleKeyInfo ReadKey(bool intercept)
@@ -298,16 +334,24 @@ namespace nDiscUtils.Core
 
         public static void ResetColor()
         {
-            kCurrentBuffer.ForegroundColor = ConsoleColor.Black;
-            kCurrentBuffer.BackgroundColor = ConsoleColor.Gray;
+            ForegroundColor = ConsoleColor.Black;
+            BackgroundColor = ConsoleColor.Gray;
         }
 
         public static void Write(int x, int y, string str)
         {
             lock(kWriteLock)
             {
-                kCurrentBuffer.SetCursorPosition(x, y);
-                kCurrentBuffer.Write(str);
+                if (UseConsoleBuffers)
+                {
+                    kCurrentBuffer.SetCursorPosition(x, y);
+                    kCurrentBuffer.Write(str);
+                }
+                else
+                {
+                    Console.SetCursorPosition(x, y);
+                    Console.Write(str);
+                }
             }
         }
 
@@ -350,19 +394,34 @@ namespace nDiscUtils.Core
         public static void Write(string format, params object[] args)
         {
             lock (kWriteLock)
-                kCurrentBuffer.Write(string.Format(format, args));
+            {
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.Write(string.Format(format, args));
+                else
+                    Console.Write(format, args);
+            }
         }
 
         public static void WriteLine()
         {
             lock (kWriteLock)
-                kCurrentBuffer.WriteLine("");
+            {
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.WriteLine("");
+                else
+                    Console.WriteLine();
+            }
         }
 
         public static void WriteLine(string format, params object[] args)
         {
             lock (kWriteLock)
-                kCurrentBuffer.WriteLine(string.Format(format, args));
+            {
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.WriteLine(string.Format(format, args));
+                else
+                    Console.WriteLine(format, args);
+            }
         }
 
         private static void DrawWindow()
