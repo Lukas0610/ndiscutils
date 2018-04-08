@@ -118,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\ArrayUtils.cs" />
+    <Compile Include="Diagnostics\ProcessExtensions.cs" />
     <Compile Include="IO\DualStream.cs" />
     <Compile Include="IO\FileSystem\Implementations\FtpFileSystem.cs" />
     <Compile Include="IO\FileSystem\ISimpleFileSystem.cs" />

@@ -25,6 +25,8 @@ using System.Linq;
 using System.Reflection;
 #endif
 using System.ServiceProcess;
+using System.Threading;
+using nDiscUtils.Diagnostics;
 #if STANDALONE
 using Microsoft.Win32;
 #endif
@@ -244,7 +246,8 @@ start:
                     $"{Environment.CommandLine} /PPID:{currentProc.Id.ToString()} /CHWND:{currentProc.MainWindowHandle.ToInt64()}",
                     Directory.GetCurrentDirectory()
                 });
-                
+
+                currentProc.Suspend();
                 while (true) { }
             }
         }
