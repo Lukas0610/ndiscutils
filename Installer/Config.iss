@@ -17,9 +17,10 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ;
 
-; User-specific configurations
-#define SourceDir  "."
-#define BinaryDir  ".\bin"
+#define DotNetURL      "https://download.microsoft.com/download/C/3/A/C3A5200B-D33C-47E9-9D70-2F7C65DAAD94/NDP46-KB3045557-x86-x64-AllOS-ENU.exe"
+#define DotNetPath     "{tmp}\NDP46-KB3045557-x86-x64-AllOS-ENU.exe"
+#define DotNetVersion  "v4.6"
 
-; Include main installer script
-#include "Installer/Main.iss"
+#define DokanURL      "https://github.com/dokan-dev/dokany/releases/download/v1.1.0.2000/DokanSetup_redist.exe"
+#define DokanPath     "{tmp}\DokanSetup-v1.1.0.2000-redist.exe"
+#define DokanVersion  "1.1.0.2000"

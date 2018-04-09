@@ -17,9 +17,15 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ;
 
-; User-specific configurations
-#define SourceDir  "."
-#define BinaryDir  ".\bin"
-
-; Include main installer script
-#include "Installer/Main.iss"
+[CustomMessages]
+en.ComponentsAppNative  =Native components
+en.ComponentsAppSvc     =Privilege Elevation Service   
+en.ComponentsDbg        =Debugging
+en.ComponentsDbgSym     =Symbols
+en.ComponentsDbgBin     =Binariese
+en.TypesFull            =Full installation
+en.TypesRecom           =Recommended installation
+en.TypesMin             =Minimal installation
+en.TypesCustom          =Custom installation
+en.TasksRegisterPrivSvc =Register service after installation
+en.ComponentsDownload   =Additional components (Downloaded dynamically)

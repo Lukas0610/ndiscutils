@@ -17,9 +17,15 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ;
 
-; User-specific configurations
-#define SourceDir  "."
-#define BinaryDir  ".\bin"
-
-; Include main installer script
-#include "Installer/Main.iss"
+[CustomMessages]
+de.ComponentsAppNative  =Native Komponenten 
+de.ComponentsAppSvc     =Dienst zur Erhöhung der Rechte   
+de.ComponentsDbg        =Debugging
+de.ComponentsDbgSym     =Symbole
+de.ComponentsDbgBin     =Dateien
+de.TypesFull            =Vollständige Installation
+de.TypesRecom           =Empfohlene Installation
+de.TypesMin             =Minimale Installation
+de.TypesCustom          =Benutzerdefinierte Installation
+de.TasksRegisterPrivSvc =Dienst nach Installation registrieren
+de.ComponentsDownload   =Zusätzliche Komponenten (dynamisch Heruntergeladen)
