@@ -122,6 +122,7 @@
     <Compile Include="IO\DualStream.cs" />
     <Compile Include="IO\FileSystem\Implementations\FtpFileSystem.cs" />
     <Compile Include="IO\FileSystem\ISimpleFileSystem.cs" />
+    <Compile Include="IO\FileSystem\MetaDataCache.cs" />
     <Compile Include="IO\FileSystem\SimpleDirectoryInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileInfo.cs" />
     <Compile Include="IO\FileSystem\SimpleFileSystemInfo.cs" />

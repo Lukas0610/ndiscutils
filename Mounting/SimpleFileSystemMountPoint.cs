@@ -158,6 +158,7 @@ namespace nDiscUtils.Mounting
                     return DokanResult.InvalidName;
 
                 fileName = mFileSystem.TransformPath(fileName);
+                var rootFileName = mFileSystem.TransformPath("\\");
 
                 var readWriteAttributes = (access & DataAccess) == 0;
                 var readAccess = (access & DataWriteAccess) == 0;
@@ -171,7 +172,7 @@ namespace nDiscUtils.Mounting
                     switch (mode)
                     {
                         case FileMode.Open:
-                            if (!directoryExists && fileName != "\\")
+                            if (!directoryExists && fileName != rootFileName)
                             {
                                 if (fileExists)
                                     return NtStatus.NotADirectory;
@@ -193,7 +194,7 @@ namespace nDiscUtils.Mounting
                     switch (mode)
                     {
                         case FileMode.Open:
-                            if (directoryExists)
+                            if (directoryExists || fileName == rootFileName)
                             {
                                 info.IsDirectory = true;
                                 info.Context = new object();

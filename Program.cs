@@ -17,14 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
-using System.Diagnostics;
 using System.Reflection;
 
 using CommandLine;
-
+using DokanNet;
+using FluentFTP;
 using nDiscUtils.Core;
+using nDiscUtils.IO.FileSystem.Implementations;
 using nDiscUtils.Modules;
-
+using nDiscUtils.Mounting;
+using nDiscUtils.Options;
 using static nDiscUtils.Core.ModuleHelpers;
 using static nDiscUtils.Core.nConsole;
 using static nDiscUtils.Core.ReturnCodes;
@@ -45,8 +47,21 @@ namespace nDiscUtils
         }
 #endif
 
+        private class MountOptionsImpl : BaseMountOptions
+        {
+
+        }
+
         public static int Main(string[] args)
         {
+            InitializeSystemConsole();
+            var ftp = new FtpClient("localhost", 21, "admin", "");
+            ftp.Connect();
+            var fs = new FtpFileSystem(ftp);
+            var fsMount = new SimpleFileSystemMountPoint(fs, new MountOptionsImpl() { Letter = 'T', FullAccess = true, ShowHiddenFiles = true, Threads = 2 });
+            fsMount.Mount("T:", DokanOptions.FixedDrive, 1, 110, TimeSpan.FromSeconds(5), "nDiscUtils\\T", new DokanNullLogger());
+            return 0;
+
             var assembly = Assembly.GetExecutingAssembly();
             var version = assembly.GetName().Version;
             var buildArch = (Is64BitBuild ? 64 : 86);

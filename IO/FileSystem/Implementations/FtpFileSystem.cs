@@ -28,9 +28,10 @@ namespace nDiscUtils.IO.FileSystem.Implementations
     public sealed class FtpFileSystem : ISimpleFileSystem
     {
 
-        private const int CACHE_TIMEOUT = 1000;
+        private const long CACHE_LIFETIME = 1000;
 
         private FtpClient mClient;
+        private MetaDataCache mCache;
 
         public bool IsReadOnly => false;
 
@@ -47,6 +48,10 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
             mClient = client;
             mClient.EnableThreadSafeDataConnections = true;
+            mCache = new MetaDataCache(CACHE_LIFETIME, true)
+            {
+                PathSeperator = '/'
+            };
         }
 
         public void CopyFile(string oldPath, string newPath)
@@ -75,14 +80,13 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public bool DirectoryExists(string path)
         {
-            var cacheEntry = GetCacheEntry(path);
-            if (!cacheEntry.DirectoryExistsInvalidate)
-                return cacheEntry.DirectoryExists;
+            if (mCache.IsValid("DE", path))
+                return (bool)mCache.Get("DE", path);
 
-            var result = mClient.DirectoryExists(path);
-            cacheEntry.DirectoryExists = result;
-            cacheEntry.DirectoryExistsSet = DateTime.Now;
-            return result;
+            var exists = mClient.DirectoryExists(path);
+            mCache.Add("DE", path, exists);
+
+            return exists;
         }
 
         public bool Exists(string path)
@@ -90,29 +94,29 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public bool FileExists(string path)
         {
-            var cacheEntry = GetCacheEntry(path);
-            if (!cacheEntry.FileExistsInvalidate)
-                return cacheEntry.FileExists;
+            if (mCache.IsValid("FE", path))
+                return (bool)mCache.Get("FE", path);
 
-            var result = mClient.FileExists(path);
-            cacheEntry.FileExists = result;
-            cacheEntry.FileExistsSet = DateTime.Now;
-            return result;
+            var exists = mClient.FileExists(path);
+            mCache.Add("FE", path, exists);
+
+            return exists;
         }
 
         public IEnumerable<SimpleDirectoryInfo> GetDirectories(string path)
         {
             FtpListItem[] result = null;
 
-            var cacheEntry = GetCacheEntry(path);
-            if (cacheEntry.DirectoryListingInvalidate)
+            if (!mCache.IsValid("L", path))
             {
                 result = mClient.GetListing(path, FtpListOption.AllFiles);
-                cacheEntry.DirectoryListing = result;
-                cacheEntry.DirectoryListingSet = DateTime.Now;
+                mCache.ClearAllChildren(path);
+                mCache.Add("L", path, result);
             }
             else
-                result = cacheEntry.DirectoryListing;
+            {
+                result = (FtpListItem[])mCache.Get("L", path);
+            }
 
             foreach (var entry in result)
             {
@@ -125,13 +129,12 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public SimpleDirectoryInfo GetDirectoryInfo(string path)
         {
-            var cacheEntry = GetCacheEntry(path);
-            if (!cacheEntry.ListItemInvalidate)
-                return GetDirectoryInfoImpl(path, cacheEntry.ListItem);
+            if (mCache.IsValid("D", path))
+                return GetDirectoryInfoImpl(path, (FtpListItem)mCache.Get("D", path));
 
             var entry = mClient.GetObjectInfo(path, true);
-            cacheEntry.ListItem = entry;
-            cacheEntry.ListItemSet = DateTime.Now;
+            mCache.Add("D", path, entry);
+
             return GetDirectoryInfoImpl(path, entry);
         }
 
@@ -151,13 +154,12 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public SimpleFileInfo GetFileInfo(string path)
         {
-            var cacheEntry = GetCacheEntry(path);
-            if (!cacheEntry.ListItemInvalidate)
-                return GetFileInfoImpl(path, cacheEntry.ListItem);
+            if (mCache.IsValid("F", path))
+                return GetFileInfoImpl(path, (FtpListItem)mCache.Get("F", path));
 
             var entry = mClient.GetObjectInfo(path, true);
-            cacheEntry.ListItem = entry;
-            cacheEntry.ListItemSet = DateTime.Now;
+            mCache.Add("F", path, entry);
+
             return GetFileInfoImpl(path, entry);
         }
 
@@ -180,15 +182,16 @@ namespace nDiscUtils.IO.FileSystem.Implementations
         {
             FtpListItem[] result = null;
 
-            var cacheEntry = GetCacheEntry(path);
-            if (cacheEntry.FileListingInvalidate)
+            if (!mCache.IsValid("L", path))
             {
                 result = mClient.GetListing(path, FtpListOption.AllFiles);
-                cacheEntry.FileListing = result;
-                cacheEntry.FileListingSet = DateTime.Now;
+                mCache.ClearAllChildren(path);
+                mCache.Add("L", path, result);
             }
             else
-                result = cacheEntry.FileListing;
+            {
+                result = (FtpListItem[])mCache.Get("L", path);
+            }
 
             foreach (var entry in result)
             {
@@ -203,15 +206,16 @@ namespace nDiscUtils.IO.FileSystem.Implementations
         {
             FtpListItem[] result = null;
 
-            var cacheEntry = GetCacheEntry(path);
-            if (cacheEntry.FileSystemListingInvalidate)
+            if (!mCache.IsValid("L", path))
             {
                 result = mClient.GetListing(path, FtpListOption.AllFiles);
-                cacheEntry.FileSystemListing = result;
-                cacheEntry.FileSystemListingSet = DateTime.Now;
+                mCache.ClearAllChildren(path);
+                mCache.Add("L", path, result);
             }
             else
-                result = cacheEntry.FileSystemListing;
+            {
+                result = (FtpListItem[])mCache.Get("L", path);
+            }
 
             foreach (var entry in result)
                 yield return GetFileSystemInfoImpl(path, entry);
@@ -219,13 +223,12 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public SimpleFileSystemInfo GetFileSystemInfo(string path)
         {
-            var cacheEntry = GetCacheEntry(path);
-            if (!cacheEntry.ListItemInvalidate)
-                return GetFileSystemInfoImpl(path, cacheEntry.ListItem);
+            if (mCache.IsValid("I", path))
+                return GetFileSystemInfoImpl(path, (FtpListItem)mCache.Get("I", path));
 
             var entry = mClient.GetObjectInfo(path, true);
-            cacheEntry.ListItem = entry;
-            cacheEntry.ListItemSet = DateTime.Now;
+            mCache.Add("I", path, entry);
+
             return GetFileSystemInfoImpl(path, entry);
         }
 
@@ -292,47 +295,6 @@ namespace nDiscUtils.IO.FileSystem.Implementations
 
         public string TransformPath(string input)
             => input.Replace('\\', '/');
-
-        //
-        // EXPERIMENTAL CACHING SYSTEM
-        //
-
-        private Dictionary<string, FtpCacheEntry> mCache
-            = new Dictionary<string, FtpCacheEntry>();
-
-        private FtpCacheEntry GetCacheEntry(string path)
-        {
-            if (!mCache.ContainsKey(path))
-                mCache.Add(path, new FtpCacheEntry());
-            return mCache[path];
-        }
-
-        private class FtpCacheEntry
-        {
-            public bool ListItemInvalidate { get => DateTime.Now.Subtract(ListItemSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime ListItemSet = DateTime.MinValue;
-            public FtpListItem ListItem;
-
-            public bool DirectoryExistsInvalidate { get => DateTime.Now.Subtract(DirectoryExistsSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime DirectoryExistsSet = DateTime.MinValue;
-            public bool DirectoryExists;
-
-            public bool FileExistsInvalidate { get => DateTime.Now.Subtract(FileExistsSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime FileExistsSet = DateTime.MinValue;
-            public bool FileExists;
-
-            public bool FileListingInvalidate { get => DateTime.Now.Subtract(FileListingSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime FileListingSet = DateTime.MinValue;
-            public FtpListItem[] FileListing;
-
-            public bool DirectoryListingInvalidate { get => DateTime.Now.Subtract(DirectoryListingSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime DirectoryListingSet = DateTime.MinValue;
-            public FtpListItem[] DirectoryListing;
-
-            public bool FileSystemListingInvalidate { get => DateTime.Now.Subtract(FileSystemListingSet).TotalMilliseconds >= CACHE_TIMEOUT; }
-            public DateTime FileSystemListingSet = DateTime.MinValue;
-            public FtpListItem[] FileSystemListing;
-        }
 
     }
 
