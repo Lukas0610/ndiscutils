@@ -125,7 +125,7 @@ namespace nDiscUtils.IO
             => mStream.ReadByte();
 
         public override long Seek(long offset, SeekOrigin origin)
-            => mStream.Seek(mOffset + offset, origin);
+            => mStream.Seek(mOffset + offset, origin) - mOffset;
 
         public override void SetLength(long value)
             => mStream.SetLength(value);
