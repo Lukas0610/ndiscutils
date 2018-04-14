@@ -144,9 +144,9 @@ namespace nDiscUtils.Modules
             [Option('s', "stripe-size", Default = "64K", HelpText = "Size of the single data stripes. Only used on certain variants.", Required = false)]
             public string StripeSizeString { get; set; }
 
-            public int StripeSize
+            public long StripeSize
             {
-                get => (int)ParseSizeString(StripeSizeString);
+                get => ParseSizeString(StripeSizeString);
             }
 
             [Option('o', "offset", Default = new string[] { }, 

@@ -37,7 +37,7 @@ namespace nDiscUtils.IO.SoftRaid
         private bool mCanSeek;
         private bool mCanTimeout;
 
-        public int StripeSize { get; set; }
+        public long StripeSize { get; set; }
 
         public Stream[] SubStreams { get => mStreams; }
 

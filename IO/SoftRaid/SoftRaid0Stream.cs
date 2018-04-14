@@ -67,7 +67,7 @@ namespace nDiscUtils.IO.SoftRaid
             while (readCount < count)
             {
                 var bufferOffset = offset + readCount;
-                var readSize = Math.Min(count - readCount, StripeSize);
+                var readSize = (int)Math.Min(count - readCount, StripeSize);
 
                 var currentIndex = GetStripeIndex(mPosition);
                 var currentBegin = GetStripeOffset(currentIndex);
@@ -140,7 +140,7 @@ namespace nDiscUtils.IO.SoftRaid
             while (writeCount < count)
             {
                 var bufferOffset = offset + writeCount;
-                var writeSize = Math.Min(count - writeCount, StripeSize);
+                var writeSize = (int)Math.Min(count - writeCount, StripeSize);
 
                 var currentIndex = GetStripeIndex(mPosition);
                 var currentBegin = GetStripeOffset(currentIndex);
