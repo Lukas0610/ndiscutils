@@ -230,8 +230,8 @@ namespace nDiscUtils.Core
 
             if (geometry == null)
             {
-                Logger.Info("Could not find valid geometry");
-                return null;
+                Logger.Warn("Could not find valid partitioning table to read geometry");
+                return Geometry.FromCapacity(stream.Length);
             }
 
             Logger.Info("{0}/BPS:{1}; SPT:{2}; HPC:{3}; CL:{4}; TS:{5}; CP:{6}", geometryType,
