@@ -43,8 +43,6 @@ namespace nDiscUtils.Modules
             { "striping", "0" },
             { "1", "1" },
             { "mirroring", "1" },
-            { "5", "5" },
-            { "paritity", "5" },
         };
 
         public static int Run(Options opts)
