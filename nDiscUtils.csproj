@@ -128,9 +128,14 @@
     <Compile Include="IO\FileSystem\SimpleFileSystemInfo.cs" />
     <Compile Include="IO\MemoryWrapper.cs" />
     <Compile Include="IO\OffsetableStream.cs" />
+    <Compile Include="IO\SoftRaid\AbstractSoftRaidStream.cs" />
+    <Compile Include="IO\SoftRaid\SoftRaid1Stream.cs" />
+    <Compile Include="IO\SoftRaid\SoftRaid0Stream.cs" />
     <Compile Include="IO\XPath.cs" />
     <Compile Include="Modules\Benchmark.cs" />
     <Compile Include="Modules\Erase.cs" />
+    <Compile Include="Modules\MakeRaidImage.cs" />
+    <Compile Include="Modules\MountRaidImage.cs" />
     <Compile Include="Modules\Security.cs" />
     <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
     <Compile Include="Runtime\Emit\ILMethod.cs" />
