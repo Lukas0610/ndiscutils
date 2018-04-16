@@ -129,6 +129,7 @@
     <Compile Include="IO\MemoryWrapper.cs" />
     <Compile Include="IO\OffsetableStream.cs" />
     <Compile Include="IO\SoftRaid\AbstractSoftRaidStream.cs" />
+    <Compile Include="IO\SoftRaid\SoftJbodStream.cs" />
     <Compile Include="IO\SoftRaid\SoftRaid1Stream.cs" />
     <Compile Include="IO\SoftRaid\SoftRaid0Stream.cs" />
     <Compile Include="IO\XPath.cs" />

@@ -145,9 +145,13 @@ namespace nDiscUtils.IO.SoftRaid
                 mCanTimeout = mCanTimeout || mStreams[i].CanTimeout;
                 mCanWrite = mCanWrite && mStreams[i].CanWrite;
             }
+
+            OnOpened();
         }
 
         public abstract void InvalidateLength();
+
+        protected virtual void OnOpened() { }
 
     }
 

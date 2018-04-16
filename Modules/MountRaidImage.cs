@@ -71,6 +71,10 @@ namespace nDiscUtils.Modules
             {
                 raidStream = new SoftRaid1Stream();
             }
+            else if (raidType == "jbod")
+            {
+                raidStream = new SoftJbodStream();
+            }
             else
             {
                 Logger.Error("RAID-type {0} is not implemented yet", raidType);

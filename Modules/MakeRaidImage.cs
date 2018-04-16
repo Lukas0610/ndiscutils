@@ -43,6 +43,7 @@ namespace nDiscUtils.Modules
             { "striping", "0" },
             { "1", "1" },
             { "mirroring", "1" },
+            { "jbod", "jbod" },
         };
 
         public static int Run(Options opts)
@@ -80,15 +81,31 @@ namespace nDiscUtils.Modules
             {
                 raidStream = new SoftRaid1Stream();
             }
+            else if (raidType == "jbod")
+            {
+                raidStream = new SoftJbodStream();
+                if (opts.JbodSizes.Count() != (opts.Paths.Count() - 1))
+                {
+                    Logger.Error("A JBOD-array requires a amount of [ Paths - 1 ] -j/--jbod options to be set");
+                    return INVALID_ARGUMENT;
+                }
+            }
             else
             {
                 Logger.Error("RAID-type {0} is not implemented yet", raidType );
                 return NOT_IMPLEMENTED;
             }
 
+            var jbodSizes = new List<long>();
+            foreach (var rawJbodSize in opts.JbodSizes)
+            {
+                jbodSizes.Add(ParseSizeString(rawJbodSize));
+            }
+
             raidStream.StripeSize = opts.StripeSize;
 
             var paths = new List<string>(opts.Paths);
+            var jbodSizeLeft = opts.Size;
 
             for (int i = 0; i < paths.Count; i++)
             {
@@ -101,6 +118,19 @@ namespace nDiscUtils.Modules
                         offset = offsets[i];
                     else
                         offset = offsets[offsets.Count - 1];
+                }
+
+                if (raidType == "jbod")
+                {
+                    var jbodSize = 0L;
+
+                    if (i != paths.Count - 1)
+                        jbodSize = jbodSizes[i];
+                    else
+                        jbodSize = jbodSizeLeft;
+
+                    jbodSizeLeft -= jbodSize;
+                    pathStream = new FixedLengthStream(pathStream, jbodSize, true);
                 }
 
                 if (offset > 0)
@@ -149,9 +179,13 @@ namespace nDiscUtils.Modules
                 get => ParseSizeString(StripeSizeString);
             }
 
-            [Option('o', "offset", Default = new string[] { }, 
+            [Option('o', "offset", Default = new string[] { }, Required = false,
                 HelpText = "Offset in bytes at which the image will be written to the target. Comma-separated for multiple values.", Separator = ',')]
             public IEnumerable<string> Offsets { get; set; }
+
+            [Option('j', "jbod", Default = new string[] { }, Required = false,
+                HelpText = "List for sizes for each part of the JBOD-array. Comma-separated for multiple values.", Separator = ',')]
+            public IEnumerable<string> JbodSizes { get; set; }
 
         }
 

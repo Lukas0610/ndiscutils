@@ -32,17 +32,28 @@ namespace nDiscUtils.IO
         private Stream mStream;
         private SafeFileHandle mHandle;
         private long mLength;
+        private bool mPassthrough;
 
         public FixedLengthStream(Stream stream, long length)
         {
             mStream = stream;
             mLength = length;
             mHandle = null;
+            mPassthrough = false;
+        }
+
+        public FixedLengthStream(Stream stream, long length, bool passthrough)
+        {
+            mStream = stream;
+            mLength = length;
+            mHandle = null;
+            mPassthrough = passthrough;
+            if (passthrough) SetLength(length);
         }
 
         public FixedLengthStream(SafeFileHandle handle, FileAccess access, long length)
 #pragma warning disable CS0618 // Typ oder Element ist veraltet
-            : this(new FileStream(handle.DangerousGetHandle(), access, false, 512), length)
+            : this(new FileStream(handle.DangerousGetHandle(), access, false, 512), length, false)
 #pragma warning restore CS0618 // Typ oder Element ist veraltet
         {
             mHandle = handle;
@@ -138,7 +149,12 @@ namespace nDiscUtils.IO
             => mStream.Seek(offset, origin);
 
         public override void SetLength(long value)
-            => mLength = value;
+        {
+            if (mPassthrough)
+                mStream.SetLength(value);
+            else
+                mLength = value;
+        }
 
         public override void Write(byte[] buffer, int offset, int count)
             => mStream.Write(buffer, offset, count);
