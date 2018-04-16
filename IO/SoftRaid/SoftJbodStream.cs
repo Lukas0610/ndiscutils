@@ -161,7 +161,7 @@ namespace nDiscUtils.IO.SoftRaid
             var end = 0L;
             for (int i = 0; i < SubStreams.Length; i++)
             {
-                if (position <= end + SubStreams[i].Length)
+                if (position < end + SubStreams[i].Length)
                     return SubStreams[i];
 
                 end += SubStreams[i].Length;
@@ -174,7 +174,7 @@ namespace nDiscUtils.IO.SoftRaid
             var end = 0L;
             for (int i = 0; i < SubStreams.Length; i++)
             {
-                if (position <= end + SubStreams[i].Length)
+                if (position < end + SubStreams[i].Length)
                     return end + SubStreams[i].Length;
 
                 end += SubStreams[i].Length;
@@ -187,7 +187,7 @@ namespace nDiscUtils.IO.SoftRaid
             var end = 0L;
             for (int i = 0; i < SubStreams.Length; i++)
             {
-                if (mPosition <= end + SubStreams[i].Length)
+                if (mPosition < end + SubStreams[i].Length)
                 {
                     SubStreams[i].Position = mPosition - end;
                     return;
