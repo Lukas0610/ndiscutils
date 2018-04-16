@@ -69,6 +69,11 @@ namespace nDiscUtils.IO
             get => (mHandle != null);
         }
 
+        public SafeFileHandle Handle
+        {
+            get => mHandle;
+        }
+
         public override bool CanRead
         {
             get => mStream.CanRead;

@@ -132,6 +132,7 @@
     <Compile Include="IO\SoftRaid\SoftJbodStream.cs" />
     <Compile Include="IO\SoftRaid\SoftRaid1Stream.cs" />
     <Compile Include="IO\SoftRaid\SoftRaid0Stream.cs" />
+    <Compile Include="IO\UnmanagedDiskGeometry.cs" />
     <Compile Include="IO\XPath.cs" />
     <Compile Include="Modules\Benchmark.cs" />
     <Compile Include="Modules\Erase.cs" />

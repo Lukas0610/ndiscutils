@@ -211,6 +211,30 @@ namespace nDiscUtils.Core
             return partitionTable;
         }
 
+        public static Geometry FindBasicGeometry(Stream stream, long size)
+        {
+            var geometryType = "UNKN";
+            Geometry geometry = null;
+
+            if (!IsLinux && stream is FixedLengthStream fixedStream && fixedStream.HasHandle)
+            {
+                geometry = UnmanagedDiskGeometry.GetDiscUtilsGeometry(fixedStream.Handle);
+                geometryType = "WINAPI";
+                if (geometry != null)
+                    goto exit;
+            }
+
+            geometry = Geometry.FromCapacity(size);
+            geometryType = "CAP";
+
+exit:
+            Logger.Info("{0}/BPS:{1}; SPT:{2}; HPC:{3}; CL:{4}; TS:{5}; CP:{6}", geometryType,
+                geometry.BytesPerSector, geometry.SectorsPerTrack, geometry.HeadsPerCylinder,
+                geometry.Cylinders, geometry.TotalSectorsLong, geometry.Capacity);
+
+            return geometry;
+        }
+
         public static Geometry FindGeometry(Stream stream)
         {
             var geometryType = "UNKN";
@@ -247,7 +271,7 @@ namespace nDiscUtils.Core
             {
                 case "NTFS":
                 {
-                    var geometry = Geometry.FromCapacity(size);
+                    var geometry = FindBasicGeometry(stream, size);
 
                     Logger.Info("Formatting stream as NTFS");
                     return NtfsFileSystem.Format(stream, label, geometry, 0, geometry.TotalSectorsLong);
@@ -255,7 +279,7 @@ namespace nDiscUtils.Core
 
                 case "FAT":
                 {
-                    var geometry = Geometry.FromCapacity(size);
+                    var geometry = FindBasicGeometry(stream, size);
 
                     Logger.Info("Formatting stream as FAT");
 #pragma warning disable CS0618 // Typ oder Element ist veraltet

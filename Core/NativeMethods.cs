@@ -37,6 +37,7 @@ namespace nDiscUtils.Core
         public const uint FSCTL_UNLOCK_VOLUME = 0x0009001C;
 
         public const uint IOCTL_STORAGE_PREDICT_FAILURE = 0x002D1100;
+        public const uint IOCTL_DISK_GET_DRIVE_GEOMETRY = 0x00070000;
 
         public const int CTRL_C_EVENT = 0;
 
