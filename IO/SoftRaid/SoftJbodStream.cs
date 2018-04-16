@@ -30,7 +30,6 @@ namespace nDiscUtils.IO.SoftRaid
 
         private object mLock;
 
-        private long mLength;
         private long mPosition;
 
         private Dictionary<int, long> mStreamLengths;
@@ -40,7 +39,6 @@ namespace nDiscUtils.IO.SoftRaid
         {
             mStreamLengths = new Dictionary<int, long>();
             mLock = new object();
-            mLength = 0;
         }
 
         protected override void OnOpened()
@@ -49,11 +47,6 @@ namespace nDiscUtils.IO.SoftRaid
             {
                 mStreamLengths.Add(i, SubStreams[i].Length);
             }
-        }
-
-        public override long Length
-        {
-            get => mLength;
         }
 
         public override long Position
@@ -77,7 +70,7 @@ namespace nDiscUtils.IO.SoftRaid
         {
             var readCount = 0;
 
-            while (readCount < count && mPosition < mLength)
+            while (readCount < count && mPosition < Length)
             {
                 var bufferOffset = offset + readCount;
                 var readSize = count - readCount;
@@ -115,27 +108,20 @@ namespace nDiscUtils.IO.SoftRaid
 
         public override void SetLength(long value)
         {
+            base.SetLength(value);
             // Invalid Operation
-            InvalidateLength();
         }
 
-        public override void InvalidateLength()
+        public override long GetEffectiveLength(long value)
         {
-            lock (mLock)
-            {
-                mLength = 0;
-                Parallel.For(0, SubStreams.Length, (i) =>
-                {
-                    mLength += SubStreams[i].Length;
-                });
-            }
+            return value;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
             var writeCount = 0;
 
-            while (writeCount < count && mPosition < mLength)
+            while (writeCount < count && mPosition < Length)
             {
                 var bufferOffset = offset + writeCount;
                 var writeSize = count - writeCount;
@@ -152,8 +138,6 @@ namespace nDiscUtils.IO.SoftRaid
                 mPosition += writeSize;
                 writeCount += writeSize;
             }
-
-            InvalidateLength();
         }
 
         private Stream GetPositionStream(long position)

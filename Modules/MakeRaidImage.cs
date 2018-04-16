@@ -140,7 +140,6 @@ namespace nDiscUtils.Modules
             }
 
             raidStream.Open();
-            raidStream.SetLength(opts.Size);
 
             if (FormatStream(opts.FileSystem, raidStream, opts.Size, "nDiscUtils Image") == null)
                 return INVALID_ARGUMENT;

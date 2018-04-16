@@ -111,7 +111,6 @@ namespace nDiscUtils.Modules
             }
 
             raidStream.Open();
-            raidStream.InvalidateLength();
 
             MountStream(raidStream, opts);
 

@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,17 +28,11 @@ namespace nDiscUtils.IO.SoftRaid
     {
 
         private object mLock;
-        private long mLength;
 
         public SoftRaid1Stream()
             : base()
         {
             mLock = new object();
-        }
-
-        public override long Length
-        {
-            get => mLength;
         }
 
         public override long Position
@@ -106,27 +101,20 @@ namespace nDiscUtils.IO.SoftRaid
         {
             lock (mLock)
             {
+                base.SetLength(value);
+
                 Parallel.For(0, SubStreams.Length, (i) =>
                 {
                     SubStreams[i].SetLength(value);
                 });
-                InvalidateLength();
             }
         }
 
-        public override void InvalidateLength()
+        public override long GetEffectiveLength(long value)
         {
-            lock (mLock)
-            {
-                var results = new long[SubStreams.Length];
-
-                Parallel.For(0, SubStreams.Length, (i) =>
-                {
-                    results[i] = SubStreams[i].Length;
-                });
-
-                mLength = results.Min();
-            }
+            if (value % SubStreams.Length != 0)
+                throw new ArgumentException("Cannot caluclate effective length of SoftRaid1: Physical length is not divisible by count of disks");
+            return value / SubStreams.Length;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -137,7 +125,6 @@ namespace nDiscUtils.IO.SoftRaid
                 {
                     SubStreams[i].Write(buffer, offset, count);
                 });
-                InvalidateLength();
                 AssertPositions();
             }
         }

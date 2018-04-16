@@ -28,19 +28,12 @@ namespace nDiscUtils.IO.SoftRaid
 
         private object mLock;
 
-        private long mLength;
         private long mPosition;
 
         public SoftRaid0Stream()
             : base()
         {
             mLock = new object();
-            mLength = 0;
-        }
-
-        public override long Length
-        {
-            get => mLength;
         }
 
         public override long Position
@@ -64,7 +57,7 @@ namespace nDiscUtils.IO.SoftRaid
         {
             var readCount = 0;
 
-            while (readCount < count && mPosition < mLength)
+            while (readCount < count && mPosition < Length)
             {
                 var bufferOffset = offset + readCount;
                 var readSize = (int)Math.Min(count - readCount, StripeSize);
@@ -110,6 +103,8 @@ namespace nDiscUtils.IO.SoftRaid
         {
             lock (mLock)
             {
+                base.SetLength(value);
+
                 if (value % SubStreams.Length != 0)
                     throw new ArgumentException("Cannot set length on substreams: Requested length is not divisible by count of disks");
 
@@ -117,27 +112,21 @@ namespace nDiscUtils.IO.SoftRaid
                 {
                     SubStreams[i].SetLength(value / SubStreams.Length);
                 });
-                InvalidateLength();
             }
         }
 
-        public override void InvalidateLength()
+        public override long GetEffectiveLength(long value)
         {
-            lock (mLock)
-            {
-                mLength = 0;
-                Parallel.For(0, SubStreams.Length, (i) =>
-                {
-                    mLength += SubStreams[i].Length;
-                });
-            }
+            if (value % StripeSize != 0)
+                throw new ArgumentException("Cannot caluclate effective length of SoftRaid0: Physical length is not divisible by size of stripes");
+            return value;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
             var writeCount = 0;
 
-            while (writeCount < count && mPosition < mLength)
+            while (writeCount < count && mPosition < Length)
             {
                 var bufferOffset = offset + writeCount;
                 var writeSize = (int)Math.Min(count - writeCount, StripeSize);
@@ -160,8 +149,6 @@ namespace nDiscUtils.IO.SoftRaid
                 mPosition += writeSize;
                 writeCount += writeSize;
             }
-
-            InvalidateLength();
         }
 
         private long GetStripeIndex(long offset)

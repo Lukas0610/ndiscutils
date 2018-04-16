@@ -37,6 +37,9 @@ namespace nDiscUtils.IO.SoftRaid
         private bool mCanSeek;
         private bool mCanTimeout;
 
+        private long mTotalLength;
+        private long mLength;
+
         public long StripeSize { get; set; }
 
         public Stream[] SubStreams { get => mStreams; }
@@ -48,6 +51,11 @@ namespace nDiscUtils.IO.SoftRaid
         public override bool CanTimeout => mCanTimeout;
 
         public override bool CanWrite => mCanWrite;
+
+        public override long Length
+        {
+            get => mLength;
+        }
 
         public override int ReadTimeout
         {
@@ -102,10 +110,13 @@ namespace nDiscUtils.IO.SoftRaid
             mCanSeek = false;
             mCanTimeout = false;
             mCanWrite = false;
+            mTotalLength = 0;
+            mLength = 0;
         }
 
         public void AddStream(Stream stream)
         {
+            mTotalLength += stream.Length;
             mStreamList.Add(stream);
         }
 
@@ -123,6 +134,13 @@ namespace nDiscUtils.IO.SoftRaid
                 }
             }
         }
+
+        public override void SetLength(long value)
+        {
+            mLength = value;
+        }
+
+        public virtual long GetEffectiveLength(long value) { return value; }
 
         public void Open()
         {
@@ -146,10 +164,10 @@ namespace nDiscUtils.IO.SoftRaid
                 mCanWrite = mCanWrite && mStreams[i].CanWrite;
             }
 
+            SetLength(GetEffectiveLength(mTotalLength));
+
             OnOpened();
         }
-
-        public abstract void InvalidateLength();
 
         protected virtual void OnOpened() { }
 
