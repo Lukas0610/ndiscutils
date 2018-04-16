@@ -74,6 +74,11 @@ namespace nDiscUtils.Modules
             else if (raidType == "jbod")
             {
                 raidStream = new SoftJbodStream();
+                if (opts.JbodSizes.Count() != opts.Paths.Count())
+                {
+                    Logger.Error("A JBOD-array requires a amount of [ Paths ] -j/--jbod options to be set");
+                    return INVALID_ARGUMENT;
+                }
             }
             else
             {
@@ -96,6 +101,11 @@ namespace nDiscUtils.Modules
                         offset = offsets[i];
                     else
                         offset = offsets[offsets.Count - 1];
+                }
+
+                if (raidType == "jbod")
+                {
+                    pathStream = new FixedLengthStream(pathStream, ParseSizeString(opts.JbodSizes.ElementAt(i)), true);
                 }
 
                 if (offset > 0)
@@ -140,6 +150,10 @@ namespace nDiscUtils.Modules
             [Option('o', "offset", Default = new string[] { },
                 HelpText = "Offset in bytes at which the image will be written to the target. Comma-separated for multiple values.", Separator = ',')]
             public IEnumerable<string> Offsets { get; set; }
+
+            [Option('j', "jbod", Default = new string[] { }, Required = false,
+                HelpText = "List for sizes for each part of the JBOD-array. Comma-separated for multiple values.", Separator = ',')]
+            public IEnumerable<string> JbodSizes { get; set; }
 
         }
 
