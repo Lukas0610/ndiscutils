@@ -57,7 +57,7 @@ namespace nDiscUtils.IO
             Logger.Info("DeviceIoControl(0x{0:X}, FSCTL_LOCK_VOLUME) returned with {1}",
                 handle.DangerousGetHandle(), error);
 
-            if (!result || error != 0)
+            if (!result)
                 throw new IOException("Failed to call DeviceIoControl(FSCTL_LOCK_VOLUME) on "
                     + diskPath + ": Error " + error);
 
