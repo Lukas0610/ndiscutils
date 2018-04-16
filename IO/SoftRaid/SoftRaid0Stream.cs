@@ -117,8 +117,8 @@ namespace nDiscUtils.IO.SoftRaid
 
         public override long GetEffectiveLength(long value)
         {
-            if (value % StripeSize != 0)
-                throw new ArgumentException("Cannot caluclate effective length of SoftRaid0: Physical length is not divisible by size of stripes");
+            /* if (value % StripeSize != 0)
+                throw new ArgumentException("Cannot calculate effective length of SoftRaid0: Physical length is not divisible by size of stripes"); */
             return value;
         }
 
