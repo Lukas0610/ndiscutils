@@ -21,7 +21,7 @@
 #include "Config.iss"
 
 #define AppName       "nDiscUtils"
-#define AppVersion    "0.4.2" 
+#define AppVersion    "0.5.0"
 #define AppPublisher  "Lukas Berger"
 #define AppCopyright  "Copyright (c) 2018 Lukas Berger"
 #define AppURL        "https://lukasberger.at/"
