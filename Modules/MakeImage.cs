@@ -39,7 +39,7 @@ namespace nDiscUtils.Modules
 
             Logger.Info("Opening image \"{0}\"", opts.Path);
             var imageStream = OpenPath(opts.Path,
-                FileMode.Open,
+                FileMode.OpenOrCreate,
                 FileAccess.ReadWrite,
                 FileShare.None);
 
