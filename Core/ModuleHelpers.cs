@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -111,8 +112,10 @@ namespace nDiscUtils.Core
 
             if (char.IsLetter(sizeChar))
                 size = long.Parse(sizeString.Substring(0, sizeString.Length - 1));
+            else if (sizeString.StartsWith("0x"))
+                return long.Parse(sizeString.Substring(2), NumberStyles.HexNumber);
             else
-                return long.Parse(sizeString.Substring(0, sizeString.Length));
+                return long.Parse(sizeString);
 
             switch (sizeChar)
             {
