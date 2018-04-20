@@ -70,7 +70,7 @@ namespace nDiscUtils.IO
 
         public override long Length
         {
-            get => mStream.Length;
+            get => mStream.Length - mOffset;
         }
 
         public override long Position
@@ -128,7 +128,7 @@ namespace nDiscUtils.IO
             => mStream.Seek(mOffset + offset, origin) - mOffset;
 
         public override void SetLength(long value)
-            => mStream.SetLength(value);
+            => mStream.SetLength(mOffset + value);
 
         public override void Write(byte[] buffer, int offset, int count)
             => mStream.Write(buffer, offset, count);
