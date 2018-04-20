@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 using CommandLine;
@@ -44,12 +45,7 @@ namespace nDiscUtils
             CosturaUtility.Initialize();
         }
 #endif
-
-        private class MountOptionsImpl : BaseMountOptions
-        {
-
-        }
-
+        
         public static int Main(string[] args)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -83,43 +79,51 @@ namespace nDiscUtils
             WriteLine("Running as {0}.", Environment.UserName);
             WriteLine();
 
-            var result = Parser.Default.ParseArguments<
-                Benchmark.Options,
-                Clone.Options,
-                Compare.Options,
-                Erase.Options,
-                ListDisks.Options,
-                ListPartitions.Options,
-                MakeDirectoryImage.Options,
-                MakeImage.Options,
-                MakeRaidImage.Options,
-                MountImage.Options,
-                MountPartition.Options,
-                MountRaidImage.Options,
-                Ramdisk.Options,
-                Security.Options,
-                Smart.Options,
-                Sync.Options
-            >(args).MapResult(
-                    (Benchmark.Options opts) => Benchmark.Run(opts),
-                    (Clone.Options opts) => Clone.Run(opts),
-                    (Compare.Options opts) => Compare.Run(opts),
-                    (Erase.Options opts) => Erase.Run(opts),
-                    (ListDisks.Options opts) => ListDisks.Run(opts),
-                    (ListPartitions.Options opts) => ListPartitions.Run(opts),
-                    (MakeDirectoryImage.Options opts) => MakeDirectoryImage.Run(opts),
-                    (MakeImage.Options opts) => MakeImage.Run(opts),
-                    (MakeRaidImage.Options opts) => MakeRaidImage.Run(opts),
-                    (MountImage.Options opts) => MountImage.Run(opts),
-                    (MountPartition.Options opts) => MountPartition.Run(opts),
-                    (MountRaidImage.Options opts) => MountRaidImage.Run(opts),
-                    (Ramdisk.Options opts) => Ramdisk.Run(opts),
-                    (Security.Options opts) => Security.Run(opts),
-                    (Smart.Options opts) => Smart.Run(opts),
-                    (Sync.Options opts) => Sync.Run(opts),
-                    (errcode) => -INVALID_ARGUMENT
-                );
-            
+            var options = new[]
+            {
+                typeof(Benchmark.Options),
+                typeof(Clone.Options),
+                typeof(Compare.Options),
+                typeof(Erase.Options),
+                typeof(ListDisks.Options),
+                typeof(ListPartitions.Options),
+                typeof(MakeDirectoryImage.Options),
+                typeof(MakeImage.Options),
+                typeof(MakeRaidImage.Options),
+                typeof(MountImage.Options),
+                typeof(MountPartition.Options),
+                typeof(MountRaidImage.Options),
+                typeof(Ramdisk.Options),
+                typeof(Security.Options),
+                typeof(Smart.Options),
+                typeof(Sync.Options),
+            };
+
+            var result = INVALID_ARGUMENT;
+            var parserResult = Parser.Default.ParseArguments(args, options);
+
+            if (parserResult != null)
+            {
+                var parsed = parserResult as Parsed<object>;
+
+                     if (parsed.Value is Benchmark.Options) result = Benchmark.Run((Benchmark.Options)parsed.Value);
+                else if (parsed.Value is Clone.Options) result = Clone.Run((Clone.Options)parsed.Value);
+                else if (parsed.Value is Compare.Options) result = Compare.Run((Compare.Options)parsed.Value);
+                else if (parsed.Value is Erase.Options) result = Erase.Run((Erase.Options)parsed.Value);
+                else if (parsed.Value is ListDisks.Options) result = ListDisks.Run((ListDisks.Options)parsed.Value);
+                else if (parsed.Value is ListPartitions.Options) result = ListPartitions.Run((ListPartitions.Options)parsed.Value);
+                else if (parsed.Value is MakeDirectoryImage.Options) result = MakeDirectoryImage.Run((MakeDirectoryImage.Options)parsed.Value);
+                else if (parsed.Value is MakeImage.Options) result = MakeImage.Run((MakeImage.Options)parsed.Value);
+                else if (parsed.Value is MakeRaidImage.Options) result = MakeRaidImage.Run((MakeRaidImage.Options)parsed.Value);
+                else if (parsed.Value is MountImage.Options) result = MountImage.Run((MountImage.Options)parsed.Value);
+                else if (parsed.Value is MountPartition.Options) result = MountPartition.Run((MountPartition.Options)parsed.Value);
+                else if (parsed.Value is MountRaidImage.Options) result = MountRaidImage.Run((MountRaidImage.Options)parsed.Value);
+                else if (parsed.Value is Ramdisk.Options) result = Ramdisk.Run((Ramdisk.Options)parsed.Value);
+                else if (parsed.Value is Security.Options) result = Security.Run((Security.Options)parsed.Value);
+                else if (parsed.Value is Smart.Options) result = Smart.Run((Smart.Options)parsed.Value);
+                else if (parsed.Value is Sync.Options) result = Sync.Run((Sync.Options)parsed.Value);
+            }
+
             if (!IsLinux)
                 CloseParent();
 
