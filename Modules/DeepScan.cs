@@ -71,11 +71,6 @@ namespace nDiscUtils.Modules
                     break;
                 }
 
-                if (buffer[3] == 0x4E)
-                {
-
-                }
-
                 Parallel.For(0, bufferSize - BLOCK_SIZE + 1, new ParallelOptions() { MaxDegreeOfParallelism = opts.Threads },
                     (i, l) =>
                     {
