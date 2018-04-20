@@ -1976,18 +1976,22 @@ namespace DiscUtils.Ntfs
 
         private static bool IsValidBPB(BiosParameterBlock bpb, long volumeSize)
         {
-			// If we have a valid NTFS signature and no sectors are set,
-			// this is not a valid NTFS-stream
-			if (bpb.SignatureByte == 0x80 && bpb.TotalSectors16 == 0 && bpb.TotalSectors32 == 0 &&
-					bpb.TotalSectors64 == 0)
-				return false;
+            // If we have a valid NTFS signature and no sectors are set,
+            // this is not a valid NTFS-stream
+            if (bpb.SignatureByte == 0x80 && bpb.TotalSectors16 == 0 && bpb.TotalSectors32 == 0 &&
+                    bpb.TotalSectors64 == 0)
+                return false;
 
-			// If signature is set to 0x00 and the OEM-id is not recognizable, you better won't
-			// support this stream.
-			if (bpb.SignatureByte == 0x00 && !bpb.OemId.StartsWith("NTFS"))
-				return false;
+            // If signature is set to 0x00 and the OEM-id is not recognizable, you better won't
+            // support this stream.
+            if (bpb.SignatureByte == 0x00 && !bpb.OemId.StartsWith("NTFS"))
+                return false;
 
-			// This data seems to be valid across all NTFS implementations.
+            // Only 0x00 and 0x80 signatures are valid in general
+            if (bpb.SignatureByte != 0x00 && bpb.SignatureByte != 0x80)
+                return false;
+
+            // This data seems to be valid across all NTFS implementations.
             if (bpb.MftRecordSize == 0 || bpb.MftCluster == 0 || bpb.BytesPerSector == 0)
                 return false;
 
