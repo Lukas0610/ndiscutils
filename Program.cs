@@ -84,6 +84,7 @@ namespace nDiscUtils
                 typeof(Benchmark.Options),
                 typeof(Clone.Options),
                 typeof(Compare.Options),
+                typeof(DeepScan.Options),
                 typeof(Erase.Options),
                 typeof(ListDisks.Options),
                 typeof(ListPartitions.Options),
@@ -102,13 +103,12 @@ namespace nDiscUtils
             var result = INVALID_ARGUMENT;
             var parserResult = Parser.Default.ParseArguments(args, options);
 
-            if (parserResult != null)
+            if (parserResult is Parsed<object> parsed && parsed != null)
             {
-                var parsed = parserResult as Parsed<object>;
-
-                     if (parsed.Value is Benchmark.Options) result = Benchmark.Run((Benchmark.Options)parsed.Value);
+                if (parsed.Value is Benchmark.Options) result = Benchmark.Run((Benchmark.Options)parsed.Value);
                 else if (parsed.Value is Clone.Options) result = Clone.Run((Clone.Options)parsed.Value);
                 else if (parsed.Value is Compare.Options) result = Compare.Run((Compare.Options)parsed.Value);
+                else if (parsed.Value is DeepScan.Options) result = DeepScan.Run((DeepScan.Options)parsed.Value);
                 else if (parsed.Value is Erase.Options) result = Erase.Run((Erase.Options)parsed.Value);
                 else if (parsed.Value is ListDisks.Options) result = ListDisks.Run((ListDisks.Options)parsed.Value);
                 else if (parsed.Value is ListPartitions.Options) result = ListPartitions.Run((ListPartitions.Options)parsed.Value);
