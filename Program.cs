@@ -94,6 +94,7 @@ namespace nDiscUtils
                 typeof(MountImage.Options),
                 typeof(MountPartition.Options),
                 typeof(MountRaidImage.Options),
+                typeof(PhysicalCheck.Options),
                 typeof(Ramdisk.Options),
                 typeof(Security.Options),
                 typeof(Smart.Options),
@@ -119,6 +120,7 @@ namespace nDiscUtils
                 else if (parsed.Value is MountPartition.Options) result = MountPartition.Run((MountPartition.Options)parsed.Value);
                 else if (parsed.Value is MountRaidImage.Options) result = MountRaidImage.Run((MountRaidImage.Options)parsed.Value);
                 else if (parsed.Value is Ramdisk.Options) result = Ramdisk.Run((Ramdisk.Options)parsed.Value);
+                else if (parsed.Value is PhysicalCheck.Options) result = PhysicalCheck.Run((PhysicalCheck.Options)parsed.Value);
                 else if (parsed.Value is Security.Options) result = Security.Run((Security.Options)parsed.Value);
                 else if (parsed.Value is Smart.Options) result = Smart.Run((Smart.Options)parsed.Value);
                 else if (parsed.Value is Sync.Options) result = Sync.Run((Sync.Options)parsed.Value);

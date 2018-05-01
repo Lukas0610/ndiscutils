@@ -154,6 +154,7 @@
     <Compile Include="Modules\Erase.cs" />
     <Compile Include="Modules\MakeRaidImage.cs" />
     <Compile Include="Modules\MountRaidImage.cs" />
+    <Compile Include="Modules\PhysicalCheck.cs" />
     <Compile Include="Modules\Security.cs" />
     <Compile Include="Mounting\SimpleFileSystemMountPoint.cs" />
     <Compile Include="Runtime\Emit\ILMethod.cs" />
