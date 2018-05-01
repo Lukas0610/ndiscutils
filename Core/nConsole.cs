@@ -391,6 +391,17 @@ namespace nDiscUtils.Core
                 Write(x, y + i, str);
         }
 
+        public static void Write(string format)
+        {
+            lock (kWriteLock)
+            {
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.Write(format);
+                else
+                    Console.Write(format);
+            }
+        }
+
         public static void Write(string format, params object[] args)
         {
             lock (kWriteLock)
@@ -410,6 +421,17 @@ namespace nDiscUtils.Core
                     kCurrentBuffer.WriteLine("");
                 else
                     Console.WriteLine();
+            }
+        }
+
+        public static void WriteLine(string format)
+        {
+            lock (kWriteLock)
+            {
+                if (UseConsoleBuffers)
+                    kCurrentBuffer.WriteLine(format);
+                else
+                    Console.WriteLine(format);
             }
         }
 
